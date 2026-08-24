@@ -1,0 +1,37 @@
+# LangChain & LangGraph Core
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-openai>=0.2.0
+langgraph>=0.2.40
+langgraph-checkpoint-postgres>=2.0.0
+
+# Database & Checkpoint Persistence
+psycopg[binary]>=3.2.0
+psycopg-pool>=3.2.0
+supabase>=2.10.0
+
+# LLM Tracing & Observability
+langfuse>=2.57.0
+
+# Payments & Gateway
+razorpay>=1.4.1
+
+# Channels (Email / Messaging / Voice)
+resend>=2.4.0
+httpx>=0.28.0
+requests>=2.32.0
+elevenlabs>=1.0.0
+
+# API Server & Validation
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+pydantic>=2.9.0
+pydantic-settings>=2.6.0
+python-dotenv>=1.0.1
+
+# Testing & Evals
+pytest>=8.3.0
+pytest-asyncio>=0.24.0
+tabulate>=0.9.0
+pandas>=2.2.0
+numpy>=1.26.0
