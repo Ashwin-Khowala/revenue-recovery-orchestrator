@@ -1,0 +1,94 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("SUPABASE_DB_URI")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Event {
+  event_id        String            @id
+  event_type      String
+  amount          Float
+  currency        String            @default("INR")
+  merchant_id     String            @default("merch_01")
+  customer_id     String            @default("cust_01")
+  customer_email  String?
+  customer_phone  String?
+  razorpay_ref    String?
+  history         Json?             @default("{}")
+  metadata        Json?             @default("{}")
+  created_at      DateTime          @default(now())
+  
+  recoveryActions RecoveryAction[]
+  auditLogs       AuditLog[]
+  promiseToPays   PromiseToPay[]
+
+  @@map("events")
+}
+
+model RecoveryAction {
+  id               String    @id @default(uuid())
+  event_id         String
+  action_type      String
+  target_channel   String
+  expected_value   Float
+  cost             Float     @default(0.0)
+  p_recovery       Float
+  friction_penalty Float     @default(0.0)
+  risk_penalty     Float     @default(0.0)
+  status           String    @default("pending")
+  payment_link_id  String?
+  short_url        String?
+  executed_at      DateTime?
+  created_at       DateTime  @default(now())
+
+  event Event @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
+
+  @@map("recovery_actions")
+}
+
+model PromiseToPay {
+  id            String    @id @default(uuid())
+  event_id      String
+  customer_id   String
+  promised_date DateTime
+  amount        Float
+  status        String    @default("active")
+  notes         String?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  event Event @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
+
+  @@map("promise_to_pay")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  event_id     String
+  node_name    String
+  action_taken String
+  details      Json?    @default("{}")
+  reasoning    String?
+  timestamp    DateTime @default(now())
+
+  event Event @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
+
+  @@map("audit_log")
+}
+
+model EvaluationRun {
+  id                     String   @id @default(uuid())
+  run_name               String
+  model_name             String
+  dataset_size           Int
+  accuracy_pct           Float
+  recovery_rate_pct      Float
+  false_intervention_pct Float
+  duplicate_contacts     Int      @default(0)
+  created_at             DateTime @default(now())
+
+  @@map("evaluation_runs")
+}

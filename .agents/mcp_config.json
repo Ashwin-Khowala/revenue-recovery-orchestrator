@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "prisma-mcp-server": {
+      "command": "npx",
+      "args": ["-y", "@prisma/mcp-server"],
+      "env": {
+        "DATABASE_URL": "postgresql://postgres:%40%40Ashwin8240@db.gmttsomarcefwjbbhlik.supabase.co:5432/postgres"
+      }
+    }
+  }
+}

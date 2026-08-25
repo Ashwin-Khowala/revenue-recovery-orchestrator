@@ -74,15 +74,27 @@ def compute_p_recovery(root_cause: str, channel: str, history: Dict[str, Any]) -
     Computes calibrated probability of recovery based on root cause, chosen channel,
     and historical customer payment reliability.
     """
+    prior_success_rate = history.get("prior_payment_success_rate", 0.75)
+    prior_contacts = history.get("prior_contacts", 0)
+    customer_avg_days_late = history.get("customer_avg_days_late", 3)
+
+    if channel == "none":
+        # For 'do_nothing', natural recovery probability directly correlates with customer's historical reliability
+        if prior_success_rate >= 0.90 and customer_avg_days_late <= 3:
+            # High-confidence natural payer: natural settlement without any outreach friction
+            natural_p = prior_success_rate * 0.95
+            return round(min(0.98, natural_p), 4)
+        else:
+            base_p = BASE_PRIORS.get(root_cause, {}).get("none", 0.20)
+            return round(base_p * (0.5 + 0.5 * prior_success_rate), 4)
+
     priors_for_cause = BASE_PRIORS.get(root_cause, BASE_PRIORS["subscription_failed"])
     base_p = priors_for_cause.get(channel, 0.30)
 
     # Customer track record multiplier (0.83 success rate -> boost, 0.20 -> drop)
-    prior_success_rate = history.get("prior_payment_success_rate", 0.75)
     history_multiplier = 0.6 + (0.6 * prior_success_rate) # maps 0.0->0.6, 1.0->1.2
 
     # Prior contacts penalty (diminishing returns per contact attempt)
-    prior_contacts = history.get("prior_contacts", 0)
     contact_decay = max(0.4, 1.0 - (0.25 * prior_contacts))
 
     calibrated_p = min(0.98, max(0.02, base_p * history_multiplier * contact_decay))

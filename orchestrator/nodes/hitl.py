@@ -11,6 +11,7 @@ import logging
 from typing import Dict, Any
 from orchestrator.state import RecoveryState
 from orchestrator.audit import log_audit_entry
+from langgraph.types import interrupt
 
 logger = logging.getLogger("orchestrator.hitl")
 
@@ -35,14 +36,11 @@ def hitl_escalation(state: RecoveryState) -> Dict[str, Any]:
         "instructions": "Please review and approve, modify, or reject this recovery action.",
     }
 
-    try:
-        from langgraph.types import interrupt
-        # Graph execution pauses here and persists state to Postgres checkpointer
-        decision = interrupt(human_payload)
-    except (ImportError, Exception) as e:
-        # Fallback for direct testing outside compiled graph checkpointer
-        logger.warning(f"LangGraph interrupt() not active in current execution context ({e}). Using simulated approval.")
-        decision = {"status": "approved", "approved_action": chosen_action}
+    # Graph execution pauses here and persists state to checkpointer
+    decision = interrupt(human_payload)
+
+    if not isinstance(decision, dict):
+        decision = {"status": "approved" if decision == "approve" else "rejected", "approved_action": chosen_action}
 
     approved_action = decision.get("approved_action", chosen_action)
     review_status = decision.get("status", "approved")
