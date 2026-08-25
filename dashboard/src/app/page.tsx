@@ -7,6 +7,14 @@ import React, { useState, useEffect, useRef } from 'react';
 // ============================================================================
 type UserRole = 'merchant' | 'payer';
 
+interface AuthSession {
+  role: UserRole;
+  name: string;
+  email: string;
+  phone?: string;
+  avatarText: string;
+}
+
 interface Incident {
   id: string;
   type: string;
@@ -37,7 +45,7 @@ const INCIDENTS: Incident[] = [
     id: 'evt_001',
     type: 'Bank Route Degraded (Outage)',
     customer: 'Aarav Sharma',
-    customerPhone: '+919876543210',
+    customerPhone: '+919820144102',
     amount: 12000,
     rootCause: 'payment_degraded',
     action: 'Silent Gateway Reroute',
@@ -104,14 +112,14 @@ const INCIDENTS: Incident[] = [
     id: 'evt_006',
     type: 'Promise-to-Pay (PTP) Commitment',
     customer: 'Kavita Iyer (DesignStudio)',
-    customerPhone: '+919811223344',
+    customerPhone: '+919811255432',
     amount: 52000,
     rootCause: 'promise_to_pay',
     action: 'Pause Outreach → Schedule Re-Check',
     channel: 'Scheduled Check',
     status: 'waiting',
     ev: 41600,
-    reasoning: 'Customer agreed to settle payment on September 2nd. The agent suspended all reminders and scheduled an automated re-verification check 24 hours post-promised date (T_promised + 24h).',
+    reasoning: 'Customer agreed to pay on Sept 2nd. Outreach paused; scheduled auto-recheck at T_promised + 24h.',
     ptpDate: '2026-09-02',
   },
 ];
@@ -184,18 +192,17 @@ function statusLabel(s: string) {
 
 export default function Dashboard() {
   // ==========================================================================
-  // AUTH & ROLE STATE
+  // AUTHENTICATION STATE (NULL = NOT LOGGED IN)
   // ==========================================================================
-  const [userRole, setUserRole] = useState<UserRole>('merchant');
-  const [currentUser, setCurrentUser] = useState({
-    name: 'Ashwin Khowala',
-    email: 'ashwin.khowala@gmail.com',
-    phone: '+919821099421',
-  });
+  const [authSession, setAuthSession] = useState<AuthSession | null>(null);
 
-  // Navigation tabs
+  // Form states for login screen
+  const [merchantEmailInput, setMerchantEmailInput] = useState('admin@razorpay-merchant.com');
+  const [payerSelectIdx, setPayerSelectIdx] = useState(4); // default Ashwin Khowala
+
+  // Merchant state
   const [merchantTab, setMerchantTab] = useState<'incidents' | 'live' | 'copilot' | 'race' | 'benchmark' | 'architecture' | 'database'>('incidents');
-  const [selectedIncident, setSelectedIncident] = useState<Incident>(INCIDENTS[4]); // default to Ashwin's subscription
+  const [selectedIncident, setSelectedIncident] = useState<Incident>(INCIDENTS[4]);
   const [selectedDbTable, setSelectedDbTable] = useState<string>('events');
 
   // Payer state
@@ -228,6 +235,40 @@ export default function Dashboard() {
   const [raceDemo, setRaceDemo] = useState<{ step: number; done: boolean } | null>(null);
   const [sendingChannel, setSendingChannel] = useState<string | null>(null);
   const [channelResult, setChannelResult] = useState<string | null>(null);
+
+  // --------------------------------------------------------------------------
+  // AUTH LOGIN HANDLERS
+  // --------------------------------------------------------------------------
+  const handleLoginAsMerchant = () => {
+    setAuthSession({
+      role: 'merchant',
+      name: 'Merchant Operations Admin',
+      email: merchantEmailInput || 'admin@razorpay-merchant.com',
+      avatarText: 'M',
+    });
+  };
+
+  const handleLoginAsPayer = (incidentIdx: number) => {
+    const inc = INCIDENTS[incidentIdx];
+    setPayerIncident(inc);
+    setPayerCurrentAmount(inc.amount);
+    setPayerDiscountApplied(false);
+    setPayerPtpSelected(null);
+    setPayerPaidSuccess(false);
+
+    setAuthSession({
+      role: 'payer',
+      name: inc.customer,
+      email: `${inc.customer.toLowerCase().replace(/[^a-z]/g, '')}@example.com`,
+      phone: inc.customerPhone,
+      avatarText: inc.customer.charAt(0),
+    });
+  };
+
+  const handleSignOut = () => {
+    setAuthSession(null);
+    endVoiceCall();
+  };
 
   // --------------------------------------------------------------------------
   // BROWSER SPEECH SYNTHESIS
@@ -268,9 +309,10 @@ export default function Dashboard() {
     setPayerDiscountApplied(false);
     setPayerCurrentAmount(incident.amount);
 
+    const userName = authSession?.name || 'Customer';
     const introText = incident.rootCause === 'mandate_auth_failed'
-      ? `Namaste ${currentUser.name}! Hum Razorpay recovery team se bol rahe hain. Aapka ${incident.amount} rupaye ka recurring mandate RBI verification ke liye hold par hai. Humne ek 1-click re-auth link generate kiya hai. Kya aap abhi complete karna chahenge?`
-      : `Namaste ${currentUser.name}! Hum Razorpay partner team se bol rahe hain. Aapka ${incident.amount} rupaye ka subscription charge complete nahi ho paya. Humne secure payment link create kiya hai. Kya koi issue aa raha hai?`;
+      ? `Namaste ${userName}! Hum Razorpay recovery team se bol rahe hain. Aapka ${incident.amount} rupaye ka recurring mandate RBI verification ke liye hold par hai. Humne ek 1-click re-auth link generate kiya hai. Kya aap abhi complete karna chahenge?`
+      : `Namaste ${userName}! Hum Razorpay partner team se bol rahe hain. Aapka ${incident.amount} rupaye ka transaction pending hai. Humne secure payment link create kiya hai. Kya koi difficulty aa rahi hai?`;
 
     const introTurn: VoiceTurn = {
       speaker: 'agent',
@@ -350,7 +392,7 @@ export default function Dashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customer_name: currentUser.name,
+          customer_name: authSession?.name || 'Customer',
           amount: payerCurrentAmount,
           root_cause: payerIncident.rootCause,
           user_speech: text,
@@ -377,7 +419,7 @@ export default function Dashboard() {
         throw new Error('offline');
       }
     } catch {
-      const fallbackReply = `Ji ${currentUser.name}! Maine aapka note record kar liya hai aur payment link update kar diya hai. Dhanyawad!`;
+      const fallbackReply = `Ji ${authSession?.name || 'Customer'}! Maine aapka note record kar liya hai aur payment link update kar diya hai. Dhanyawad!`;
       const agentTurn: VoiceTurn = {
         speaker: 'agent',
         text: fallbackReply,
@@ -404,11 +446,6 @@ export default function Dashboard() {
   const handlePayerPromiseToPay = (dateStr: string) => {
     setPayerPtpSelected(dateStr);
     alert(`🤝 Promise-to-Pay registered for ${dateStr}! All reminder calls and messages are now paused.`);
-  };
-
-  const handleSimulatePayment = () => {
-    setPayerPaidSuccess(true);
-    alert('💳 Payment Completed Successfully! Your subscription is now active.');
   };
 
   // --------------------------------------------------------------------------
@@ -448,8 +485,8 @@ export default function Dashboard() {
           event_id: `evt_demo_${Date.now().toString().slice(-6)}`,
           event_type: 'subscription_failed',
           amount: 4999,
-          customer_name: currentUser.name,
-          customer_phone: currentUser.phone,
+          customer_name: 'Ashwin Khowala',
+          customer_phone: '+919821099421',
         }),
       });
       if (res.ok) {
@@ -542,7 +579,7 @@ export default function Dashboard() {
           event_type: incident.rootCause,
           amount: incident.amount,
           customer_name: incident.customer,
-          customer_phone: currentUser.phone,
+          customer_phone: incident.customerPhone,
         }),
       });
       if (res.ok) {
@@ -599,10 +636,146 @@ export default function Dashboard() {
   const totalRecovered = INCIDENTS.filter(i => i.status === 'recovered').reduce((a, i) => a + i.amount, 0);
   const recoveryRate = Math.round((totalRecovered / totalAtRisk) * 100);
 
+  // ==========================================================================
+  // UN-AUTHENTICATED STATE: CLEAN LOGIN / AUTH PORTAL
+  // ==========================================================================
+  if (!authSession) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex flex-col justify-between font-sans">
+        {/* Top Header */}
+        <header className="bg-white border-b border-slate-200 py-3.5 px-6">
+          <div className="max-w-5xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#0052CC] flex items-center justify-center text-white font-extrabold text-sm">
+                R
+              </div>
+              <div>
+                <h1 className="text-sm font-bold text-slate-900">Razorpay AI Revenue Recovery</h1>
+                <p className="text-[11px] text-slate-500 font-medium">Track 3 Supervisory Agent System</p>
+              </div>
+            </div>
+
+            <a
+              href="https://t.me/razorpaytestbot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#229ED9]/10 text-[#0088cc] border border-[#229ED9]/30 text-xs font-bold hover:bg-[#229ED9]/20 transition-colors"
+            >
+              <span>🤖 Telegram Bot: @razorpaytestbot</span>
+            </a>
+          </div>
+        </header>
+
+        {/* Main Login Screen */}
+        <main className="max-w-4xl mx-auto px-6 py-12 w-full space-y-8">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+              Sign In to Revenue Recovery Platform
+            </h2>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              Select your role to access either the business operations control center or customer self-service recovery portal.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* CARD 1: SIGN IN AS MERCHANT */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col justify-between space-y-5 hover:border-[#0052CC] transition-colors">
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#0052CC] flex items-center justify-center font-bold text-lg">
+                  🏢
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Merchant Operations Admin</h3>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Access at-risk revenue metrics (₹2.45L), LangGraph state graph, EV policy calculations, HITL review approvals, and 5-table Prisma schema.
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-2 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Business Admin Email</label>
+                    <input
+                      type="email"
+                      value={merchantEmailInput}
+                      onChange={(e) => setMerchantEmailInput(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#0052CC]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Security Key</label>
+                    <input
+                      type="password"
+                      defaultValue="••••••••••••"
+                      disabled
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-400 font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleLoginAsMerchant}
+                className="w-full py-2.5 rounded-xl bg-[#0052CC] hover:bg-[#0747A6] text-white text-xs font-bold transition-all shadow-xs"
+              >
+                🔐 Sign In as Merchant Admin &rarr;
+              </button>
+            </div>
+
+            {/* CARD 2: SIGN IN AS PAYER / CUSTOMER */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col justify-between space-y-5 hover:border-emerald-500 transition-colors">
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-lg">
+                  👤
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Customer Recovery Portal</h3>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    View your pending bill or mandate, 1-click Razorpay payment link, claim 5% concessions, schedule promise-to-pay dates, or talk with the Gemini Live Voice Agent.
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-2 text-xs">
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Select Customer Demo Profile</label>
+                  <select
+                    value={payerSelectIdx}
+                    onChange={(e) => setPayerSelectIdx(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                  >
+                    <option value={4}>Ashwin Khowala — Subscription Retry (₹4,999)</option>
+                    <option value={1}>Ananya Verma — RBI Mandate Re-Auth (₹28,500)</option>
+                    <option value={5}>Kavita Iyer — Promise-to-Pay (₹52,000)</option>
+                    <option value={3}>Rohan Mehta — Abandoned Cart (₹3,499)</option>
+                  </select>
+                  <div className="text-[11px] text-slate-500 pt-1">
+                    Phone: <code className="font-mono text-slate-700">{INCIDENTS[payerSelectIdx].customerPhone}</code>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleLoginAsPayer(payerSelectIdx)}
+                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs"
+              >
+                💳 Sign In to Customer Portal &rarr;
+              </button>
+            </div>
+          </div>
+        </main>
+
+        <footer className="border-t border-slate-200 bg-white py-3.5 text-center text-xs text-slate-500">
+          Razorpay Revenue Recovery Orchestrator &bull; Track 3 Supervisory Agent System
+        </footer>
+      </div>
+    );
+  }
+
+  // ==========================================================================
+  // AUTHENTICATED STATE: MERCH OR PAYER PORTAL
+  // ==========================================================================
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
       {/* ================================================================== */}
-      {/* TOP NAV BAR WITH ROLE SWITCHER & AUTH STATUS */}
+      {/* TOP NAV BAR WITH PROFILE BADGE & SIGN OUT BUTTON */}
       {/* ================================================================== */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
@@ -618,44 +791,38 @@ export default function Dashboard() {
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-medium">
-                {userRole === 'merchant' ? '🏢 Merchant Control Center & Operations' : '👤 Customer Self-Service Recovery Portal'}
+                {authSession.role === 'merchant' ? '🏢 Merchant Control Center & Operations' : '👤 Customer Self-Service Recovery Portal'}
               </p>
             </div>
           </div>
 
-          {/* Role & Auth Switcher */}
-          <div className="flex items-center gap-2">
-            <div className="bg-slate-100 p-1 rounded-lg border border-slate-200 flex items-center gap-1 text-xs">
-              <button
-                onClick={() => setUserRole('merchant')}
-                className={`px-3 py-1 rounded-md font-bold transition-all ${
-                  userRole === 'merchant'
-                    ? 'bg-white text-[#0052CC] shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                🏢 Merchant View
-              </button>
-              <button
-                onClick={() => setUserRole('payer')}
-                className={`px-3 py-1 rounded-md font-bold transition-all ${
-                  userRole === 'payer'
-                    ? 'bg-white text-emerald-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                👤 Payer Portal
-              </button>
-            </div>
-
+          {/* Authenticated User Profile & Sign Out */}
+          <div className="flex items-center gap-3">
             <a
               href="https://t.me/razorpaytestbot"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#229ED9]/10 text-[#0088cc] border border-[#229ED9]/30 text-xs font-bold hover:bg-[#229ED9]/20 transition-colors"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#229ED9]/10 text-[#0088cc] border border-[#229ED9]/30 text-xs font-bold hover:bg-[#229ED9]/20 transition-colors"
             >
               <span>🤖 @razorpaytestbot</span>
             </a>
+
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+              <div className="w-7 h-7 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center">
+                {authSession.avatarText}
+              </div>
+              <div className="text-left hidden md:block">
+                <div className="text-xs font-bold text-slate-900 leading-tight">{authSession.name}</div>
+                <div className="text-[10px] text-slate-500">{authSession.role === 'merchant' ? 'Operations Admin' : 'Payer Profile'}</div>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-red-50 hover:text-red-700 text-slate-600 transition-colors"
+                title="Sign out of current role"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -665,21 +832,21 @@ export default function Dashboard() {
         {/* ================================================================ */}
         {/* VIEW 1: PAYER / CUSTOMER RECOVERY PORTAL */}
         {/* ================================================================ */}
-        {userRole === 'payer' && (
+        {authSession.role === 'payer' && (
           <div className="space-y-6">
             {/* Payer Welcome Banner */}
             <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">Hello, {currentUser.name}!</h2>
-                  <p className="text-xs text-slate-500">Registered Phone: {currentUser.phone} &bull; Safe Test Override Active</p>
+                  <h2 className="text-base font-bold text-slate-900">Hello, {authSession.name}!</h2>
+                  <p className="text-xs text-slate-500">Phone: {authSession.phone || payerIncident.customerPhone}</p>
                 </div>
                 <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold">
                   Action Required &bull; 1 Pending Bill
                 </span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Your previous payment of <strong>₹{payerIncident.amount.toLocaleString()}</strong> for <em>{payerIncident.type}</em> was not completed due to a temporary bank authorization pause. You can complete your transaction securely below, claim a recovery concession, commit to a promise-to-pay date, or talk to our live Gemini voice agent.
+                Your previous payment of <strong>₹{payerIncident.amount.toLocaleString()}</strong> for <em>{payerIncident.type}</em> was not completed due to a temporary bank authorization hold. You can complete your transaction securely below, claim a 5% concession, schedule a promise-to-pay date, or talk with our conversational Gemini live voice agent.
               </p>
             </div>
 
@@ -789,7 +956,7 @@ export default function Dashboard() {
                         }`}
                       >
                         <span className="font-bold text-[10px] block opacity-70">
-                          {t.speaker === 'agent' ? '🤖 Razorpay AI Voice' : '👤 You'}
+                          {t.speaker === 'agent' ? '🤖 Razorpay AI Voice' : `👤 ${authSession.name}`}
                         </span>
                         {t.text}
                       </div>
@@ -850,7 +1017,7 @@ export default function Dashboard() {
         {/* ================================================================ */}
         {/* VIEW 2: MERCHANT CONTROL CENTER (OPERATIONS & TRACK 3 ENGINE) */}
         {/* ================================================================ */}
-        {userRole === 'merchant' && (
+        {authSession.role === 'merchant' && (
           <div className="space-y-6">
             {/* Top Metric Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
