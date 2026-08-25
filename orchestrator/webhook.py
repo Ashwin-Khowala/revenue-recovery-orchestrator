@@ -585,3 +585,76 @@ async def voice_agent_dialogue_endpoint(req: VoiceAgentDialogueRequest):
         "payment_link": "https://rzp.io/rzp/Qf0zRD2B",
     }
 
+
+# ============================================================================
+# GEMINI LIVE & TOOL-CALLING VOICE AGENT ENDPOINT
+# ============================================================================
+class VoiceAgentTurnRequest(BaseModel):
+    user_speech: str
+    role: Optional[str] = "payer"
+    customer_name: Optional[str] = "Ashwin Khowala"
+    amount: Optional[float] = 4999.0
+    root_cause: Optional[str] = "subscription_failed"
+
+
+@app.post("/api/orchestrator/voice-agent-turn")
+async def voice_agent_turn_endpoint(req: VoiceAgentTurnRequest):
+    """
+    Executes real-time conversational voice turn with autonomous tool calling:
+    - Payer: apply_concession_discount (5%), register_promise_to_pay, get_invoice
+    - Merchant: approve_high_value_invoice (₹1.45L), get_financial_kpis
+    """
+    from orchestrator.gemini_live_engine import run_voice_agent_turn
+    result = run_voice_agent_turn(
+        user_speech=req.user_speech,
+        role=req.role or "payer",
+        customer_name=req.customer_name or "Ashwin Khowala",
+        amount=req.amount or 4999.0,
+        root_cause=req.root_cause or "subscription_failed",
+    )
+    return result
+
+
+# ============================================================================
+# PLIVO TELEPHONY ENDPOINTS
+# ============================================================================
+class PlivoCallRequest(BaseModel):
+    customer_name: str
+    recipient_phone: str
+    amount: float
+    root_cause: str
+
+
+@app.post("/api/orchestrator/plivo/make-call")
+async def plivo_make_call_endpoint(req: PlivoCallRequest):
+    """
+    Initiates an outbound recovery phone call to customer using Plivo Telephony.
+    """
+    from orchestrator.channels.plivo_voice import make_plivo_recovery_call
+    result = make_plivo_recovery_call(
+        recipient_phone=req.recipient_phone,
+        customer_name=req.customer_name,
+        amount=req.amount,
+        root_cause=req.root_cause,
+    )
+    return result
+
+
+@app.get("/api/orchestrator/plivo/answer-xml")
+async def plivo_answer_xml_endpoint(customer_name: str = "Customer", amount: float = 4999.0):
+    """
+    Returns Plivo XML response with synthesized Hinglish speech.
+    """
+    from fastapi.responses import Response
+    xml_content = (
+        f'<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<Response>\n'
+        f'    <Speak language="hi-IN" voice="WOMAN">'
+        f'Namaste {customer_name}! Hum Razorpay partner desk se bol rahe hain. '
+        f'Aapka {amount} rupaye ka payment complete karne ke liye humne payment link SMS kar diya hai. Dhanyawad!'
+        f'</Speak>\n'
+        f'</Response>'
+    )
+    return Response(content=xml_content, media_type="application/xml")
+
+
