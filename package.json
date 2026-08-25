@@ -1,0 +1,14 @@
+{
+  "name": "razorpay-revenue-recovery-orchestrator",
+  "version": "1.0.0",
+  "description": "Supervisory AI Decision & Execution Engine for Razorpay AI Buildathon (Track 3)",
+  "scripts": {
+    "dev": "python run_all.py",
+    "start": "python run_all.py",
+    "dashboard": "npm --prefix dashboard run dev",
+    "backend": "python -m uvicorn orchestrator.webhook:app --host 0.0.0.0 --port 8000",
+    "telegram": "python -m orchestrator.channels.telegram_bot"
+  },
+  "author": "Ashwin Khowala",
+  "license": "MIT"
+}

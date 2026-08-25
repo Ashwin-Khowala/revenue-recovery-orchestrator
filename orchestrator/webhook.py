@@ -271,10 +271,24 @@ async def copilot_chat_endpoint(req: CopilotChatRequest):
                 azure_endpoint=azure_endpoint,
             )
             system_prompt = (
-                "You are the Razorpay Revenue Recovery Orchestrator Copilot. You assist merchants and finance operations "
-                "in understanding payment failures, Expected Value (EV) recovery decisions, RBI mandate rules (> ₹15,000 AFA requirements), "
-                "silent route degradation rerouting, and Human-In-The-Loop (HITL) escalations (capped at ₹1,00,000). "
-                "Keep your answers concise, professional, and grounded in the system rules."
+                "You are the Razorpay AI Revenue Recovery Assistant for the Merchant Dashboard. "
+                "You have FULL real-time access to the merchant's financial data and active customer incidents. "
+                "\n\nCURRENT FINANCIAL SNAPSHOT:\n"
+                "• Total At-Risk Revenue: ₹2,45,998 across 6 customer incidents\n"
+                "• Total Recovered Revenue: ₹44,075 (18% auto-recovered, 100% on degraded bank routes)\n"
+                "• Invariant Health: 0 duplicate contacts (100% compliant, 0 spam penalty)\n"
+                "• High-Value Escalations: ₹1,45,000 (TechMatrix Corp — paused for human merchant approval)\n\n"
+                "ACTIVE CUSTOMER TRANSACTIONS:\n"
+                "1. TechMatrix Corp (Rajesh): ₹1,45,000 — B2B Overdue Invoice. Status: Paused for Human Approval (HITL) because amount ≥ ₹1,00,000 cap.\n"
+                "2. Kavita Iyer (DesignStudio): ₹52,000 — Promise-to-Pay scheduled for Sept 2nd. Reminders paused.\n"
+                "3. Ananya Verma: ₹28,500 — RBI Mandate (>₹15k) AFA Re-Auth link sent via WhatsApp/Telegram.\n"
+                "4. Aarav Sharma: ₹12,000 — Bank route failure (Axis bank spike). Silently rerouted to HDFC. Fully recovered.\n"
+                "5. Ashwin Khowala: ₹4,999 — Subscription soft-decline. 5% dynamic discount retry link active.\n"
+                "6. Rohan Mehta: ₹3,499 — Abandoned Cart. 'Do Nothing' chosen due to 96% on-time history to avoid brand fatigue.\n\n"
+                "GUIDELINES:\n"
+                "• Answer in a clear, friendly, human-understandable tone for business owners.\n"
+                "• Avoid unnecessary technical jargon unless asked.\n"
+                "• When asked about 'financial status', 'how much money', or 'summary', provide a clear breakdown of at-risk, recovered, and pending amounts."
             )
             response = client.chat.completions.create(
                 model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-54-mini"),
@@ -282,7 +296,7 @@ async def copilot_chat_endpoint(req: CopilotChatRequest):
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": req.query},
                 ],
-                max_completion_tokens=400,
+                max_completion_tokens=600,
             )
             answer = response.choices[0].message.content
             return {
@@ -293,41 +307,58 @@ async def copilot_chat_endpoint(req: CopilotChatRequest):
         except Exception as e:
             logger.warning(f"Copilot Azure OpenAI query failed: {e}. Using deterministic reasoning engine.")
 
-    # Deterministic knowledge base response
-    if "rbi" in query_lower or "mandate" in query_lower:
+    # Rich Deterministic knowledge base response
+    if any(w in query_lower for w in ["financial", "status", "money", "pending", "balance", "total", "summary", "overview", "how much"]):
         answer = (
-            "📌 **RBI Mandate Failure Rule (> ₹15,000):** Under RBI guidelines, recurring auto-debits above ₹15,000 require "
-            "1-time Additional Factor Authentication (AFA). Rather than failing the subscription permanently, the orchestrator "
-            "generates a 1-click dynamic mandate consent link dispatched via Telegram/WhatsApp to let the customer authorize securely."
+            "📊 **Your Business Financial & Recovery Summary:**\n\n"
+            "• **Total Revenue At-Risk:** ₹2,45,998 across 6 customer incidents\n"
+            "• **Successfully Recovered:** ₹44,075 (18% direct recovery rate, 100% on bank route outages)\n"
+            "• **Awaiting Your Approval (HITL):** ₹1,45,000 (TechMatrix Corp — high-value safety gate)\n"
+            "• **Scheduled for Payment:** ₹52,000 (Kavita Iyer — Promise-to-Pay for Sept 2nd)\n"
+            "• **Pending Customer Self-Action:** ₹33,499 (Ananya Verma ₹28,500 + Ashwin Khowala ₹4,999)\n\n"
+            "💡 **Recommendation:** Review and approve the ₹1,45,000 TechMatrix invoice in the 'Pending Payments' tab to release outreach."
         )
-    elif "escalate" in query_lower or "hitl" in query_lower or "100000" in query_lower or "1 lakh" in query_lower or "cap" in query_lower:
+    elif "rbi" in query_lower or "mandate" in query_lower or "15000" in query_lower:
         answer = (
-            "🛡️ **Financial Guardrail & HITL Escalation:** Any transaction with an amount ≥ ₹1,00,000 triggers mandatory "
-            "Human-in-the-Loop (HITL) review via LangGraph `interrupt()`. The AI halts outreach and awaits merchant approval "
-            "so large enterprise balances are never dispatched un-gated."
+            "📌 **RBI Recurring Mandate Rule (> ₹15,000):**\n\n"
+            "Under Reserve Bank of India (RBI) guidelines, any recurring payment above ₹15,000 requires 1-time Additional Factor Authentication (AFA).\n\n"
+            "• Instead of permanently cancelling the customer's subscription, our AI creates a **1-click secure authorization link** and sends it via WhatsApp or Telegram.\n"
+            "• **Current Case:** Ananya Verma (₹28,500) received this link and can approve it with one tap."
         )
-    elif "do nothing" in query_lower or "ev" in query_lower or "expected value" in query_lower:
+    elif any(w in query_lower for w in ["escalate", "hitl", "human", "100000", "1 lakh", "cap", "techmatrix"]):
         answer = (
-            "🧠 **'Do Nothing' as a Scored Candidate:** We model customer priors. If a customer has a 96% on-time payment track record, "
-            "sending an immediate reminder incurs friction penalty and brand fatigue. In such cases, Expected Value EV = P(recovery) × Amount − Friction "
-            "is highest for `do_nothing`, allowing natural recovery without spam."
+            "🛡️ **High-Value Safety Gate (Human-In-The-Loop / HITL):**\n\n"
+            "To protect your business relationships, the AI **never** sends aggressive automated collection messages on large sums.\n\n"
+            "• **Strict Rule:** Any transaction of **₹1,00,000 or higher** is automatically paused.\n"
+            "• **Current Case:** TechMatrix Corp (₹1,45,000) is paused awaiting your 1-click approval in the dashboard or Telegram bot before any message moves."
         )
-    elif "route" in query_lower or "bank" in query_lower or "degraded" in query_lower:
+    elif any(w in query_lower for w in ["do nothing", "rohan", "friction", "fatigue"]):
         answer = (
-            "⚡ **Silent Route Degradation:** When a bank gateway experiences >30% failure rate (e.g., Axis Bank downtime), "
-            "the orchestrator triggers a silent reroute to a secondary gateway (e.g., HDFC Smart Gateway). The customer is NEVER spammed "
-            "for an infrastructure-level issue."
+            "🧠 **Smart 'Do Nothing' Decision:**\n\n"
+            "Many recovery systems spam customers immediately, which annoys good buyers and damages your brand.\n\n"
+            "• If a customer has a **96% on-time payment track record** (like Rohan Mehta, ₹3,499), sending an instant reminder costs more in customer goodwill than it gains.\n"
+            "• The AI calculates that waiting yields the highest net revenue without spam."
         )
-    elif "race" in query_lower or "duplicate" in query_lower:
+    elif any(w in query_lower for w in ["route", "bank", "degraded", "outage", "aarav"]):
         answer = (
-            "⚡ **Webhook Race Condition Arbitrator:** When `payment.failed` is followed seconds later by `payment.captured`, "
-            "our in-flight memory queue cancels the queued recovery action instantly. This mathematically guarantees 0 duplicate contacts."
+            "⚡ **Automatic Bank Outage Protection:**\n\n"
+            "When a bank gateway experiences server downtime or high failure rates (e.g. Axis Bank spike):\n\n"
+            "• The system **silently switches** the transaction to a healthy backup gateway (e.g. HDFC).\n"
+            "• **Zero Customer Spam:** The customer is never bothered for an infrastructure issue on the bank's side."
+        )
+    elif any(w in query_lower for w in ["race", "duplicate", "spam"]):
+        answer = (
+            "🛡️ **Zero Duplicate Messages Invariant:**\n\n"
+            "If a customer pays on their own right after a payment fails, our system instantly cancels the queued reminder.\n\n"
+            "• We mathematically guarantee **0 duplicate or embarrassing reminder messages** to customers who have already paid."
         )
     else:
         answer = (
-            f"🤖 **Recovery Orchestrator Insight:** The engine monitors at-risk revenue across 6 root causes (degraded routes, "
-            f"RBI mandates, subscription failures, abandoned checkouts, B2B overdue receivables, and promise-to-pay). "
-            f"You have ₹2,45,998 total at-risk with an 18% automated recovery rate and 0 duplicate contacts."
+            "👋 **Razorpay AI Recovery Assistant:**\n\n"
+            "I monitor your at-risk payments and automatically recover failed revenue without spamming your customers.\n\n"
+            "• **Current Balance At-Risk:** ₹2,45,998 across 6 accounts\n"
+            "• **Recovered:** ₹44,075 with 0 duplicate contacts\n\n"
+            "You can ask me: *'What is my financial status?'*, *'Why is TechMatrix paused?'*, or *'How does bank outage protection work?'*"
         )
 
     return {

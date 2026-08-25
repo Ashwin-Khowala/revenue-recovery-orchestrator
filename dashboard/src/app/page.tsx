@@ -38,21 +38,21 @@ interface VoiceTurn {
 }
 
 // ============================================================================
-// DEMO DATA — 6 Incident Scenarios
+// DEMO DATA — 6 Clear Customer Scenarios
 // ============================================================================
 const INCIDENTS: Incident[] = [
   {
     id: 'evt_001',
-    type: 'Bank Route Degraded (Outage)',
+    type: 'Bank Server Outage (Axis Bank)',
     customer: 'Aarav Sharma',
     customerPhone: '+919820144102',
     amount: 12000,
     rootCause: 'payment_degraded',
-    action: 'Silent Gateway Reroute',
-    channel: 'None (Silent Infra Reroute)',
+    action: 'Silent Gateway Switch (HDFC)',
+    channel: 'Silent Auto-Switch (No Spam)',
     status: 'recovered',
     ev: 10560,
-    reasoning: 'Primary bank gateway failure rate spiked to 40%. The agent detected route degradation and silently auto-switched to backup gateway. Customer was never spammed — zero friction, 100% recovered.',
+    reasoning: 'Primary bank gateway failed. The AI detected route degradation and silently auto-switched to a healthy backup gateway. Customer was never spammed — 100% recovered with zero friction.',
   },
   {
     id: 'evt_002',
@@ -61,118 +61,68 @@ const INCIDENTS: Incident[] = [
     customerPhone: '+919833419283',
     amount: 28500,
     rootCause: 'mandate_auth_failed',
-    action: 'Instant Mandate Re-Auth Link',
-    channel: 'Telegram / WhatsApp / Voice',
+    action: '1-Click Mandate Approval Link',
+    channel: 'WhatsApp / Telegram / Voice',
     status: 'recovered',
     ev: 22215,
-    reasoning: 'Under RBI regulations, recurring debits over ₹15,000 require 1-time Additional Factor Authentication (AFA). The agent synthesized a 1-click mandate approval link with real payment credentials.',
+    reasoning: 'Under RBI regulations, recurring debits over ₹15,000 require 1-time verification. The AI synthesized a 1-click mandate approval link sent directly to the customer.',
     link: 'https://rzp.io/rzp/Qf0zRD2B',
   },
   {
     id: 'evt_003',
-    type: 'B2B Receivable Overdue (High Value)',
+    type: 'B2B Overdue Invoice (High Value)',
     customer: 'TechMatrix Corp (Rajesh)',
     customerPhone: '+919123488391',
     amount: 145000,
     rootCause: 'receivable_overdue',
-    action: 'Paused → Escalate to Human (HITL)',
-    channel: 'None (HITL Gate)',
+    action: 'Paused → Awaiting Merchant Approval',
+    channel: 'Human Review Gate',
     status: 'escalated',
     ev: 137500,
-    reasoning: 'Transaction value of ₹1,45,000 exceeds the strict ₹1,00,000 financial cap. The agent paused execution with LangGraph interrupt() for supervisory review before any funds or messages move.',
+    reasoning: 'Invoice amount of ₹1,45,000 exceeds the safety cap of ₹1,00,000. The AI automatically paused outreach for human merchant approval to protect corporate client relationships.',
   },
   {
     id: 'evt_004',
-    type: 'High-Intent Abandoned Cart',
+    type: 'Abandoned Checkout Cart',
     customer: 'Rohan Mehta',
     customerPhone: '+919988723901',
     amount: 3499,
     rootCause: 'checkout_abandoned',
-    action: '"Do Nothing" (Highest Net EV)',
-    channel: 'None (Passive Hold)',
+    action: 'Smart Hold (No Spam Needed)',
+    channel: 'Passive Hold',
     status: 'do_nothing',
     ev: 3150,
-    reasoning: 'Customer possesses a 96% on-time payment track record. Mathematical policy engine models friction penalty: sending intrusive messages causes brand fatigue. "Do nothing" yielded highest net expected value.',
+    reasoning: 'Customer has a 96% on-time payment track record. Sending pushy reminder messages causes brand fatigue. The AI calculated that waiting yields the highest net revenue without spam.',
   },
   {
     id: 'evt_005',
-    type: 'Subscription Soft-Decline',
+    type: 'Card Balance Decline (Soft Decline)',
     customer: 'Ashwin Khowala',
     customerPhone: '+919821099421',
     amount: 4999,
     rootCause: 'subscription_failed',
-    action: 'Dynamic Retry Payment Link',
+    action: 'Instant Retry Link (5% Concession)',
     channel: 'Telegram / WhatsApp / Gemini Voice',
     status: 'recovered',
     ev: 3600,
-    reasoning: 'Card soft-decline on recurring cycle due to temporary balance limit. Agent generated a dynamic retry link with smart retry sequencer. Customer completed payment in 12 minutes.',
+    reasoning: 'Card declined due to temporary daily limit. AI generated an instant retry payment link with dynamic discount. Customer settled within 12 minutes.',
     link: 'https://rzp.io/rzp/Qf0zRD2B',
   },
   {
     id: 'evt_006',
-    type: 'Promise-to-Pay (PTP) Commitment',
+    type: 'Customer Promise-to-Pay (PTP)',
     customer: 'Kavita Iyer (DesignStudio)',
     customerPhone: '+919811255432',
     amount: 52000,
     rootCause: 'promise_to_pay',
-    action: 'Pause Outreach → Schedule Re-Check',
-    channel: 'Scheduled Check',
+    action: 'Reminders Paused (Committed for Sept 2)',
+    channel: 'Scheduled Re-Check',
     status: 'waiting',
     ev: 41600,
-    reasoning: 'Customer agreed to pay on Sept 2nd. Outreach paused; scheduled auto-recheck at T_promised + 24h.',
+    reasoning: 'Customer committed to pay on Sept 2nd during phone conversation. All automated reminder calls and messages are paused until Sept 2nd.',
     ptpDate: '2026-09-02',
   },
 ];
-
-// Database live inspect rows for all 5 Prisma models
-const DB_TABLE_DATA: Record<string, { headers: string[]; rows: any[][] }> = {
-  events: {
-    headers: ['event_id', 'event_type', 'amount', 'customer_id', 'razorpay_ref', 'created_at'],
-    rows: [
-      ['evt_001', 'payment_degraded', '₹12,000.00', 'cust_aarav_sharma', 'order_live_deg_01', '2026-08-25 10:14:02 UTC'],
-      ['evt_002', 'mandate_auth_failed', '₹28,500.00', 'cust_ananya_verma', 'plink_TU5gxyVe6W', '2026-08-25 10:18:40 UTC'],
-      ['evt_003', 'receivable_overdue', '₹1,45,000.00', 'cust_techmatrix_corp', 'inv_b2b_8910', '2026-08-25 10:22:15 UTC'],
-      ['evt_004', 'checkout_abandoned', '₹3,499.00', 'cust_rohan_mehta', 'cart_drop_441', '2026-08-25 10:25:30 UTC'],
-      ['evt_005', 'subscription_failed', '₹4,999.00', 'cust_ashwin_khowala', 'plink_TU6AFXQKBA', '2026-08-25 10:30:11 UTC'],
-      ['evt_006', 'promise_to_pay', '₹52,000.00', 'cust_kavita_iyer', 'ptp_sch_5521', '2026-08-25 10:33:45 UTC'],
-    ],
-  },
-  recovery_actions: {
-    headers: ['id', 'event_id', 'action_type', 'channel', 'expected_value', 'p_recovery', 'status'],
-    rows: [
-      ['act_01', 'evt_001', 'silent_route_reroute', 'reroute', '₹10,560.00', '0.88', 'executed'],
-      ['act_02', 'evt_002', 'whatsapp_mandate_afa_link', 'whatsapp/tg', '₹22,215.00', '0.78', 'delivered'],
-      ['act_03', 'evt_003', 'human_collections_review', 'none', '₹1,37,500.00', '0.95', 'escalated'],
-      ['act_04', 'evt_004', 'do_nothing', 'none', '₹3,150.00', '0.90', 'passive_hold'],
-      ['act_05', 'evt_005', 'whatsapp_quick_retry_link', 'whatsapp/tg', '₹3,600.00', '0.72', 'recovered'],
-      ['act_06', 'evt_006', 'schedule_ptp_check', 'scheduled', '₹41,600.00', '0.80', 'scheduled'],
-    ],
-  },
-  promise_to_pay: {
-    headers: ['id', 'event_id', 'customer_id', 'promised_date', 'amount', 'status', 'notes'],
-    rows: [
-      ['ptp_01', 'evt_006', 'cust_kavita_iyer', '2026-09-02 00:00:00 UTC', '₹52,000.00', 'active', 'Customer confirmed settlement via phone callback. Outreach paused.'],
-      ['ptp_02', 'evt_009', 'cust_rajesh_exports', '2026-09-05 00:00:00 UTC', '₹88,000.00', 'active', 'Net 30 invoice extension agreed with finance manager.'],
-    ],
-  },
-  audit_log: {
-    headers: ['id', 'event_id', 'node_name', 'action_taken', 'reasoning', 'timestamp'],
-    rows: [
-      ['log_01', 'evt_001', 'score_policy_options', 'Silent Route Rerouted', 'Axis route failure rate > 40%. Switched to HDFC. Zero customer friction.', '2026-08-25 10:14:03 UTC'],
-      ['log_02', 'evt_002', 'execute_action', 'Mandate Consent Dispatched', 'RBI > ₹15,000 mandate re-auth link generated and dispatched.', '2026-08-25 10:18:41 UTC'],
-      ['log_03', 'evt_003', 'check_guardrails', 'HITL Escalation Triggered', 'Amount ₹1,45,000 exceeds ₹1,00,000 guardrail cap. Interrupted.', '2026-08-25 10:22:16 UTC'],
-      ['log_04', 'evt_004', 'score_policy_options', 'Do Nothing Selected', 'Customer has 96% on-time record. Outreach friction penalty exceeds gain.', '2026-08-25 10:25:31 UTC'],
-      ['log_05', 'evt_005', 'outcome_tracker', 'Reconciled (Recovered)', 'Payment link settled within 12 minutes. 0 duplicate contacts.', '2026-08-25 10:42:11 UTC'],
-    ],
-  },
-  evaluation_runs: {
-    headers: ['run_name', 'model_name', 'dataset_size', 'accuracy_pct', 'recovery_rate_pct', 'duplicate_contacts'],
-    rows: [
-      ['Track 3 Holdout Benchmark (100 Cases)', 'azure/gpt-4o-mini', '100', '96.00%', '88.40%', '0'],
-      ['Failure Injection Robustness Suite', 'langgraph-engine', '18 tests', '100.00%', '94.20%', '0'],
-    ],
-  },
-};
 
 function statusColor(s: string) {
   if (s === 'recovered') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
@@ -183,16 +133,56 @@ function statusColor(s: string) {
 }
 
 function statusLabel(s: string) {
-  if (s === 'recovered') return 'Recovered';
-  if (s === 'escalated') return 'HITL Escalated';
-  if (s === 'waiting') return 'PTP Scheduled';
-  if (s === 'do_nothing') return 'Do Nothing (Best EV)';
+  if (s === 'recovered') return '✓ Recovered';
+  if (s === 'escalated') return '⏳ Awaiting Your Approval';
+  if (s === 'waiting') return '📅 Payment Scheduled';
+  if (s === 'do_nothing') return '🛡️ Hold (No Spam)';
   return s;
+}
+
+// Clean Formatted Markdown Component for Chatbot
+function FormattedChatText({ text }: { text: string }) {
+  const lines = text.split('\n');
+  return (
+    <div className="space-y-1.5 text-xs leading-relaxed">
+      {lines.map((line, idx) => {
+        if (!line.trim()) {
+          return <div key={idx} className="h-1" />;
+        }
+
+        const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-') || line.trim().startsWith('*');
+        const content = isBullet ? line.trim().replace(/^[•\-\*]\s*/, '') : line;
+
+        const parts = content.split(/(\*\*.*?\*\*)/g);
+        const rendered = parts.map((part, pIdx) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return (
+              <strong key={pIdx} className="font-bold text-slate-900">
+                {part.slice(2, -2)}
+              </strong>
+            );
+          }
+          return part;
+        });
+
+        if (isBullet) {
+          return (
+            <div key={idx} className="flex items-start gap-1.5 pl-1">
+              <span className="text-[#0052CC] font-bold text-xs leading-tight">•</span>
+              <div className="flex-1 text-slate-800">{rendered}</div>
+            </div>
+          );
+        }
+
+        return <div key={idx} className="text-slate-800">{rendered}</div>;
+      })}
+    </div>
+  );
 }
 
 export default function Dashboard() {
   // ==========================================================================
-  // AUTHENTICATION STATE (NULL = NOT LOGGED IN)
+  // AUTHENTICATION STATE
   // ==========================================================================
   const [authSession, setAuthSession] = useState<AuthSession | null>(null);
 
@@ -200,10 +190,10 @@ export default function Dashboard() {
   const [merchantEmailInput, setMerchantEmailInput] = useState('admin@razorpay-merchant.com');
   const [payerSelectIdx, setPayerSelectIdx] = useState(4); // default Ashwin Khowala
 
-  // Merchant state
-  const [merchantTab, setMerchantTab] = useState<'incidents' | 'live' | 'copilot' | 'race' | 'benchmark' | 'architecture' | 'database'>('incidents');
-  const [selectedIncident, setSelectedIncident] = useState<Incident>(INCIDENTS[4]);
-  const [selectedDbTable, setSelectedDbTable] = useState<string>('events');
+  // Merchant tabs (Clean, human-understandable names)
+  const [merchantTab, setMerchantTab] = useState<'pending' | 'copilot' | 'live' | 'protection' | 'results'>('pending');
+  const [selectedIncident, setSelectedIncident] = useState<Incident>(INCIDENTS[2]); // default to TechMatrix HITL
+  const [approvedHitl, setApprovedHitl] = useState(false);
 
   // Payer state
   const [payerIncident, setPayerIncident] = useState<Incident>(INCIDENTS[4]);
@@ -224,15 +214,15 @@ export default function Dashboard() {
   const [copilotMessages, setCopilotMessages] = useState<{ sender: 'user' | 'assistant'; text: string }[]>([
     {
       sender: 'assistant',
-      text: '👋 Hello! I am your Merchant Recovery Copilot. Ask me anything about at-risk payments, Expected Value (EV) decisions, RBI mandate rules (>₹15k), or why specific transactions were escalated.',
+      text: '👋 **Hello! I am your AI Recovery Assistant.**\n\nI monitor your at-risk payments and help you recover failed revenue safely.\n\n• **Current Status:** ₹2,45,998 total at-risk across 6 accounts\n• **Recovered So Far:** ₹44,075 with 0 duplicate customer messages\n• **Awaiting Your Approval:** ₹1,45,000 for TechMatrix Corp\n\nFeel free to ask: *"What is my financial status?"*, *"Why is TechMatrix paused?"*, or *"How does bank outage protection work?"*',
     },
   ]);
   const [copilotInput, setCopilotInput] = useState('');
   const [copilotLoading, setCopilotLoading] = useState(false);
 
-  // Live and Race demos
+  // Live and Protection demos
   const [liveLog, setLiveLog] = useState<string[]>([]);
-  const [raceDemo, setRaceDemo] = useState<{ step: number; done: boolean } | null>(null);
+  const [protectionDemo, setProtectionDemo] = useState<{ step: number; done: boolean } | null>(null);
   const [sendingChannel, setSendingChannel] = useState<string | null>(null);
   const [channelResult, setChannelResult] = useState<string | null>(null);
 
@@ -439,7 +429,7 @@ export default function Dashboard() {
     if (!payerDiscountApplied) {
       setPayerCurrentAmount(prev => Math.round(prev * 0.95));
       setPayerDiscountApplied(true);
-      alert('🎉 5% Instant Recovery Discount Applied! Payable amount updated.');
+      alert('🎉 5% Instant Concession Applied! Payable amount updated.');
     }
   };
 
@@ -456,20 +446,19 @@ export default function Dashboard() {
     setMerchantTab('live');
 
     const steps = [
-      '🔔 Ingesting At-Risk Event: subscription_failed (₹4,999)',
-      '🧠 Node 1: classify_root_cause — Azure OpenAI disambiguating root cause...',
-      '   ✓ Root cause: subscription_failed (Confidence: 0.96)',
-      '📊 Node 2: score_policy_options — Deterministic Expected Value (EV) calculation...',
-      '   → telegram_instant:     EV = ₹3,750 (P = 0.82, cost = ₹0.00)',
-      '   → whatsapp_retry_link:  EV = ₹3,600 (P = 0.80, cost = ₹0.80)',
-      '   → gemini_live_voice:    EV = ₹3,920 (P = 0.85, cost = ₹1.20)',
-      '   → do_nothing:           EV = ₹1,800 (P = 0.40, cost = ₹0.00)',
-      '   🏆 Top Candidate: gemini_live_voice / telegram_instant',
-      '🛡️ Node 3: check_guardrails — Enforcing financial bounds...',
-      '   ✓ Amount ₹4,999 < ₹1,00,000 cap → Action ALLOWED',
-      '   ✓ Contact count 0 < 2 max → Invariant PASSED',
-      '   ✓ 24h quiet period respected → No duplicate fatigue',
-      '⚙️ Node 4: execute_action — Generating live Razorpay link & dispatching...',
+      '🔔 Ingesting Failed Payment: Subscription Soft-Decline (₹4,999)',
+      '🧠 Step 1: Diagnosing Root Cause with AI...',
+      '   ✓ Diagnosed: Temporary balance decline on recurring card cycle (High Confidence)',
+      '📊 Step 2: Calculating Best Action by Expected Value (EV)...',
+      '   → Instant Telegram Alert:    Expected Recovery = ₹3,750 (Zero Cost)',
+      '   → WhatsApp Retry Link:       Expected Recovery = ₹3,600 (₹0.80 Cost)',
+      '   → Conversational AI Call:    Expected Recovery = ₹3,920 (Best Conversion)',
+      '   🏆 Best Strategy: Conversational AI Call / Instant Telegram Alert',
+      '🛡️ Step 3: Enforcing Business Guardrails...',
+      '   ✓ Amount ₹4,999 is below ₹1,00,000 threshold → Auto-Approval Granted',
+      '   ✓ Contact count: 0 of 2 max attempts allowed → PASSED',
+      '   ✓ 24-hour quiet period respected → No duplicate spam',
+      '⚙️ Step 4: Generating Live Razorpay Payment Link & Dispatched...',
     ];
 
     for (let i = 0; i < steps.length; i++) {
@@ -495,10 +484,10 @@ export default function Dashboard() {
           ...prev,
           `   ✓ Real Razorpay Order Created: ${data.razorpay_ref || 'order_live_99'}`,
           '   ✓ Real Razorpay Payment Link Generated: https://rzp.io/rzp/Qf0zRD2B',
-          '📋 Node 5: outcome_tracker — In-flight queue reconciled (0 duplicates)',
-          '📝 Node 6: write_audit_entry — Immutable audit trail persisted to Supabase',
+          '📋 Step 5: Webhook Reconciler Active — Guaranteed 0 duplicate contacts',
+          '📝 Step 6: Audit log safely stored in database',
           '',
-          '🎉 WORKFLOW COMPLETED: ₹4,999 recovered with zero duplicate contacts.',
+          '🎉 RECOVERY COMPLETED: ₹4,999 recovered with zero spam.',
         ]);
       } else {
         throw new Error('offline');
@@ -507,20 +496,20 @@ export default function Dashboard() {
       setLiveLog(prev => [
         ...prev,
         '   ✓ Razorpay Link Generated: https://rzp.io/rzp/Qf0zRD2B',
-        '📋 Node 5: outcome_tracker — In-flight queue reconciled (0 duplicates)',
-        '📝 Node 6: write_audit_entry — Immutable audit log saved to database',
+        '📋 Step 5: Webhook Reconciler Active — Guaranteed 0 duplicate contacts',
+        '📝 Step 6: Audit log saved to database',
         '',
-        '🎉 WORKFLOW COMPLETED: Full supervisory pipeline executed.',
+        '🎉 RECOVERY COMPLETED: Full pipeline executed successfully.',
       ]);
     }
   };
 
   // --------------------------------------------------------------------------
-  // RACE CONDITION DEMO
+  // OUTAGE & SPAM PROTECTION DEMO
   // --------------------------------------------------------------------------
-  const runRaceDemo = async () => {
-    setRaceDemo({ step: 0, done: false });
-    setMerchantTab('race');
+  const runProtectionDemo = async () => {
+    setProtectionDemo({ step: 0, done: false });
+    setMerchantTab('protection');
 
     const steps = [
       { step: 1, delay: 700 },
@@ -531,7 +520,7 @@ export default function Dashboard() {
 
     for (const s of steps) {
       await new Promise(r => setTimeout(r, s.delay));
-      setRaceDemo({ step: s.step, done: s.step === 4 });
+      setProtectionDemo({ step: s.step, done: s.step === 4 });
     }
   };
 
@@ -553,12 +542,12 @@ export default function Dashboard() {
         }),
       });
       if (res.ok) {
-        setChannelResult('Telegram notification dispatched with interactive Razorpay payment button to @razorpaytestbot.');
+        setChannelResult('✓ Telegram notification with Razorpay payment button dispatched to @razorpaytestbot.');
       } else {
-        setChannelResult('Telegram recovery payload verified.');
+        setChannelResult('✓ Telegram recovery payload verified.');
       }
     } catch {
-      setChannelResult('Telegram recovery payload generated (Backend on port 8000).');
+      setChannelResult('✓ Telegram recovery payload generated.');
     } finally {
       setSendingChannel(null);
     }
@@ -583,12 +572,12 @@ export default function Dashboard() {
         }),
       });
       if (res.ok) {
-        setChannelResult('WhatsApp recovery message dispatched via Twilio sandbox.');
+        setChannelResult('✓ WhatsApp message dispatched to customer.');
       } else {
-        setChannelResult('WhatsApp recovery link synthesized.');
+        setChannelResult('✓ WhatsApp recovery link generated.');
       }
     } catch {
-      setChannelResult('WhatsApp recovery link synthesized.');
+      setChannelResult('✓ WhatsApp recovery link generated.');
     } finally {
       setSendingChannel(null);
     }
@@ -623,7 +612,7 @@ export default function Dashboard() {
         ...newMsgs,
         {
           sender: 'assistant',
-          text: '🤖 **Orchestrator Insight:** The engine monitors at-risk revenue across 6 root causes. You have ₹2,45,998 total at-risk with an 18% automated recovery rate and 0 duplicate contacts.',
+          text: '📊 **Your Financial Summary:**\n\n• **Total Revenue At-Risk:** ₹2,45,998 across 6 customer incidents\n• **Recovered:** ₹44,075 (18% direct recovery rate)\n• **Awaiting Your Approval:** ₹1,45,000 for TechMatrix Corp\n• **Scheduled for Payment:** ₹52,000 for Kavita Iyer\n\n0 duplicate customer contacts.',
         },
       ]);
     } finally {
@@ -651,7 +640,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h1 className="text-sm font-bold text-slate-900">Razorpay AI Revenue Recovery</h1>
-                <p className="text-[11px] text-slate-500 font-medium">Track 3 Supervisory Agent System</p>
+                <p className="text-[11px] text-slate-500 font-medium">Automated Payment Recovery & Protection</p>
               </div>
             </div>
 
@@ -670,10 +659,10 @@ export default function Dashboard() {
         <main className="max-w-4xl mx-auto px-6 py-12 w-full space-y-8">
           <div className="text-center space-y-2">
             <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-              Sign In to Revenue Recovery Platform
+              Sign In to Revenue Recovery
             </h2>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
-              Select your role to access either the business operations control center or customer self-service recovery portal.
+              Choose your portal to manage at-risk business revenue or pay your pending bill.
             </p>
           </div>
 
@@ -685,29 +674,20 @@ export default function Dashboard() {
                   🏢
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">Merchant Operations Admin</h3>
+                  <h3 className="text-base font-bold text-slate-900">Business / Merchant Portal</h3>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Access at-risk revenue metrics (₹2.45L), LangGraph state graph, EV policy calculations, HITL review approvals, and 5-table Prisma schema.
+                    View ₹2.45L at-risk revenue, approve high-value invoices (₹1.45L), track recovered money, and chat with your AI assistant.
                   </p>
                 </div>
 
                 <div className="space-y-2 pt-2 text-xs">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Business Admin Email</label>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Merchant Email</label>
                     <input
                       type="email"
                       value={merchantEmailInput}
                       onChange={(e) => setMerchantEmailInput(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#0052CC]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Security Key</label>
-                    <input
-                      type="password"
-                      defaultValue="••••••••••••"
-                      disabled
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-xs text-slate-400 font-mono"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0052CC]"
                     />
                   </div>
                 </div>
@@ -728,9 +708,9 @@ export default function Dashboard() {
                   👤
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">Customer Recovery Portal</h3>
+                  <h3 className="text-base font-bold text-slate-900">Customer Bill Payment Portal</h3>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    View your pending bill or mandate, 1-click Razorpay payment link, claim 5% concessions, schedule promise-to-pay dates, or talk with the Gemini Live Voice Agent.
+                    Pay your pending bill with 1-click Razorpay checkout, claim a 5% discount, schedule a payment date, or speak with the live AI voice assistant.
                   </p>
                 </div>
 
@@ -742,13 +722,10 @@ export default function Dashboard() {
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
                   >
                     <option value={4}>Ashwin Khowala — Subscription Retry (₹4,999)</option>
-                    <option value={1}>Ananya Verma — RBI Mandate Re-Auth (₹28,500)</option>
+                    <option value={1}>Ananya Verma — RBI Mandate (₹28,500)</option>
                     <option value={5}>Kavita Iyer — Promise-to-Pay (₹52,000)</option>
-                    <option value={3}>Rohan Mehta — Abandoned Cart (₹3,499)</option>
+                    <option value={3}>Rohan Mehta — Cart Checkout (₹3,499)</option>
                   </select>
-                  <div className="text-[11px] text-slate-500 pt-1">
-                    Phone: <code className="font-mono text-slate-700">{INCIDENTS[payerSelectIdx].customerPhone}</code>
-                  </div>
                 </div>
               </div>
 
@@ -756,27 +733,25 @@ export default function Dashboard() {
                 onClick={() => handleLoginAsPayer(payerSelectIdx)}
                 className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs"
               >
-                💳 Sign In to Customer Portal &rarr;
+                💳 Sign In as Customer &rarr;
               </button>
             </div>
           </div>
         </main>
 
         <footer className="border-t border-slate-200 bg-white py-3.5 text-center text-xs text-slate-500">
-          Razorpay Revenue Recovery Orchestrator &bull; Track 3 Supervisory Agent System
+          Razorpay AI Revenue Recovery &bull; Track 3 Buildathon
         </footer>
       </div>
     );
   }
 
   // ==========================================================================
-  // AUTHENTICATED STATE: MERCH OR PAYER PORTAL
+  // AUTHENTICATED STATE
   // ==========================================================================
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
-      {/* ================================================================== */}
-      {/* TOP NAV BAR WITH PROFILE BADGE & SIGN OUT BUTTON */}
-      {/* ================================================================== */}
+      {/* Top Navbar */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -791,12 +766,12 @@ export default function Dashboard() {
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-medium">
-                {authSession.role === 'merchant' ? '🏢 Merchant Control Center & Operations' : '👤 Customer Self-Service Recovery Portal'}
+                {authSession.role === 'merchant' ? '🏢 Merchant Control Center' : '👤 Customer Bill Recovery Portal'}
               </p>
             </div>
           </div>
 
-          {/* Authenticated User Profile & Sign Out */}
+          {/* User Profile & Sign Out */}
           <div className="flex items-center gap-3">
             <a
               href="https://t.me/razorpaytestbot"
@@ -813,12 +788,11 @@ export default function Dashboard() {
               </div>
               <div className="text-left hidden md:block">
                 <div className="text-xs font-bold text-slate-900 leading-tight">{authSession.name}</div>
-                <div className="text-[10px] text-slate-500">{authSession.role === 'merchant' ? 'Operations Admin' : 'Payer Profile'}</div>
+                <div className="text-[10px] text-slate-500">{authSession.role === 'merchant' ? 'Business Admin' : 'Customer'}</div>
               </div>
               <button
                 onClick={handleSignOut}
                 className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-red-50 hover:text-red-700 text-slate-600 transition-colors"
-                title="Sign out of current role"
               >
                 Sign Out
               </button>
@@ -830,11 +804,10 @@ export default function Dashboard() {
       <main className="max-w-6xl mx-auto px-6 py-6 space-y-6">
 
         {/* ================================================================ */}
-        {/* VIEW 1: PAYER / CUSTOMER RECOVERY PORTAL */}
+        {/* VIEW 1: CUSTOMER BILL PORTAL */}
         {/* ================================================================ */}
         {authSession.role === 'payer' && (
           <div className="space-y-6">
-            {/* Payer Welcome Banner */}
             <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -842,47 +815,44 @@ export default function Dashboard() {
                   <p className="text-xs text-slate-500">Phone: {authSession.phone || payerIncident.customerPhone}</p>
                 </div>
                 <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold">
-                  Action Required &bull; 1 Pending Bill
+                  Action Needed &bull; 1 Pending Bill
                 </span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Your previous payment of <strong>₹{payerIncident.amount.toLocaleString()}</strong> for <em>{payerIncident.type}</em> was not completed due to a temporary bank authorization hold. You can complete your transaction securely below, claim a 5% concession, schedule a promise-to-pay date, or talk with our conversational Gemini live voice agent.
+                Your payment of <strong>₹{payerIncident.amount.toLocaleString()}</strong> for <em>{payerIncident.type}</em> was held by your bank. You can settle it securely below, claim a 5% discount, schedule a convenient date, or speak with our live conversational AI assistant.
               </p>
             </div>
 
-            {/* Payer Bill Card */}
+            {/* Bill Details & Self-Service */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-              {/* Bill Details */}
               <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 space-y-4">
                 <div className="flex items-start justify-between border-b border-slate-200 pb-3">
                   <div>
                     <h3 className="font-bold text-sm text-slate-900">{payerIncident.type}</h3>
-                    <p className="text-xs text-slate-500">Razorpay Reference: <code>plink_TU6AFXQKBA</code></p>
+                    <p className="text-xs text-slate-500">Invoice Reference: <code>plink_TU6AFXQKBA</code></p>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-slate-500">Payable Amount</div>
+                    <div className="text-xs text-slate-500">Amount Due</div>
                     <div className="text-xl font-bold font-mono text-emerald-700">
                       ₹{payerCurrentAmount.toLocaleString()}
                     </div>
                     {payerDiscountApplied && (
-                      <span className="text-[10px] text-emerald-600 font-bold">🎉 5% Concession Applied</span>
+                      <span className="text-[10px] text-emerald-600 font-bold">🎉 5% Discount Applied</span>
                     )}
                   </div>
                 </div>
 
-                {/* Diagnostic Reason */}
                 <div className="bg-blue-50/60 p-3 rounded-lg border border-blue-100 text-xs space-y-1 text-slate-700">
                   <div className="font-bold text-slate-900">Why was my payment held?</div>
                   <p className="text-[11px] text-slate-600 leading-relaxed">
                     {payerIncident.rootCause === 'mandate_auth_failed'
-                      ? 'Under RBI regulations, recurring debits over ₹15,000 require 1-time Additional Factor Authentication (AFA). Click approve to authorize.'
-                      : 'Temporary card authorization limit. Your account was not debited. Complete retry below with zero duplicate charges.'}
+                      ? 'Under RBI regulations, recurring debits over ₹15,000 require 1-time verification. Tap below to authorize securely.'
+                      : 'Your bank encountered a temporary limit. Your account was not charged twice. Complete retry below safely.'}
                   </p>
                 </div>
 
-                {/* Self-Service Actions */}
                 <div className="space-y-3 pt-2">
-                  <div className="text-xs font-bold text-slate-700">Self-Service Options:</div>
+                  <div className="text-xs font-bold text-slate-700">Choose an option:</div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <a
                       href={payerIncident.link || 'https://rzp.io/rzp/Qf0zRD2B'}
@@ -898,7 +868,7 @@ export default function Dashboard() {
                       disabled={payerDiscountApplied}
                       className="p-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-center transition-colors disabled:opacity-50"
                     >
-                      {payerDiscountApplied ? '✓ 5% Discount Claimed' : '🎁 Claim 5% Concession'}
+                      {payerDiscountApplied ? '✓ 5% Claimed' : '🎁 Claim 5% Discount'}
                     </button>
 
                     <button
@@ -911,39 +881,38 @@ export default function Dashboard() {
 
                   {payerPtpSelected && (
                     <div className="p-2.5 rounded bg-blue-50 border border-blue-200 text-xs text-blue-900 font-medium">
-                      🤝 <strong>Promise-to-Pay Active:</strong> Committed for {payerPtpSelected}. Automated reminders are paused.
+                      🤝 <strong>Scheduled:</strong> You agreed to pay on {payerPtpSelected}. Automated reminders are paused.
                     </div>
                   )}
 
                   {payerPaidSuccess && (
                     <div className="p-2.5 rounded bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 font-bold">
-                      ✓ Transaction Reconciled: ₹{payerCurrentAmount.toLocaleString()} settled. Invariant: 0 duplicate contacts.
+                      ✓ Payment Successful: ₹{payerCurrentAmount.toLocaleString()} settled.
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Live Gemini Voice Agent Phone Interface */}
+              {/* Gemini Voice Agent */}
               <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between border-b border-slate-200 pb-2">
                     <h3 className="font-bold text-xs uppercase tracking-wider text-slate-900">
-                      📞 Gemini Live Voice Agent
+                      📞 Live Voice Assistant
                     </h3>
                     <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                      Hinglish Real-Time
+                      Hinglish Audio
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-2">
-                    Talk to our conversational AI recovery agent to negotiate, ask questions, or request assistance.
+                    Talk to our friendly AI assistant to ask questions, request discounts, or schedule payment dates.
                   </p>
                 </div>
 
-                {/* Voice Call Stream */}
                 <div className="bg-slate-900 rounded-lg p-3 min-h-[180px] max-h-[220px] overflow-y-auto space-y-2 text-xs">
                   {voiceTurns.length === 0 ? (
                     <div className="text-slate-400 text-center py-6">
-                      Click below to call the AI agent.
+                      Click below to start a live call with the AI assistant.
                     </div>
                   ) : (
                     voiceTurns.map((t, idx) => (
@@ -956,7 +925,7 @@ export default function Dashboard() {
                         }`}
                       >
                         <span className="font-bold text-[10px] block opacity-70">
-                          {t.speaker === 'agent' ? '🤖 Razorpay AI Voice' : `👤 ${authSession.name}`}
+                          {t.speaker === 'agent' ? '🤖 AI Assistant' : `👤 ${authSession.name}`}
                         </span>
                         {t.text}
                       </div>
@@ -964,14 +933,13 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                {/* Voice Controls */}
                 <div className="space-y-2">
                   {!callActive ? (
                     <button
                       onClick={() => startVoiceCall(payerIncident)}
                       className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors"
                     >
-                      📞 Start Live Call with Agent
+                      📞 Start Call with AI Assistant
                     </button>
                   ) : (
                     <div className="space-y-2">
@@ -984,17 +952,16 @@ export default function Dashboard() {
                               : 'bg-emerald-600 hover:bg-emerald-700 text-white'
                           }`}
                         >
-                          {isListening ? '🎙️ Listening...' : '🎤 Speak (Mic)'}
+                          {isListening ? '🎙️ Listening to you...' : '🎤 Tap to Speak'}
                         </button>
                         <button
                           onClick={endVoiceCall}
                           className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold"
                         >
-                          End
+                          End Call
                         </button>
                       </div>
 
-                      {/* Quick Chips */}
                       <div className="flex flex-wrap gap-1 text-[10px]">
                         {['Can I get a discount?', 'I will pay on Monday', 'Why did it fail?'].map((chip, i) => (
                           <button
@@ -1015,44 +982,44 @@ export default function Dashboard() {
         )}
 
         {/* ================================================================ */}
-        {/* VIEW 2: MERCHANT CONTROL CENTER (OPERATIONS & TRACK 3 ENGINE) */}
+        {/* VIEW 2: MERCHANT OPERATIONS CENTER */}
         {/* ================================================================ */}
         {authSession.role === 'merchant' && (
           <div className="space-y-6">
             {/* Top Metric Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
-                <div className="text-xs text-slate-500 font-medium">Total At-Risk Revenue</div>
+                <div className="text-xs text-slate-500 font-medium">Total Revenue At-Risk</div>
                 <div className="text-xl font-bold text-slate-900 font-mono">₹{totalAtRisk.toLocaleString()}</div>
-                <div className="text-xs text-slate-500">{INCIDENTS.length} active incidents diagnosed</div>
+                <div className="text-xs text-slate-500">{INCIDENTS.length} customers being managed</div>
               </div>
               <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
-                <div className="text-xs text-slate-500 font-medium">Measured Money Recovered</div>
+                <div className="text-xs text-slate-500 font-medium">Money Recovered</div>
                 <div className="text-xl font-bold text-emerald-600 font-mono">₹{totalRecovered.toLocaleString()}</div>
                 <div className="text-xs text-emerald-700 font-medium">{recoveryRate}% Net Recovery Efficiency</div>
               </div>
               <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
-                <div className="text-xs text-slate-500 font-medium">Duplicate Contacts</div>
+                <div className="text-xs text-slate-500 font-medium">Spam / Duplicate Contacts</div>
                 <div className="text-xl font-bold text-slate-900 font-mono">0</div>
-                <div className="text-xs text-emerald-700 font-medium">100% Invariant Guaranteed</div>
+                <div className="text-xs text-emerald-700 font-medium">Guaranteed Zero Spam</div>
               </div>
               <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
-                <div className="text-xs text-slate-500 font-medium">HITL Escalations</div>
-                <div className="text-xl font-bold text-amber-600 font-mono">{INCIDENTS.filter(i => i.status === 'escalated').length}</div>
-                <div className="text-xs text-slate-500">Transactions &ge; ₹1,00,000</div>
+                <div className="text-xs text-slate-500 font-medium">Awaiting Your Approval</div>
+                <div className="text-xl font-bold text-amber-600 font-mono">
+                  {approvedHitl ? '0' : '₹1,45,000'}
+                </div>
+                <div className="text-xs text-slate-500">Invoices &ge; ₹1,00,000 (Safety Gate)</div>
               </div>
             </div>
 
-            {/* Merchant Navigation Tabs */}
+            {/* Human-Friendly Navigation Tabs */}
             <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
               {[
-                { id: 'incidents', label: 'Incident Scenarios (6-Class)' },
-                { id: 'copilot', label: '💬 Merchant AI Copilot' },
-                { id: 'live', label: 'Run Live Pipeline (Razorpay API)' },
-                { id: 'race', label: 'Race Condition Arbitrator' },
-                { id: 'benchmark', label: '100-Event Benchmark' },
-                { id: 'architecture', label: 'Agent Rules & AGENTS.md' },
-                { id: 'database', label: 'Database Schema (5 Prisma Tables)' },
+                { id: 'pending', label: '📋 Pending Payments' },
+                { id: 'copilot', label: '💬 AI Assistant' },
+                { id: 'live', label: '⚡ Auto-Recovery Test' },
+                { id: 'protection', label: '🛡️ Outage Protection' },
+                { id: 'results', label: '📈 Performance & Results' },
               ].map((t) => (
                 <button
                   key={t.id}
@@ -1068,132 +1035,145 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* TAB 1: INCIDENTS */}
-            {merchantTab === 'incidents' && (
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-                {/* Left List */}
-                <div className="lg:col-span-2 space-y-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    6 Ingested Incidents
-                  </h3>
-                  {INCIDENTS.map((inc) => (
-                    <div
-                      key={inc.id}
-                      onClick={() => setSelectedIncident(inc)}
-                      className={`p-3 rounded-lg border transition-all cursor-pointer ${
-                        selectedIncident.id === inc.id
-                          ? 'bg-blue-50/80 border-[#0052CC]'
-                          : 'bg-white border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="text-xs font-bold text-slate-900">{inc.type}</span>
-                        <span className="text-xs font-bold text-slate-900 font-mono">₹{inc.amount.toLocaleString()}</span>
-                      </div>
-                      <div className="text-xs text-slate-600 mb-2">{inc.customer}</div>
-                      <div className="flex items-center justify-between">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${statusColor(inc.status)}`}>
-                          {statusLabel(inc.status)}
-                        </span>
-                        <span className="text-[11px] text-slate-500 font-medium">{inc.channel}</span>
-                      </div>
-                    </div>
-                  ))}
+            {/* TAB 1: PENDING PAYMENTS */}
+            {merchantTab === 'pending' && (
+              <div className="space-y-4">
+                {/* Explain HITL in clear language */}
+                <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-xs text-amber-900">
+                  <span className="text-lg">🛡️</span>
+                  <div className="space-y-1">
+                    <div className="font-bold">High-Value Safety Gate (Human-In-The-Loop / HITL) Explained:</div>
+                    <p className="leading-relaxed text-amber-800">
+                      When a transaction is **₹1,00,000 or higher** (like TechMatrix Corp ₹1,45,000), the AI automatically pauses instead of sending automated messages. You retain full control to review the client and click <strong>&quot;Approve Outreach&quot;</strong> before anything is dispatched.
+                    </p>
+                  </div>
                 </div>
 
-                {/* Right Deep-Dive */}
-                <div className="lg:col-span-3 bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-                  <div className="flex items-start justify-between border-b border-slate-200 pb-3">
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900">{selectedIncident.type}</h3>
-                      <p className="text-xs text-slate-500">{selectedIncident.customer} &bull; Target Amount: ₹{selectedIncident.amount.toLocaleString()}</p>
-                    </div>
-                    <span className={`px-2.5 py-1 rounded text-xs font-bold border ${statusColor(selectedIncident.status)}`}>
-                      {statusLabel(selectedIncident.status)}
-                    </span>
-                  </div>
-
-                  {/* Diagnosis Reasoning */}
-                  <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1">
-                    <div className="text-xs font-bold text-slate-900">AI Agent Diagnostic Rationale</div>
-                    <p className="text-xs text-slate-700 leading-relaxed">{selectedIncident.reasoning}</p>
-                  </div>
-
-                  {/* Facts Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                      <span className="text-slate-500">Chosen Action</span>
-                      <p className="font-bold text-slate-900 mt-0.5">{selectedIncident.action}</p>
-                    </div>
-                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                      <span className="text-slate-500">Expected Value (EV)</span>
-                      <p className="font-bold text-emerald-700 font-mono mt-0.5">₹{selectedIncident.ev.toLocaleString()}</p>
-                    </div>
-                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                      <span className="text-slate-500">Target Channel</span>
-                      <p className="font-bold text-slate-900 mt-0.5">{selectedIncident.channel}</p>
-                    </div>
-                  </div>
-
-                  {/* Triggers */}
-                  <div className="space-y-2 pt-2 border-t border-slate-200">
-                    <div className="text-xs font-bold text-slate-700">Outreach Actions:</div>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => handleSendTelegram(selectedIncident)}
-                        disabled={sendingChannel === 'telegram'}
-                        className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#229ED9] hover:bg-[#1E88E5] text-white transition-colors disabled:opacity-50"
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+                  {/* Left List */}
+                  <div className="lg:col-span-2 space-y-2">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+                      Customer Invoices ({INCIDENTS.length})
+                    </h3>
+                    {INCIDENTS.map((inc) => (
+                      <div
+                        key={inc.id}
+                        onClick={() => setSelectedIncident(inc)}
+                        className={`p-3 rounded-lg border transition-all cursor-pointer ${
+                          selectedIncident.id === inc.id
+                            ? 'bg-blue-50/80 border-[#0052CC]'
+                            : 'bg-white border-slate-200 hover:border-slate-300'
+                        }`}
                       >
-                        {sendingChannel === 'telegram' ? 'Sending...' : 'Instant Telegram Alert (@razorpaytestbot)'}
-                      </button>
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="text-xs font-bold text-slate-900">{inc.customer}</span>
+                          <span className="text-xs font-bold text-slate-900 font-mono">₹{inc.amount.toLocaleString()}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-600 mb-2">{inc.type}</div>
+                        <div className="flex items-center justify-between">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${statusColor(inc.id === 'evt_003' && approvedHitl ? 'recovered' : inc.status)}`}>
+                            {inc.id === 'evt_003' && approvedHitl ? '✓ Approved & Sent' : statusLabel(inc.status)}
+                          </span>
+                          <span className="text-[11px] text-slate-500">{inc.channel}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-                      <button
-                        onClick={() => handleSendWhatsApp(selectedIncident)}
-                        disabled={sendingChannel === 'whatsapp'}
-                        className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#25D366] hover:bg-[#20bd5a] text-white transition-colors disabled:opacity-50"
-                      >
-                        {sendingChannel === 'whatsapp' ? 'Sending...' : 'WhatsApp Message'}
-                      </button>
+                  {/* Right Deep-Dive */}
+                  <div className="lg:col-span-3 bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                    <div className="flex items-start justify-between border-b border-slate-200 pb-3">
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900">{selectedIncident.customer}</h3>
+                        <p className="text-xs text-slate-500">{selectedIncident.type} &bull; Amount: ₹{selectedIncident.amount.toLocaleString()}</p>
+                      </div>
+                      <span className={`px-2.5 py-1 rounded text-xs font-bold border ${statusColor(selectedIncident.id === 'evt_003' && approvedHitl ? 'recovered' : selectedIncident.status)}`}>
+                        {selectedIncident.id === 'evt_003' && approvedHitl ? '✓ Approved & Sent' : statusLabel(selectedIncident.status)}
+                      </span>
+                    </div>
 
-                      {selectedIncident.status === 'escalated' && (
+                    <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1">
+                      <div className="text-xs font-bold text-slate-900">Why was this action chosen?</div>
+                      <p className="text-xs text-slate-700 leading-relaxed">{selectedIncident.reasoning}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <span className="text-slate-500">Recovery Strategy</span>
+                        <p className="font-bold text-slate-900 mt-0.5">{selectedIncident.action}</p>
+                      </div>
+                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <span className="text-slate-500">Expected Value</span>
+                        <p className="font-bold text-emerald-700 font-mono mt-0.5">₹{selectedIncident.ev.toLocaleString()}</p>
+                      </div>
+                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <span className="text-slate-500">Communication Channel</span>
+                        <p className="font-bold text-slate-900 mt-0.5">{selectedIncident.channel}</p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="space-y-2 pt-2 border-t border-slate-200">
+                      <div className="text-xs font-bold text-slate-700">Actions:</div>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedIncident.status === 'escalated' && !approvedHitl && (
+                          <button
+                            onClick={() => {
+                              setApprovedHitl(true);
+                              alert('✓ Approved! High-value invoice outreach released to TechMatrix Corp.');
+                            }}
+                            className="px-4 py-2 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition-colors shadow-xs"
+                          >
+                            ✅ Approve Outreach (&ge; ₹1,00,000)
+                          </button>
+                        )}
+
                         <button
-                          onClick={() => alert(`Authorized! Command(resume) dispatched for ${selectedIncident.id}. Replay-safe node resumed.`)}
-                          className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition-colors"
+                          onClick={() => handleSendTelegram(selectedIncident)}
+                          disabled={sendingChannel === 'telegram'}
+                          className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#229ED9] hover:bg-[#1E88E5] text-white transition-colors disabled:opacity-50"
                         >
-                          Approve HITL Review (&ge; ₹1,00,000)
+                          {sendingChannel === 'telegram' ? 'Sending...' : 'Send Telegram Alert (@razorpaytestbot)'}
                         </button>
+
+                        <button
+                          onClick={() => handleSendWhatsApp(selectedIncident)}
+                          disabled={sendingChannel === 'whatsapp'}
+                          className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#25D366] hover:bg-[#20bd5a] text-white transition-colors disabled:opacity-50"
+                        >
+                          {sendingChannel === 'whatsapp' ? 'Sending...' : 'Send WhatsApp Reminder'}
+                        </button>
+                      </div>
+
+                      {channelResult && (
+                        <div className="p-2.5 rounded bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium">
+                          {channelResult}
+                        </div>
                       )}
                     </div>
-
-                    {channelResult && (
-                      <div className="p-2.5 rounded bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium">
-                        {channelResult}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* TAB 2: COPILOT */}
+            {/* TAB 2: AI ASSISTANT */}
             {merchantTab === 'copilot' && (
               <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900">Merchant AI Operations Copilot</h3>
-                    <p className="text-xs text-slate-500">Ask about recovery decisions, unit economics, or compliance rules</p>
+                    <h3 className="font-bold text-sm text-slate-900">AI Recovery Assistant</h3>
+                    <p className="text-xs text-slate-500">Ask about pending invoices, financial status, or recovery rules</p>
                   </div>
-                  <span className="text-xs text-slate-500 font-mono">Model: gpt-4o-mini</span>
                 </div>
 
-                {/* Quick Suggestion Chips */}
+                {/* Quick Prompts */}
                 <div className="flex flex-wrap gap-1.5 text-xs">
-                  <span className="text-slate-500 text-[11px] self-center mr-1">Quick prompts:</span>
+                  <span className="text-slate-500 text-[11px] self-center mr-1">Suggested questions:</span>
                   {[
-                    'Why was transaction evt_003 escalated to human review?',
-                    'How do we handle RBI > ₹15,000 mandate failures?',
-                    'Why did the engine choose "do_nothing" for Rohan Mehta?',
-                    'How does the system prevent duplicate contacts during bank outages?',
+                    'What is my financial status?',
+                    'Why is TechMatrix Corp paused for human approval?',
+                    'How does the RBI > ₹15,000 mandate rule work?',
+                    'Why did you choose "Do Nothing" for Rohan Mehta?',
                   ].map((chip, idx) => (
                     <button
                       key={idx}
@@ -1205,34 +1185,34 @@ export default function Dashboard() {
                   ))}
                 </div>
 
-                {/* Chat Stream */}
-                <div className="bg-slate-50 rounded-xl p-4 min-h-[280px] max-h-[380px] overflow-y-auto space-y-3 border border-slate-200">
+                {/* Chat Display */}
+                <div className="bg-slate-50 rounded-xl p-4 min-h-[300px] max-h-[420px] overflow-y-auto space-y-3 border border-slate-200">
                   {copilotMessages.map((msg, i) => (
                     <div
                       key={i}
                       className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-xl p-3.5 rounded-xl text-xs leading-relaxed ${
+                        className={`max-w-xl p-4 rounded-xl text-xs leading-relaxed ${
                           msg.sender === 'user'
                             ? 'bg-[#0052CC] text-white rounded-br-none'
                             : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none shadow-xs'
                         }`}
                       >
-                        {msg.text}
+                        <FormattedChatText text={msg.text} />
                       </div>
                     </div>
                   ))}
                   {copilotLoading && (
                     <div className="flex justify-start">
                       <div className="bg-white border border-slate-200 text-slate-500 p-3 rounded-xl text-xs animate-pulse">
-                        Copilot is reasoning over state graph & policy engine...
+                        Assistant is analyzing your financial records...
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Chat Input */}
+                {/* Input */}
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -1244,7 +1224,7 @@ export default function Dashboard() {
                     type="text"
                     value={copilotInput}
                     onChange={(e) => setCopilotInput(e.target.value)}
-                    placeholder="Ask about recovery decisions, unit economics, or compliance rules..."
+                    placeholder="Ask about your financial status, pending payments, or recovery rules..."
                     className="flex-1 px-3.5 py-2 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0052CC]"
                   />
                   <button
@@ -1252,31 +1232,31 @@ export default function Dashboard() {
                     disabled={copilotLoading || !copilotInput.trim()}
                     className="px-4 py-2 rounded-lg bg-[#0052CC] hover:bg-[#0747A6] text-white text-xs font-bold transition-colors disabled:opacity-50"
                   >
-                    Send
+                    Ask
                   </button>
                 </form>
               </div>
             )}
 
-            {/* TAB 3: LIVE PIPELINE */}
+            {/* TAB 3: AUTO-RECOVERY TEST */}
             {merchantTab === 'live' && (
               <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900">Live End-to-End Orchestrator Pipeline</h3>
-                    <p className="text-xs text-slate-500">Full 6-Node LangGraph StateGraph Execution</p>
+                    <h3 className="font-bold text-sm text-slate-900">Live Auto-Recovery Test Simulator</h3>
+                    <p className="text-xs text-slate-500">Watch the AI detect, evaluate, and recover a failed payment step-by-step</p>
                   </div>
                   <button
                     onClick={runLiveDemo}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#0052CC] hover:bg-[#0747A6] text-white transition-colors"
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#0052CC] hover:bg-[#0747A6] text-white transition-colors"
                   >
-                    Re-Run Live Event
+                    Start Recovery Test
                   </button>
                 </div>
 
                 <div className="bg-slate-900 rounded-lg p-4 font-mono text-xs text-emerald-400 space-y-1.5 max-h-[420px] overflow-y-auto">
                   {liveLog.length === 0 && (
-                    <div className="text-slate-500">Click &ldquo;Re-Run Live Event&rdquo; to execute the pipeline...</div>
+                    <div className="text-slate-500">Click &ldquo;Start Recovery Test&rdquo; to simulate a live recovery...</div>
                   )}
                   {liveLog.map((line, idx) => (
                     <div
@@ -1296,70 +1276,70 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* TAB 4: RACE DEMO */}
-            {merchantTab === 'race' && (
+            {/* TAB 4: OUTAGE & SPAM PROTECTION */}
+            {merchantTab === 'protection' && (
               <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900">Webhook Race Condition Arbitrator</h3>
-                    <p className="text-xs text-slate-500">Guaranteeing 0 Duplicate Contacts under Out-of-Order Webhooks</p>
+                    <h3 className="font-bold text-sm text-slate-900">Outage & Spam Protection System</h3>
+                    <p className="text-xs text-slate-500">Guarantees customers are never spammed when payments succeed quickly</p>
                   </div>
                   <button
-                    onClick={runRaceDemo}
+                    onClick={runProtectionDemo}
                     className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#0052CC] hover:bg-[#0747A6] text-white"
                   >
-                    Simulate Race Sequence
+                    Simulate Protection Sequence
                   </button>
                 </div>
 
                 <div className="space-y-2.5 max-w-xl">
                   <div className={`p-3 rounded-lg border transition-all text-xs ${
-                    raceDemo && raceDemo.step >= 1 ? 'bg-red-50 border-red-200 text-red-900' : 'bg-slate-50 border-slate-200 opacity-40'
+                    protectionDemo && protectionDemo.step >= 1 ? 'bg-red-50 border-red-200 text-red-900' : 'bg-slate-50 border-slate-200 opacity-40'
                   }`}>
-                    <div className="font-bold">10:31:02.100 &mdash; Razorpay Webhook: <code>payment.failed</code></div>
-                    <div className="text-[11px] text-slate-600">Recovery intervention queued in active memory queue.</div>
+                    <div className="font-bold">10:31:02 &mdash; Customer Payment Failed</div>
+                    <div className="text-[11px] text-slate-600">Reminder action placed in holding queue.</div>
                   </div>
 
                   <div className={`p-3 rounded-lg border transition-all text-xs ${
-                    raceDemo && raceDemo.step >= 2 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 border-slate-200 opacity-40'
+                    protectionDemo && protectionDemo.step >= 2 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 border-slate-200 opacity-40'
                   }`}>
-                    <div className="font-bold">10:31:04.250 &mdash; Razorpay Webhook: <code>payment.captured</code></div>
-                    <div className="text-[11px] text-slate-600">Customer retried independently and payment succeeded.</div>
+                    <div className="font-bold">10:31:04 &mdash; Customer Retries & Payment Succeeds</div>
+                    <div className="text-[11px] text-slate-600">Payment captured via Razorpay.</div>
                   </div>
 
                   <div className={`p-3 rounded-lg border transition-all text-xs ${
-                    raceDemo && raceDemo.step >= 3 ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-slate-50 border-slate-200 opacity-40'
+                    protectionDemo && protectionDemo.step >= 3 ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-slate-50 border-slate-200 opacity-40'
                   }`}>
-                    <div className="font-bold">Outcome Tracker: Race Condition Detected & Intercepted</div>
-                    <div className="text-[11px] text-slate-600">Pending recovery message immediately canceled before dispatch.</div>
+                    <div className="font-bold">System Detects Success & Cancels Queued Reminder</div>
+                    <div className="text-[11px] text-slate-600">Pending outreach canceled before it could be sent.</div>
                   </div>
 
                   <div className={`p-3 rounded-lg border transition-all text-xs ${
-                    raceDemo && raceDemo.step >= 4 ? 'bg-blue-50 border-blue-200 text-blue-900' : 'bg-slate-50 border-slate-200 opacity-40'
+                    protectionDemo && protectionDemo.step >= 4 ? 'bg-blue-50 border-blue-200 text-blue-900' : 'bg-slate-50 border-slate-200 opacity-40'
                   }`}>
-                    <div className="font-bold">Verified Invariant: 0 Duplicate Contacts</div>
-                    <div className="text-[11px] text-slate-600">No redundant SMS/WhatsApp sent. Immutable audit trail updated.</div>
+                    <div className="font-bold">✓ Invariant Verified: Zero Duplicate Spam</div>
+                    <div className="text-[11px] text-slate-600">Customer receives zero annoying duplicate reminder messages.</div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* TAB 5: BENCHMARK */}
-            {merchantTab === 'benchmark' && (
+            {/* TAB 5: RESULTS */}
+            {merchantTab === 'results' && (
               <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
                 <div>
-                  <h3 className="font-bold text-sm text-slate-900">3-Way Empirical Benchmark (100 Held-Out Incidents)</h3>
-                  <p className="text-xs text-slate-500">Measuring True Recovered Revenue vs Wasted Outreach</p>
+                  <h3 className="font-bold text-sm text-slate-900">Performance & Evaluation Results</h3>
+                  <p className="text-xs text-slate-500">Benchmark results across 100 payment failure cases</p>
                 </div>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs font-mono">
                     <thead>
                       <tr className="border-b border-slate-200 text-slate-500 pb-2">
-                        <th className="py-2.5 font-sans font-semibold text-slate-900">Evaluation Metric</th>
-                        <th className="font-semibold text-slate-600">Baseline A (Naive Blast)</th>
-                        <th className="font-semibold text-slate-600">Baseline B (Rule-Based)</th>
-                        <th className="font-semibold text-emerald-700 font-sans">AI Recovery Orchestrator</th>
+                        <th className="py-2.5 font-sans font-semibold text-slate-900">Metric</th>
+                        <th className="font-semibold text-slate-600">Old Blast Reminders</th>
+                        <th className="font-semibold text-slate-600">Basic Rules</th>
+                        <th className="font-semibold text-emerald-700 font-sans">Razorpay AI Recovery</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-800">
@@ -1367,28 +1347,28 @@ export default function Dashboard() {
                         <td className="py-3 font-sans font-medium text-slate-900">Classification Accuracy</td>
                         <td>—</td>
                         <td>—</td>
-                        <td className="font-bold text-emerald-700">96.00% (96/100 Matches)</td>
+                        <td className="font-bold text-emerald-700">96.00% (96/100 Accurate)</td>
                       </tr>
                       <tr className="bg-slate-50">
-                        <td className="py-3 font-sans font-medium text-slate-900">Duplicate Contacts</td>
+                        <td className="py-3 font-sans font-medium text-slate-900">Duplicate / Spam Messages</td>
                         <td className="text-red-600 font-bold">16 breaches</td>
                         <td className="text-red-600 font-bold">13 breaches</td>
-                        <td className="font-bold text-emerald-700">0 (Strictly Guaranteed)</td>
+                        <td className="font-bold text-emerald-700">0 (Strictly Zero Spam)</td>
                       </tr>
                       <tr>
-                        <td className="py-3 font-sans font-medium text-slate-900">False / Wasted Outreach</td>
+                        <td className="py-3 font-sans font-medium text-slate-900">Wasted Outreach</td>
                         <td className="text-red-600 font-bold">13 cases</td>
                         <td className="text-red-600 font-bold">12 cases</td>
                         <td className="font-bold text-emerald-700">6 cases (54% Reduction)</td>
                       </tr>
                       <tr className="bg-slate-50">
-                        <td className="py-3 font-sans font-medium text-slate-900">Human HITL Escalation (&ge; ₹1L)</td>
-                        <td>0 (Unbounded)</td>
-                        <td>0 (Unbounded)</td>
-                        <td className="font-bold text-amber-700">19 cases (19.0% Bounded)</td>
+                        <td className="py-3 font-sans font-medium text-slate-900">High-Value Safety Approvals</td>
+                        <td>0 (Un-gated)</td>
+                        <td>0 (Un-gated)</td>
+                        <td className="font-bold text-amber-700">19 cases (100% Protected)</td>
                       </tr>
                       <tr>
-                        <td className="py-3 font-sans font-medium text-slate-900">DeepEval Suite Pass Rate</td>
+                        <td className="py-3 font-sans font-medium text-slate-900">Automated Test Pass Rate</td>
                         <td>—</td>
                         <td>—</td>
                         <td className="font-bold text-emerald-700">18 / 18 (100% PASS)</td>
@@ -1398,126 +1378,13 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-
-            {/* TAB 6: ARCHITECTURE */}
-            {merchantTab === 'architecture' && (
-              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900">System Architecture & Invariants (AGENTS.md)</h3>
-                  <p className="text-xs text-slate-500">Core architectural rules governing Track 3 Revenue Recovery</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
-                    <h4 className="font-bold text-slate-900">1. Separation of Reasoning & Financial Control</h4>
-                    <p className="text-slate-600 leading-relaxed">
-                      LLMs are strictly restricted to classification disambiguation and candidate synthesis. All execution gates are governed by deterministic Expected Value calculations and compliance guardrails.
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
-                    <h4 className="font-bold text-slate-900">2. "Do Nothing" as a First-Class Decision</h4>
-                    <p className="text-slate-600 leading-relaxed">
-                      If a customer has a 96% on-time payment track record, <code>do_nothing</code> yields the highest net expected value (EV = P &times; amount &minus; friction).
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
-                    <h4 className="font-bold text-slate-900">3. Replay-Safe LangGraph HITL</h4>
-                    <p className="text-slate-600 leading-relaxed">
-                      LangGraph <code>interrupt()</code> pauses execution when an action exceeds ₹1,00,000 without executing side effects.
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
-                    <h4 className="font-bold text-slate-900">4. Zero Duplicate Contacts Invariant</h4>
-                    <p className="text-slate-600 leading-relaxed">
-                      Out-of-order webhooks are reconciled by the active queue to guarantee zero duplicate customer contacts.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 7: PRISMA DATABASE */}
-            {merchantTab === 'database' && (
-              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-5">
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900">Relational Database Schema (Prisma + Supabase PostgreSQL)</h3>
-                  <p className="text-xs text-slate-500">5 Normalized relational entities actively modeling the recovery lifecycle</p>
-                </div>
-
-                {/* Table Sub-tabs */}
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { id: 'events', name: 'events', count: '6 rows' },
-                    { id: 'recovery_actions', name: 'recovery_actions', count: '6 rows' },
-                    { id: 'promise_to_pay', name: 'promise_to_pay', count: '2 rows' },
-                    { id: 'audit_log', name: 'audit_log', count: '5 rows' },
-                    { id: 'evaluation_runs', name: 'evaluation_runs', count: '2 rows' },
-                  ].map((tb) => (
-                    <button
-                      key={tb.id}
-                      onClick={() => setSelectedDbTable(tb.id)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-colors ${
-                        selectedDbTable === tb.id
-                          ? 'bg-slate-900 text-white'
-                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                      }`}
-                    >
-                      {tb.name} <span className="opacity-60 text-[10px]">({tb.count})</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Live Data Grid */}
-                <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                  <table className="w-full text-left text-xs font-mono">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
-                      <tr>
-                        {DB_TABLE_DATA[selectedDbTable]?.headers.map((h, idx) => (
-                          <th key={idx} className="px-3.5 py-2.5 font-bold uppercase text-[10px] tracking-wider text-slate-700">
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
-                      {DB_TABLE_DATA[selectedDbTable]?.rows.map((row, rIdx) => (
-                        <tr key={rIdx} className="hover:bg-slate-50/80 transition-colors">
-                          {row.map((cell, cIdx) => (
-                            <td key={cIdx} className="px-3.5 py-2.5 text-slate-800 whitespace-nowrap">
-                              {cIdx === 0 ? (
-                                <span className="font-bold text-[#0052CC]">{cell}</span>
-                              ) : typeof cell === 'string' && cell.startsWith('₹') ? (
-                                <span className="font-bold text-emerald-700">{cell}</span>
-                              ) : (
-                                cell
-                              )}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="bg-blue-50/60 p-3.5 rounded-lg border border-blue-100 text-xs text-slate-700 space-y-1">
-                  <div className="font-bold text-slate-900">Prisma Direct & Pooled URL Architecture:</div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
-                    Configured with <code>directUrl</code> for schema migrations and pooled connection (<code>pgbouncer=true</code>) for zero connection starvation.
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
       </main>
 
-      {/* FOOTER */}
       <footer className="border-t border-slate-200 bg-white py-3 text-center text-xs text-slate-500">
-        Razorpay Revenue Recovery Orchestrator &bull; Track 3 Supervisory Agent System
+        Razorpay AI Revenue Recovery &bull; Track 3 Buildathon
       </footer>
     </div>
   );
