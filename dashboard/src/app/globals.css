@@ -4,54 +4,51 @@
 
 @layer base {
   body {
-    @apply bg-background text-slate-100 font-sans antialiased min-h-screen selection:bg-razorpay/30 selection:text-white;
+    @apply bg-[#F8FAFC] text-slate-900 font-sans antialiased min-h-screen;
   }
 }
 
-/* Glassmorphism & custom utility classes */
-.glass-panel {
-  @apply bg-surface/80 backdrop-blur-md border border-surface-border rounded-xl shadow-xl shadow-black/40;
+/* Crisp Razorpay Design System */
+.panel {
+  @apply bg-white border border-slate-200/80 rounded-xl shadow-sm;
 }
 
-.glass-card {
-  @apply bg-surface border border-surface-border hover:border-razorpay/50 transition-all duration-200 rounded-xl;
+.panel-subtle {
+  @apply bg-slate-50/80 border border-slate-200/60 rounded-xl;
 }
 
-.badge-profit {
-  @apply bg-financial-profit/15 text-financial-profit border border-financial-profit/30 px-2.5 py-0.5 rounded-full text-xs font-semibold;
+/* Status Badges - Muted and Corporate */
+.badge-recovered {
+  @apply bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-[11px] font-semibold;
 }
 
-.badge-risk {
-  @apply bg-financial-risk/15 text-financial-risk border border-financial-risk/30 px-2.5 py-0.5 rounded-full text-xs font-semibold;
+.badge-escalated {
+  @apply bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded text-[11px] font-semibold;
 }
 
-.badge-loss {
-  @apply bg-financial-loss/15 text-financial-loss border border-financial-loss/30 px-2.5 py-0.5 rounded-full text-xs font-semibold;
+.badge-scheduled {
+  @apply bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded text-[11px] font-semibold;
 }
 
-.badge-info {
-  @apply bg-razorpay/15 text-razorpay-light border border-razorpay/30 px-2.5 py-0.5 rounded-full text-xs font-semibold;
+.badge-neutral {
+  @apply bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded text-[11px] font-medium;
 }
 
-.badge-purple {
-  @apply bg-financial-purple/15 text-financial-purple border border-financial-purple/30 px-2.5 py-0.5 rounded-full text-xs font-semibold;
-}
-
-/* Custom modern scrollbar */
+/* Clean Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #070B14;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1F2E4D;
-  border-radius: 4px;
+  background: #CBD5E1;
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3395FF;
+  background: #94A3B8;
 }

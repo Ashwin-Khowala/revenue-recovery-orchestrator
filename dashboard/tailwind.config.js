@@ -8,25 +8,25 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#070B14',
+        background: '#F8FAFC',
         surface: {
-          DEFAULT: '#0D1526',
-          muted: '#131E35',
-          border: '#1F2E4D',
-          hover: '#192845',
+          DEFAULT: '#FFFFFF',
+          muted: '#F1F5F9',
+          border: '#E2E8F0',
+          hover: '#F8FAFC',
         },
         razorpay: {
-          DEFAULT: '#3395FF',
+          DEFAULT: '#0066FF',
           dark: '#0C2340',
-          light: '#528FF0',
-          glow: 'rgba(51, 149, 255, 0.15)',
+          light: '#2563EB',
+          navy: '#0C2340',
         },
         financial: {
-          profit: '#10B981',
-          risk: '#F59E0B',
-          loss: '#EF4444',
-          neutral: '#94A3B8',
-          purple: '#8B5CF6',
+          profit: '#059669',
+          risk: '#D97706',
+          loss: '#DC2626',
+          neutral: '#64748B',
+          purple: '#7C3AED',
         }
       },
       fontFamily: {

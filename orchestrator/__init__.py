@@ -1,6 +1,7 @@
 """
-Revenue Recovery Orchestrator
-Track 3: AI Revenue Recovery (Razorpay AI Buildathon)
+Orchestrator Package Initialization
 """
 
-__version__ = "1.0.0"
+from dotenv import load_dotenv
+
+load_dotenv()

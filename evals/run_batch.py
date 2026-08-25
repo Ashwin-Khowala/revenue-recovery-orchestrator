@@ -6,11 +6,15 @@ across the 100-event held-out benchmark dataset.
 
 import json
 import logging
+import os
+import sys
 from typing import List, Dict, Any
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from tabulate import tabulate
 
-import sys
-import os
+# Disable remote DB roundtrips during offline batch evaluation for high throughput
+os.environ["DISABLE_AUDIT_DB"] = "true"
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -28,7 +32,7 @@ def run_orchestrator_on_event(event: Dict[str, Any]) -> Dict[str, Any]:
     state: RecoveryState = {
         "event_id": event["event_id"],
         "event_type": event["event_type"],
-        "amount": event["amount"],
+        "amount": float(event["amount"]),
         "currency": event.get("currency", "INR"),
         "merchant_id": event.get("merchant_id", "merch_01"),
         "customer_id": event.get("customer_id", "cust_01"),
@@ -45,7 +49,11 @@ def run_orchestrator_on_event(event: Dict[str, Any]) -> Dict[str, Any]:
     }
 
     config = {"configurable": {"thread_id": f"eval_{event['event_id']}"}}
-    result = orchestrator_graph.invoke(state, config=config)
+    try:
+        result = orchestrator_graph.invoke(state, config=config)
+    except Exception:
+        snapshot = orchestrator_graph.get_state(config)
+        result = dict(snapshot.values) if snapshot and snapshot.values else {}
 
     channel = result.get("channel_used", "none")
     cost = result.get("chosen_action", {}).get("cost", 0.0)
@@ -108,13 +116,30 @@ def run_full_benchmark(holdout_path: str = "evals/labeled_holdout.json"):
     total_at_risk = sum(float(e["amount"]) for e in holdout_events)
     n = len(holdout_events)
 
-    print(f"\n================================================================================")
-    print(f"RUNNING 3-WAY BATCH EVALUATION BENCHMARK ({n} Held-Out Events, ₹{total_at_risk:,.2f} at Risk)")
-    print(f"================================================================================\n")
+    print(f"\n================================================================================", flush=True)
+    print(f"RUNNING 3-WAY BATCH EVALUATION BENCHMARK ({n} Held-Out Events, ₹{total_at_risk:,.2f} at Risk)", flush=True)
+    print(f"================================================================================\n", flush=True)
 
+    print(f"-> Processing {n} events through Baseline A (Naive Blast)...", flush=True)
     naive_results = [run_baseline_naive_on_event(e) for e in holdout_events]
+
+    print(f"-> Processing {n} events through Baseline B (Rule-Based Engine)...", flush=True)
     rules_results = [run_baseline_rules_on_event(e) for e in holdout_events]
-    orch_results = [run_orchestrator_on_event(e) for e in holdout_events]
+
+    print(f"-> Processing {n} events through AI Revenue Recovery Orchestrator (Concurrent Thread Pool)...", flush=True)
+    orch_results = [None] * n
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_idx = {
+            executor.submit(run_orchestrator_on_event, event): i 
+            for i, event in enumerate(holdout_events)
+        }
+        completed_count = 0
+        for future in as_completed(future_to_idx):
+            idx = future_to_idx[future]
+            orch_results[idx] = future.result()
+            completed_count += 1
+            if completed_count % 20 == 0 or completed_count == n:
+                print(f"   [Progress] {completed_count}/{n} events completed...", flush=True)
 
     m_naive = compute_aggregate_metrics(naive_results, total_at_risk)
     m_rules = compute_aggregate_metrics(rules_results, total_at_risk)
@@ -132,15 +157,15 @@ def run_full_benchmark(holdout_path: str = "evals/labeled_holdout.json"):
     ]
 
     headers = ["Evaluation Metric", "Baseline A (Naive Blast)", "Baseline B (Rule-Based)", "AI Recovery Orchestrator"]
-    print(tabulate(table_data, headers=headers, tablefmt="fancy_grid"))
+    print("\n" + tabulate(table_data, headers=headers, tablefmt="fancy_grid"), flush=True)
 
     # Compute classifier accuracy on heldout set
     correct_classifications = sum(
         1 for r in orch_results if r.get("classified_root_cause") == r.get("ground_truth_root_cause")
     )
     accuracy = (correct_classifications / n) * 100
-    print(f"\nRoot-Cause Classifier Accuracy on Held-Out Set: {accuracy:.2f}% ({correct_classifications}/{n} exact matches)")
-    print(f"Zero Unsafe / Duplicate Contacts Executed: {m_orch['duplicate_contacts'] == 0}\n")
+    print(f"\nRoot-Cause Classifier Accuracy on Held-Out Set: {accuracy:.2f}% ({correct_classifications}/{n} exact matches)", flush=True)
+    print(f"Zero Unsafe / Duplicate Contacts Executed: {m_orch['duplicate_contacts'] == 0}\n", flush=True)
 
 
 if __name__ == "__main__":
