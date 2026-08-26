@@ -36,6 +36,23 @@ def hitl_escalation(state: RecoveryState) -> Dict[str, Any]:
         "instructions": "Please review and approve, modify, or reject this recovery action.",
     }
 
+    # Notify merchant staff via Telegram before pausing
+    # (This is before interrupt so it runs on first entry AND does not violate purity rules
+    #  because interrupt() itself blocks state from advancing — notifying before is fine)
+    try:
+        from orchestrator.channels.telegram_bot import send_hitl_alert_to_merchant
+        customer_name = state.get("customer_name", state.get("customer_id", "Customer"))
+        merchant_id = state.get("merchant_id", "merch_01")
+        send_hitl_alert_to_merchant(
+            merchant_id=merchant_id,
+            event_id=event_id,
+            customer_name=customer_name,
+            amount=amount,
+            root_cause=root_cause,
+        )
+    except Exception as e:
+        logger.debug(f"HITL Telegram alert error (non-fatal): {e}")
+
     # Graph execution pauses here and persists state to checkpointer
     decision = interrupt(human_payload)
 

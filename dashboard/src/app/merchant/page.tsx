@@ -219,6 +219,9 @@ export default function MerchantDashboard() {
               <button className="px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors">
                 Live Protection
               </button>
+              <a href="/merchant/customers/merch_01" className="px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-600" style={{textDecoration:"none"}}>
+                Customers
+              </a>
               <button className="px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors">
                 Audit Reports
               </button>

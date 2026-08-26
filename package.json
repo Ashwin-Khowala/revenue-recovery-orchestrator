@@ -10,5 +10,11 @@
     "telegram": "python -m orchestrator.channels.telegram_bot"
   },
   "author": "Ashwin Khowala",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  }
 }

@@ -257,28 +257,39 @@ def execute_action(state: RecoveryState) -> Dict[str, Any]:
             reasoning=f"Direct email recovery link delivered to {customer_email}.",
         )
     # --------------------------------------------------------------------------
-    # Case 8: Telegram Instant Bot Channel
+    # Case 8: Telegram Proactive Recovery (fixed — resolves customer chat_id from DB)
     # --------------------------------------------------------------------------
     if target_channel == "telegram":
-        from orchestrator.channels.telegram import send_telegram_recovery
-        tg_result = send_telegram_recovery(
-            customer_name=customer_name,
+        from orchestrator.channels.telegram_bot import send_recovery_message
+        customer_id = state.get("customer_id", "")
+        language = state.get("history", {}).get("language", "english")
+        offer_discount = discount_applied > 0
+        
+        tg_sent = send_recovery_message(
+            customer_id=customer_id,
             amount=amount - discount_applied,
-            recovery_link=recovery_link,
+            payment_link=recovery_link,
             root_cause=root_cause,
-            discount_applied=discount_applied,
+            merchant_name=state.get("merchant_id", "the merchant"),
+            language=language,
+            offer_discount=offer_discount,
+            discount_amount=discount_applied,
+            event_id=event_id,
         )
+        tg_result = {"sent": tg_sent, "payment_link": recovery_link}
         new_contact_count = contact_count + 1
         audit_entry = log_audit_entry(
             event_id=event_id,
             node_name="execute_action",
-            action_taken="Telegram Instant Recovery Dispatched",
+            action_taken="Telegram Proactive Recovery Sent" if tg_sent else "Telegram Send Failed (No Linked Account)",
             details={
-                "tg_result": tg_result,
+                "customer_id": customer_id,
+                "tg_sent": tg_sent,
                 "payment_link": recovery_link,
-                "payment_link_id": payment_link_id,
+                "language": language,
+                "discount_applied": discount_applied,
             },
-            reasoning=f"Instant recovery alert dispatched via Telegram Bot API with Razorpay payment link ({recovery_link}).",
+            reasoning=f"Proactive Telegram recovery dispatched to customer {customer_id} (chat_id resolved from DB).",
         )
         return {
             "channel_used": "telegram",

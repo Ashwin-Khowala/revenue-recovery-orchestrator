@@ -1,11 +1,19 @@
 ---
 name: revenue-recovery
-description: Supervisory AI decision engine for detecting at-risk revenue, classifying payment failures, computing Expected Value (EV), enforcing financial compliance guardrails, and safely executing multi-channel recovery workflows for Razorpay.
+description: Supervisory AI decision engine for detecting at-risk revenue, classifying payment failures with 4-tier behavioral memory, computing Expected Value (EV), enforcing financial compliance guardrails, and safely executing multi-channel recovery workflows for Razorpay.
 ---
 
 # Revenue Recovery Skill
 
 This skill provides comprehensive guidelines, operational schemas, and decision workflows for orchestrating automated revenue recovery across payment gateways, recurring mandates, B2B receivables, and checkout drop-offs.
+
+## 4-Tier Memory Enrichment (Node 0)
+
+Before any LLM reasoning or policy evaluation, the agent must query and enrich the state with:
+1. `customer_profiles`: Identity, language, payment reliability ($[0, 1]$), risk score, and preferred channel.
+2. `customer_episodes`: Historical record of past failures, outreach outcomes, response hours, and promise commitments.
+3. `merchants`: Custom contact policy, daily channel budgets, and escalation rules.
+4. `telegram_chats`: Live mappings for proactive Telegram outreach and merchant HITL notifications.
 
 ## 6-Class Root Cause Schema
 
@@ -38,3 +46,4 @@ $$EV(\text{action}) = P(\text{recovery} \mid \text{action}, \text{context}) \tim
 - **Dedup Rule**: Enforce a 24-hour quiet period across channels for identical `customer_id`.
 - **Amount Authorization Cap**: Any action on amounts $\ge \text{₹1,00,000}$ triggers mandatory human approval (`ESCALATE`).
 - **Zero Duplicate Contacts**: Hard operational invariant ($= 0$) enforced via active pending queue arbitration on out-of-order webhooks.
+- **Cryptographic Audit**: All execution events must be hash-chained via SHA-256 for tamper evidence.

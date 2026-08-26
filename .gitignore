@@ -36,6 +36,7 @@ env/
 htmlcov/
 
 # Next.js / Node
+node_modules/
 dashboard/node_modules/
 dashboard/.next/
 dashboard/out/
