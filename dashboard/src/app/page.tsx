@@ -38,19 +38,27 @@ interface VoiceTurn {
   toolsExecuted?: Array<{ tool: string; message: string; [key: string]: any }>;
 }
 
+interface ChatMessage {
+  id: string;
+  sender: 'user' | 'assistant';
+  text: string;
+  time: string;
+  actions?: Array<{ label: string; actionKey: string; data?: any }>;
+}
+
 // ============================================================================
 // DEMO DATA — 6 Comprehensive Customer Scenarios
 // ============================================================================
 const INCIDENTS: Incident[] = [
   {
     id: 'evt_001',
-    type: 'Bank Server Outage (Axis Bank)',
+    type: 'Bank Gateway Outage (Axis Bank)',
     customer: 'Aarav Sharma',
     customerPhone: '+919820144102',
     amount: 12000,
     rootCause: 'payment_degraded',
-    action: 'Silent Gateway Switch (HDFC)',
-    channel: 'Silent Auto-Switch (No Spam)',
+    action: 'Silent Route Switch (HDFC Gateway)',
+    channel: 'Silent Auto-Switch (Zero Spam)',
     status: 'recovered',
     ev: 10560,
     reasoning: 'Primary bank gateway failed. The AI detected route degradation and silently auto-switched to a healthy backup gateway. Customer was never spammed — 100% recovered with zero friction.',
@@ -62,7 +70,7 @@ const INCIDENTS: Incident[] = [
     customerPhone: '+919833419283',
     amount: 28500,
     rootCause: 'mandate_auth_failed',
-    action: '1-Click Mandate Approval Link',
+    action: '1-Click Mandate Re-Auth Link',
     channel: 'WhatsApp / Telegram / Voice',
     status: 'recovered',
     ev: 22215,
@@ -141,11 +149,11 @@ function statusLabel(s: string) {
   return s;
 }
 
-// Clean Formatted Markdown Component for Chatbot
+// Clean Formatted Markdown Component with Dhanvantari styled typography
 function FormattedChatText({ text }: { text: string }) {
   const lines = text.split('\n');
   return (
-    <div className="space-y-1.5 text-xs leading-relaxed">
+    <div className="space-y-1 text-xs leading-relaxed">
       {lines.map((line, idx) => {
         if (!line.trim()) {
           return <div key={idx} className="h-1" />;
@@ -168,7 +176,7 @@ function FormattedChatText({ text }: { text: string }) {
 
         if (isBullet) {
           return (
-            <div key={idx} className="flex items-start gap-1.5 pl-1">
+            <div key={idx} className="flex items-start gap-1.5 pl-1 my-0.5">
               <span className="text-[#0052CC] font-bold text-xs leading-tight">•</span>
               <div className="flex-1 text-slate-800">{rendered}</div>
             </div>
@@ -204,10 +212,23 @@ export default function Dashboard() {
   const [payerPaidSuccess, setPayerPaidSuccess] = useState(false);
 
   // ==========================================================================
-  // RIGHT-SIDE COLLAPSIBLE COPILOT & VOICE CONTAINER STATE
+  // DHANVANTARI-INSPIRED RIGHT-SIDE COLLAPSIBLE CHAT CONTAINER STATE
   // ==========================================================================
   const [copilotOpen, setCopilotOpen] = useState(true);
   const [copilotMode, setCopilotMode] = useState<'chat' | 'voice'>('chat');
+
+  // Messages list
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    {
+      id: 'msg_0',
+      sender: 'assistant',
+      text: '👋 **Hello! I am your AI Recovery Assistant.**\n\nI monitor your at-risk payments and help you recover failed revenue safely.\n\n• **Total At-Risk:** ₹2,45,998 across 6 customer accounts\n• **Recovered:** ₹44,075 with 0 duplicate spam contacts\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp\n\nAsk me anything or toggle to **Live Voice Talk** to speak directly in Hinglish!',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    },
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Gemini Live Voice State
   const [callActive, setCallActive] = useState(false);
@@ -217,21 +238,20 @@ export default function Dashboard() {
   const [voiceLoading, setVoiceLoading] = useState(false);
   const recognitionRef = useRef<any>(null);
 
-  // Copilot Text Chat state
-  const [copilotMessages, setCopilotMessages] = useState<{ sender: 'user' | 'assistant'; text: string }[]>([
-    {
-      sender: 'assistant',
-      text: '👋 **Hello! I am your AI Recovery Copilot.**\n\nI monitor your at-risk payments and help you recover failed revenue safely.\n\n• **Total At-Risk:** ₹2,45,998 across 6 customer accounts\n• **Recovered So Far:** ₹44,075 (0 duplicate spam contacts)\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp\n\nAsk me anything or switch to **Voice Talk** above to speak with me directly in Hinglish!',
-    },
-  ]);
-  const [copilotInput, setCopilotInput] = useState('');
-  const [copilotLoading, setCopilotLoading] = useState(false);
-
   // Live and Protection demos
   const [liveLog, setLiveLog] = useState<string[]>([]);
   const [protectionDemo, setProtectionDemo] = useState<{ step: number; done: boolean } | null>(null);
   const [sendingChannel, setSendingChannel] = useState<string | null>(null);
   const [channelResult, setChannelResult] = useState<string | null>(null);
+
+  // Auto-scroll chat to bottom
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages, voiceTurns]);
 
   // --------------------------------------------------------------------------
   // AUTH LOGIN HANDLERS
@@ -310,11 +330,11 @@ export default function Dashboard() {
     
     let introText = '';
     if (isMerchant) {
-      introText = `Namaste ${userName}! Main aapka Merchant Voice Copilot hoon. Aap financial status pooch sakte hain, ya TechMatrix Corp ka ₹1.45 lakh invoice approve kar sakte hain.`;
+      introText = `Namaste ${userName}! Main aapka Merchant Voice Copilot hoon. Aap financial status pooch sakte hain, high-value invoices review kar sakte hain, ya ₹1.45 lakh invoice approve kar sakte hain.`;
     } else if (payerIncident.rootCause === 'mandate_auth_failed') {
-      introText = `Namaste ${userName}! Aapka ₹${payerIncident.amount.toLocaleString()} ka recurring mandate RBI verification ke liye hold par hai. Kya aap 1-click re-auth link receive karna chahenge?`;
+      introText = `Namaste ${userName}! Aapka ₹${payerIncident.amount.toLocaleString()} ka recurring mandate RBI verification ke liye hold par hai. Kya aap 1-click re-auth link chahenge?`;
     } else {
-      introText = `Namaste ${userName}! Aapka ₹${payerCurrentAmount.toLocaleString()} ka payment pending hai. Kya aap discount chahte hain ya koi date schedule karein?`;
+      introText = `Namaste ${userName}! Aapka ₹${payerCurrentAmount.toLocaleString()} ka payment pending hai. Kya aap 5% concession discount chahte hain ya koi date schedule karein?`;
     }
 
     const introTurn: VoiceTurn = {
@@ -344,7 +364,7 @@ export default function Dashboard() {
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('Speech recognition is not supported in this browser. Please use Google Chrome or type your response below.');
+      alert('Speech recognition is not supported in this browser. Please use Google Chrome.');
       return;
     }
 
@@ -366,7 +386,11 @@ export default function Dashboard() {
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       if (transcript) {
-        handleSendVoiceUserSpeech(transcript);
+        if (copilotMode === 'voice') {
+          handleSendVoiceUserSpeech(transcript);
+        } else {
+          setChatInput(transcript);
+        }
       }
     };
 
@@ -644,16 +668,22 @@ export default function Dashboard() {
   };
 
   // --------------------------------------------------------------------------
-  // COPILOT CHAT SUBMISSION
+  // COPILOT CHAT SUBMISSION (Dhanvantari Style)
   // --------------------------------------------------------------------------
-  const handleSendCopilot = async (textToSend?: string) => {
-    const q = textToSend || copilotInput;
-    if (!q.trim() || copilotLoading) return;
+  const handleSendChat = async (textToSend?: string) => {
+    const q = textToSend || chatInput;
+    if (!q.trim() || chatLoading) return;
 
-    const newMsgs = [...copilotMessages, { sender: 'user' as const, text: q }];
-    setCopilotMessages(newMsgs);
-    setCopilotInput('');
-    setCopilotLoading(true);
+    const userMsg: ChatMessage = {
+      id: `msg_${Date.now()}`,
+      sender: 'user',
+      text: q,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setChatMessages(prev => [...prev, userMsg]);
+    setChatInput('');
+    setChatLoading(true);
 
     try {
       const res = await fetch('http://localhost:8000/api/orchestrator/copilot-chat', {
@@ -663,20 +693,26 @@ export default function Dashboard() {
       });
       if (res.ok) {
         const data = await res.json();
-        setCopilotMessages([...newMsgs, { sender: 'assistant', text: data.answer }]);
+        const assistantMsg: ChatMessage = {
+          id: `msg_asst_${Date.now()}`,
+          sender: 'assistant',
+          text: data.answer,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+        setChatMessages(prev => [...prev, assistantMsg]);
       } else {
         throw new Error('offline');
       }
     } catch {
-      setCopilotMessages([
-        ...newMsgs,
-        {
-          sender: 'assistant',
-          text: '📊 **Your Financial Summary:**\n\n• **Total Revenue At-Risk:** ₹2,45,998 across 6 customer incidents\n• **Recovered:** ₹44,075 (18% direct recovery rate)\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp\n• **Scheduled for Payment:** ₹52,000 for Kavita Iyer\n\n0 duplicate customer contacts.',
-        },
-      ]);
+      const fallbackMsg: ChatMessage = {
+        id: `msg_asst_${Date.now()}`,
+        sender: 'assistant',
+        text: '📊 **Your Financial Summary:**\n\n• **Total Revenue At-Risk:** ₹2,45,998 across 6 customer incidents\n• **Recovered:** ₹44,075 (18% direct recovery rate)\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp\n• **Scheduled for Payment:** ₹52,000 for Kavita Iyer\n\n0 duplicate customer contacts.',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setChatMessages(prev => [...prev, fallbackMsg]);
     } finally {
-      setCopilotLoading(false);
+      setChatLoading(false);
     }
   };
 
@@ -694,7 +730,7 @@ export default function Dashboard() {
         <header className="bg-white border-b border-slate-200 py-3.5 px-6">
           <div className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#0052CC] flex items-center justify-center text-white font-extrabold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-[#0052CC] flex items-center justify-center text-white font-extrabold text-sm shadow-xs">
                 R
               </div>
               <div>
@@ -813,7 +849,7 @@ export default function Dashboard() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#0052CC] flex items-center justify-center text-white font-extrabold text-sm">
+            <div className="w-8 h-8 rounded-lg bg-[#0052CC] flex items-center justify-center text-white font-extrabold text-sm shadow-xs">
               R
             </div>
             <div>
@@ -846,7 +882,7 @@ export default function Dashboard() {
                 setCopilotMode('voice');
                 if (!callActive) startVoiceCall(authSession.role);
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition-colors"
             >
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>🎙️ Voice Talk</span>
@@ -854,9 +890,9 @@ export default function Dashboard() {
 
             <button
               onClick={() => setCopilotOpen(prev => !prev)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                 copilotOpen
-                  ? 'bg-[#0052CC] text-white'
+                  ? 'bg-[#0052CC] text-white shadow-xs'
                   : 'bg-blue-50 text-[#0052CC] border border-blue-200 hover:bg-blue-100'
               }`}
             >
@@ -882,7 +918,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content Area + Right Collapsible Container Layout */}
+      {/* Main Content Area + Dhanvantari-Styled Right Collapsible Container Layout */}
       <div className="max-w-7xl mx-auto px-6 py-6 w-full flex-1 flex flex-col lg:flex-row gap-6 items-start">
         
         {/* LEFT / CENTER WORKSPACE (Dynamically fills remaining width) */}
@@ -893,7 +929,7 @@ export default function Dashboard() {
           {/* ================================================================ */}
           {authSession.role === 'payer' && (
             <div className="space-y-6">
-              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
+              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3 shadow-xs">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-base font-bold text-slate-900">Hello, {authSession.name}!</h2>
@@ -909,7 +945,7 @@ export default function Dashboard() {
               </div>
 
               {/* Bill Details Card */}
-              <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-5 shadow-xs">
                 <div className="flex items-start justify-between border-b border-slate-200 pb-4">
                   <div>
                     <h3 className="font-bold text-base text-slate-900">{payerIncident.type}</h3>
@@ -986,22 +1022,22 @@ export default function Dashboard() {
             <div className="space-y-6">
               {/* Top Metric Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
+                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1 shadow-xs">
                   <div className="text-xs text-slate-500 font-medium">Total Revenue At-Risk</div>
                   <div className="text-xl font-bold text-slate-900 font-mono">₹{totalAtRisk.toLocaleString()}</div>
                   <div className="text-xs text-slate-500">{INCIDENTS.length} customer accounts active</div>
                 </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
+                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1 shadow-xs">
                   <div className="text-xs text-slate-500 font-medium">Money Recovered</div>
                   <div className="text-xl font-bold text-emerald-600 font-mono">₹{totalRecovered.toLocaleString()}</div>
                   <div className="text-xs text-emerald-700 font-medium">{recoveryRate}% Recovery Efficiency</div>
                 </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
+                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1 shadow-xs">
                   <div className="text-xs text-slate-500 font-medium">Spam / Duplicate Contacts</div>
                   <div className="text-xl font-bold text-slate-900 font-mono">0</div>
                   <div className="text-xs text-emerald-700 font-medium">Guaranteed Zero Spam</div>
                 </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
+                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1 shadow-xs">
                   <div className="text-xs text-slate-500 font-medium">Awaiting Your Approval</div>
                   <div className="text-xl font-bold text-amber-600 font-mono">
                     {approvedHitl ? '0' : '₹1,45,000'}
@@ -1023,7 +1059,7 @@ export default function Dashboard() {
                     onClick={() => setMerchantTab(t.id as any)}
                     className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                       merchantTab === t.id
-                        ? 'bg-[#0052CC] text-white'
+                        ? 'bg-[#0052CC] text-white shadow-xs'
                         : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
                     }`}
                   >
@@ -1036,7 +1072,7 @@ export default function Dashboard() {
               {merchantTab === 'pending' && (
                 <div className="space-y-4">
                   {/* Explain HITL in clear language */}
-                  <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-xs text-amber-900">
+                  <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-xs text-amber-900 shadow-xs">
                     <span className="text-lg">🛡️</span>
                     <div className="space-y-1">
                       <div className="font-bold">High-Value Safety Gate (Human-In-The-Loop / HITL):</div>
@@ -1056,9 +1092,9 @@ export default function Dashboard() {
                         <div
                           key={inc.id}
                           onClick={() => setSelectedIncident(inc)}
-                          className={`p-3 rounded-lg border transition-all cursor-pointer ${
+                          className={`p-3 rounded-xl border transition-all cursor-pointer ${
                             selectedIncident.id === inc.id
-                              ? 'bg-blue-50/80 border-[#0052CC]'
+                              ? 'bg-blue-50/80 border-[#0052CC] shadow-xs'
                               : 'bg-white border-slate-200 hover:border-slate-300'
                           }`}
                         >
@@ -1078,7 +1114,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Right Deep-Dive */}
-                    <div className="lg:col-span-3 bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                    <div className="lg:col-span-3 bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-xs">
                       <div className="flex items-start justify-between border-b border-slate-200 pb-3">
                         <div>
                           <h3 className="text-base font-bold text-slate-900">{selectedIncident.customer}</h3>
@@ -1151,7 +1187,7 @@ export default function Dashboard() {
                           <button
                             onClick={() => handleTriggerPlivoCall(selectedIncident)}
                             disabled={sendingChannel === 'plivo'}
-                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-xs"
                           >
                             <span>📞</span>
                             <span>{sendingChannel === 'plivo' ? 'Calling...' : 'Call via Plivo Telephony'}</span>
@@ -1160,7 +1196,7 @@ export default function Dashboard() {
                           <button
                             onClick={() => handleSendTelegram(selectedIncident)}
                             disabled={sendingChannel === 'telegram'}
-                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#229ED9] hover:bg-[#1E88E5] text-white transition-colors disabled:opacity-50"
+                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#229ED9] hover:bg-[#1E88E5] text-white transition-colors disabled:opacity-50 shadow-xs"
                           >
                             {sendingChannel === 'telegram' ? 'Sending...' : 'Telegram Alert (@razorpaytestbot)'}
                           </button>
@@ -1168,7 +1204,7 @@ export default function Dashboard() {
                           <button
                             onClick={() => handleSendWhatsApp(selectedIncident)}
                             disabled={sendingChannel === 'whatsapp'}
-                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#25D366] hover:bg-[#20bd5a] text-white transition-colors disabled:opacity-50"
+                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#25D366] hover:bg-[#20bd5a] text-white transition-colors disabled:opacity-50 shadow-xs"
                           >
                             {sendingChannel === 'whatsapp' ? 'Sending...' : 'WhatsApp Reminder'}
                           </button>
@@ -1187,7 +1223,7 @@ export default function Dashboard() {
 
               {/* TAB 2: AUTO-RECOVERY TEST */}
               {merchantTab === 'live' && (
-                <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-xs">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-bold text-sm text-slate-900">Live Auto-Recovery Test Simulator</h3>
@@ -1195,13 +1231,13 @@ export default function Dashboard() {
                     </div>
                     <button
                       onClick={runLiveDemo}
-                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#0052CC] hover:bg-[#0747A6] text-white transition-colors"
+                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#0052CC] hover:bg-[#0747A6] text-white transition-colors shadow-xs"
                     >
                       Start Recovery Test
                     </button>
                   </div>
 
-                  <div className="bg-slate-900 rounded-lg p-4 font-mono text-xs text-emerald-400 space-y-1.5 max-h-[420px] overflow-y-auto">
+                  <div className="bg-slate-900 rounded-xl p-4 font-mono text-xs text-emerald-400 space-y-1.5 max-h-[420px] overflow-y-auto">
                     {liveLog.length === 0 && (
                       <div className="text-slate-500">Click &ldquo;Start Recovery Test&rdquo; to simulate a live recovery...</div>
                     )}
@@ -1225,7 +1261,7 @@ export default function Dashboard() {
 
               {/* TAB 3: OUTAGE & SPAM PROTECTION */}
               {merchantTab === 'protection' && (
-                <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-xs">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-bold text-sm text-slate-900">Outage & Spam Protection System</h3>
@@ -1233,7 +1269,7 @@ export default function Dashboard() {
                     </div>
                     <button
                       onClick={runProtectionDemo}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#0052CC] hover:bg-[#0747A6] text-white"
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#0052CC] hover:bg-[#0747A6] text-white shadow-xs"
                     >
                       Simulate Protection Sequence
                     </button>
@@ -1273,7 +1309,7 @@ export default function Dashboard() {
 
               {/* TAB 4: RESULTS */}
               {merchantTab === 'results' && (
-                <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-xs">
                   <div>
                     <h3 className="font-bold text-sm text-slate-900">Performance & Evaluation Results</h3>
                     <p className="text-xs text-slate-500">Benchmark results across 100 payment failure cases</p>
@@ -1330,42 +1366,59 @@ export default function Dashboard() {
         </main>
 
         {/* ================================================================ */}
-        {/* RIGHT COLLAPSIBLE CONTAINER: AI COPILOT & VOICE TALK ASSISTANT */}
+        {/* DHANVANTARI-STYLED RIGHT COLLAPSIBLE CONTAINER: AI COPILOT & VOICE */}
         {/* ================================================================ */}
         {copilotOpen ? (
-          <aside className="w-full lg:w-[410px] shrink-0 bg-white border border-slate-200 rounded-2xl shadow-lg flex flex-col h-[700px] sticky top-20 overflow-hidden transition-all duration-300">
-            {/* Header */}
-            <div className="bg-slate-900 text-white p-3.5 flex items-center justify-between border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#0052CC] flex items-center justify-center font-bold text-xs">
-                  🤖
+          <aside className="w-full lg:w-[420px] shrink-0 bg-white border border-slate-200/90 rounded-2xl shadow-xl flex flex-col h-[740px] sticky top-20 overflow-hidden transition-all duration-300">
+            {/* Dhanvantari Header Bar */}
+            <div className="bg-slate-900 text-white px-4 py-3.5 flex items-center justify-between border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#0052CC] to-blue-500 flex items-center justify-center font-extrabold text-white text-xs shadow-xs">
+                  ✨
                 </div>
                 <div>
-                  <div className="text-xs font-bold leading-tight">AI Recovery Copilot</div>
-                  <div className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                  <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
+                    <span>Razorpay Recovery Assistant</span>
+                    <span className="px-1.5 py-0.2 rounded text-[9px] bg-blue-500/20 text-blue-300 font-mono">
+                      v2.4
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Connected &bull; {authSession.role === 'merchant' ? 'Merchant Mode' : 'Payer Mode'}</span>
+                    <span>{authSession.role === 'merchant' ? 'Merchant Operations Mode' : 'Customer Payment Mode'}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Minimize button */}
-              <div className="flex items-center gap-1.5">
+              {/* Actions Header */}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setChatMessages([{
+                    id: `msg_${Date.now()}`,
+                    sender: 'assistant',
+                    text: 'Conversations cleared. Ready to assist with revenue recovery questions!',
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                  }])}
+                  className="p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-[11px]"
+                  title="Clear Chat"
+                >
+                  🔄
+                </button>
                 <button
                   onClick={() => setCopilotOpen(false)}
-                  className="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 text-xs font-bold transition-colors"
-                  title="Collapse Panel"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 text-xs font-bold transition-colors"
+                  title="Collapse Sidebar"
                 >
                   ✕
                 </button>
               </div>
             </div>
 
-            {/* Mode Switcher: Text Chat vs Gemini Live Voice */}
-            <div className="bg-slate-100 p-1.5 flex gap-1 border-b border-slate-200">
+            {/* Mode Switcher Tabs */}
+            <div className="bg-slate-100/90 p-1.5 flex gap-1 border-b border-slate-200">
               <button
                 onClick={() => setCopilotMode('chat')}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                   copilotMode === 'chat'
                     ? 'bg-white text-slate-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
@@ -1378,7 +1431,7 @@ export default function Dashboard() {
                   setCopilotMode('voice');
                   if (!callActive) startVoiceCall(authSession.role);
                 }}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                   copilotMode === 'voice'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-emerald-700'
@@ -1389,22 +1442,27 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* BODY 1: TEXT CHAT */}
+            {/* BODY 1: DHANVANTARI TEXT CHAT AREA */}
             {copilotMode === 'chat' && (
-              <div className="flex-1 flex flex-col justify-between overflow-hidden p-3.5 space-y-3">
-                {/* Suggested Prompts */}
-                <div className="space-y-1.5">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Suggested Questions</div>
-                  <div className="flex flex-wrap gap-1">
+              <div className="flex-1 flex flex-col justify-between overflow-hidden p-3.5 space-y-3 bg-slate-50/50">
+                
+                {/* Horizontally Scrollable Suggestion Chips (Dhanvantari Style) */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <span>Quick Prompts</span>
+                    <span className="text-[9px] font-normal text-slate-400">Click to ask</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
                     {[
                       authSession.role === 'merchant' ? 'What is my financial status?' : 'Why was my payment held?',
                       authSession.role === 'merchant' ? 'Why is TechMatrix paused?' : 'Can I get a discount?',
-                      authSession.role === 'merchant' ? 'Explain RBI mandate rule' : 'I will pay next Monday',
+                      authSession.role === 'merchant' ? 'Approve TechMatrix Corp' : 'I will pay next Monday',
+                      authSession.role === 'merchant' ? 'Explain RBI mandate rule' : 'How does re-auth work?',
                     ].map((chip, idx) => (
                       <button
                         key={idx}
-                        onClick={() => handleSendCopilot(chip)}
-                        className="px-2 py-1 rounded-full bg-slate-100 hover:bg-blue-50 hover:text-[#0052CC] text-slate-700 text-[10px] font-medium transition-colors border border-slate-200"
+                        onClick={() => handleSendChat(chip)}
+                        className="px-2.5 py-1 rounded-full bg-white hover:bg-blue-50 hover:text-[#0052CC] hover:border-blue-300 text-slate-700 text-[11px] font-medium transition-all border border-slate-200 shadow-2xs"
                       >
                         {chip}
                       </button>
@@ -1412,72 +1470,96 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Messages Stream */}
+                {/* Messages Stream Container */}
                 <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-                  {copilotMessages.map((msg, i) => (
+                  {chatMessages.map((msg) => (
                     <div
-                      key={i}
+                      key={msg.id}
                       className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[90%] p-3 rounded-xl text-xs leading-relaxed ${
+                        className={`max-w-[88%] p-3.5 rounded-2xl text-xs leading-relaxed ${
                           msg.sender === 'user'
-                            ? 'bg-[#0052CC] text-white rounded-br-none'
-                            : 'bg-slate-50 border border-slate-200 text-slate-800 rounded-bl-none shadow-xs'
+                            ? 'bg-[#0052CC] text-white rounded-br-none shadow-xs'
+                            : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none shadow-xs'
                         }`}
                       >
+                        <div className="flex items-center justify-between gap-2 mb-1 opacity-75 text-[10px]">
+                          <span className="font-bold">
+                            {msg.sender === 'user' ? `👤 ${authSession.name}` : '✨ AI Copilot'}
+                          </span>
+                          <span>{msg.time}</span>
+                        </div>
                         <FormattedChatText text={msg.text} />
                       </div>
                     </div>
                   ))}
-                  {copilotLoading && (
+
+                  {chatLoading && (
                     <div className="flex justify-start">
-                      <div className="bg-slate-50 border border-slate-200 text-slate-500 p-2.5 rounded-xl text-xs animate-pulse">
-                        Analyzing recovery data...
+                      <div className="bg-white border border-slate-200 text-slate-500 p-3 rounded-2xl text-xs animate-pulse shadow-xs flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
+                        <span>Analyzing recovery intelligence...</span>
                       </div>
                     </div>
                   )}
+                  <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input form */}
+                {/* Dhanvantari Bottom Input Box with Mic + Send Paper Plane */}
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    handleSendCopilot();
+                    handleSendChat();
                   }}
-                  className="flex gap-1.5 pt-2 border-t border-slate-200"
+                  className="pt-2 border-t border-slate-200 flex items-center gap-1.5"
                 >
+                  <button
+                    type="button"
+                    onClick={toggleSpeechRecognition}
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm transition-all ${
+                      isListening
+                        ? 'bg-red-600 text-white animate-pulse'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    }`}
+                    title="Voice Input (Speech-to-Text)"
+                  >
+                    🎙️
+                  </button>
+
                   <input
                     type="text"
-                    value={copilotInput}
-                    onChange={(e) => setCopilotInput(e.target.value)}
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
                     placeholder="Ask about finances, customers, or rules..."
-                    className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0052CC]"
+                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0052CC] bg-white shadow-2xs"
                   />
+
                   <button
                     type="submit"
-                    disabled={copilotLoading || !copilotInput.trim()}
-                    className="px-3.5 py-2 rounded-lg bg-[#0052CC] hover:bg-[#0747A6] text-white text-xs font-bold transition-colors disabled:opacity-50"
+                    disabled={chatLoading || !chatInput.trim()}
+                    className="px-4 py-2.5 rounded-xl bg-[#0052CC] hover:bg-[#0747A6] text-white text-xs font-bold transition-colors disabled:opacity-50 shadow-xs flex items-center gap-1"
                   >
-                    Send
+                    <span>Send</span>
+                    <span>&rarr;</span>
                   </button>
                 </form>
               </div>
             )}
 
-            {/* BODY 2: GEMINI LIVE VOICE TALK */}
+            {/* BODY 2: DHANVANTARI VOICE ASSISTANT WITH REAL TOOL EXECUTION */}
             {copilotMode === 'voice' && (
-              <div className="flex-1 flex flex-col justify-between overflow-hidden p-3.5 space-y-3">
+              <div className="flex-1 flex flex-col justify-between overflow-hidden p-3.5 space-y-3 bg-slate-900">
                 {/* Voice Status Card */}
-                <div className="bg-slate-900 text-white p-3 rounded-xl flex items-center justify-between border border-slate-800">
+                <div className="bg-slate-800/90 text-white p-3.5 rounded-xl flex items-center justify-between border border-slate-700 shadow-xs">
                   <div className="flex items-center gap-2.5">
-                    <div className={`w-3 h-3 rounded-full ${callActive ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}`} />
+                    <div className={`w-3.5 h-3.5 rounded-full ${callActive ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}`} />
                     <div>
                       <div className="text-xs font-bold">
-                        {callActive ? '🎙️ Live Audio Stream Active' : 'Call Inactive'}
+                        {callActive ? '🎙️ Gemini Live Audio Stream Active' : 'Voice Call Idle'}
                       </div>
                       <div className="text-[10px] text-slate-400">
-                        {authSession.role === 'merchant' ? 'Merchant Voice Assistant' : 'Payer Voice Assistant'}
+                        {authSession.role === 'merchant' ? 'Merchant Voice Assistant' : 'Customer Voice Assistant'}
                       </div>
                     </div>
                   </div>
@@ -1485,14 +1567,14 @@ export default function Dashboard() {
                   {callActive ? (
                     <button
                       onClick={endVoiceCall}
-                      className="px-2.5 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold"
+                      className="px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold shadow-xs"
                     >
                       End Call
                     </button>
                   ) : (
                     <button
                       onClick={() => startVoiceCall(authSession.role)}
-                      className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold"
+                      className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold shadow-xs"
                     >
                       Start Call
                     </button>
@@ -1502,21 +1584,22 @@ export default function Dashboard() {
                 {/* Spoken Turns Stream */}
                 <div className="flex-1 bg-slate-950 rounded-xl p-3 overflow-y-auto space-y-2 text-xs border border-slate-800">
                   {voiceTurns.length === 0 ? (
-                    <div className="text-slate-500 text-center py-10 text-xs">
-                      Tap &ldquo;Start Call&rdquo; or click below to speak naturally in Hindi or English.
+                    <div className="text-slate-500 text-center py-12 text-xs space-y-2">
+                      <div className="text-xl">🎙️</div>
+                      <div>Tap &ldquo;Start Call&rdquo; or tap to speak in Hindi or English.</div>
                     </div>
                   ) : (
                     voiceTurns.map((t, idx) => (
                       <div key={idx} className="space-y-1">
                         <div
-                          className={`p-2.5 rounded-lg leading-relaxed ${
+                          className={`p-2.5 rounded-xl leading-relaxed ${
                             t.speaker === 'user'
-                              ? 'bg-[#0052CC] text-white ml-3'
-                              : 'bg-slate-800 text-slate-100 mr-3 border border-slate-700'
+                              ? 'bg-[#0052CC] text-white ml-4 shadow-xs'
+                              : 'bg-slate-800 text-slate-100 mr-4 border border-slate-700'
                           }`}
                         >
                           <span className="font-bold text-[9px] block opacity-70 mb-0.5">
-                            {t.speaker === 'agent' ? '🤖 Gemini Voice Copilot' : `👤 ${authSession.name}`}
+                            {t.speaker === 'agent' ? '✨ Gemini Live Voice Copilot' : `👤 ${authSession.name}`}
                           </span>
                           {t.text}
                         </div>
@@ -1525,7 +1608,7 @@ export default function Dashboard() {
                         {t.toolsExecuted && t.toolsExecuted.map((tool, tIdx) => (
                           <div
                             key={tIdx}
-                            className="text-[10px] font-mono px-2 py-1 rounded bg-emerald-950/90 text-emerald-300 border border-emerald-700 ml-3 flex items-center gap-1.5"
+                            className="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-700 ml-4 flex items-center gap-1.5 shadow-xs"
                           >
                             <span>⚡</span>
                             <span><strong>Tool Executed:</strong> {tool.tool} &mdash; {tool.message}</span>
@@ -1537,7 +1620,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Voice Controls */}
-                <div className="space-y-2 pt-1 border-t border-slate-200">
+                <div className="space-y-2 pt-1 border-t border-slate-800">
                   <div className="flex gap-2">
                     <button
                       onClick={toggleSpeechRecognition}
@@ -1561,7 +1644,7 @@ export default function Dashboard() {
                       <button
                         key={i}
                         onClick={() => handleSendVoiceUserSpeech(chip)}
-                        className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
+                        className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
                       >
                         &ldquo;{chip}&rdquo;
                       </button>
