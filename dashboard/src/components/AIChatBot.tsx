@@ -240,8 +240,8 @@ export default function AIChatBot({
             ? '📊 **Business Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 customer accounts\n• **Recovered:** ₹44,075 with 0 duplicate spam contacts\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp'
             : '📊 **Financial Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 accounts\n• **Recovered:** ₹44,075 (0 duplicate spam contacts)\n• **Pending Approval:** ₹1,45,000 TechMatrix Corp'
           : isEnglish
-          ? `Your payment of ₹${amount.toLocaleString()} is currently pending. You can apply a 5% concession discount or schedule a payment date.`
-          : `Aapka ₹${amount.toLocaleString()} ka payment pending hai. Aap 5% discount le sakte hain ya date schedule kar sakte hain.`;
+          ? `Your payment of ₹${amount.toLocaleString('en-IN')} is currently pending. You can apply a 5% concession discount or schedule a payment date.`
+          : `Aapka ₹${amount.toLocaleString('en-IN')} ka payment pending hai. Aap 5% discount le sakte hain ya date schedule kar sakte hain.`;
 
       setMessages(prev => [
         ...prev,
@@ -338,8 +338,8 @@ export default function AIChatBot({
             ? 'Total at-risk revenue is ₹2,45,998 with ₹44,075 recovered and zero duplicate contacts.'
             : 'Total ₹2,45,998 at-risk revenue hai, ₹44,075 recover ho chuka hai aur strictly 0 duplicate spam contacts hain.'
           : isEnglish
-          ? `Your payment of ₹${amount.toLocaleString()} is currently pending. Would you like a 5% discount?`
-          : `Aapka ₹${amount.toLocaleString()} ka payment pending hai. Kya aap 5% discount lena chahenge?`;
+          ? `Your payment of ₹${amount.toLocaleString('en-IN')} is currently pending. Would you like a 5% discount?`
+          : `Aapka ₹${amount.toLocaleString('en-IN')} ka payment pending hai. Kya aap 5% discount lena chahenge?`;
 
       setVoiceTurns(prev => [
         ...prev,
@@ -393,30 +393,27 @@ export default function AIChatBot({
 
   return (
     <aside
-      style={resizableWidth ? { width: `${resizableWidth}px` } : undefined}
-      className={`shrink-0 bg-white border border-slate-200/90 rounded-2xl shadow-xl flex flex-col h-[740px] sticky top-20 overflow-hidden transition-all duration-150 ${
-        resizableWidth ? '' : 'w-full lg:w-[400px]'
-      }`}
+      className="w-full h-full flex flex-col bg-white overflow-hidden rounded-none border-none shadow-none"
     >
       {/* 1. Header with Mode Switcher & Collapse */}
-      <div className="bg-white px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+      <div className="px-4 py-3 flex items-center justify-between bg-white border-b border-slate-200 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-[#00A3C4] flex items-center justify-center text-white text-sm shadow-xs font-bold">
+          <div className="w-8 h-8 rounded-lg bg-[#00A3C4] flex items-center justify-center text-white text-sm shadow-sm font-bold">
             ✨
           </div>
           <div>
-            <h3 className="text-xs font-bold text-slate-900 leading-tight">
-              {role === 'merchant' ? 'AI Recovery Assistant' : 'AI Payment Assistant'}
+            <h3 className="text-sm font-bold leading-tight text-slate-900">
+              {role === 'merchant' ? 'AI Recovery Copilot' : 'AI Payment Assistant'}
             </h3>
-            <div className="flex items-center gap-1.5 text-[10px] text-[#00A3C4] font-medium mt-0.5">
+            <div className="flex items-center gap-1.5 text-[11px] text-[#00A3C4] font-medium mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Online • {role === 'merchant' ? 'Supervisor Mode' : 'Payer Mode'}</span>
+              <span>Online • Voice & Recovery Engine</span>
             </div>
           </div>
         </div>
 
         {/* Action Buttons: Voice Chat Toggle + Collapse */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => {
               if (mode === 'chat') {
@@ -426,19 +423,19 @@ export default function AIChatBot({
                 setMode('chat');
               }
             }}
-            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all shadow-xs flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 ${
               mode === 'voice'
                 ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
                 : 'bg-cyan-50 text-[#00A3C4] hover:bg-cyan-100 border border-cyan-200'
             }`}
           >
-            <span>{mode === 'voice' ? '✕ Stop Voice' : '🎙️ Voice Chat'}</span>
+            <span>{mode === 'voice' ? '✕ Stop Voice' : '🎙️ Voice Agent'}</span>
           </button>
 
           <button
             onClick={toggleOpen}
             className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-xs font-bold transition-colors"
-            title="Collapse Panel"
+            title="Collapse Panel (⌘J)"
           >
             ✕
           </button>
@@ -447,47 +444,46 @@ export default function AIChatBot({
 
       {/* 2. BODY */}
       {mode === 'chat' ? (
-        <div className="flex-1 flex flex-col justify-between overflow-hidden p-4 bg-slate-50/40">
+        <div className="flex-1 flex flex-col justify-between overflow-hidden p-4 bg-white min-h-0">
           {/* Messages Stream */}
-          <div className="flex-1 overflow-y-auto space-y-3.5 pr-1">
+          <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 custom-scrollbar">
             {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-center py-10 px-3 space-y-3.5 my-auto">
-                <div className="w-14 h-14 rounded-2xl bg-[#00A3C4] flex items-center justify-center text-white text-2xl shadow-md">
+              <div className="flex flex-col items-center justify-center text-center py-8 px-2 space-y-4 my-auto">
+                <div className="w-14 h-14 rounded-2xl bg-[#00A3C4] flex items-center justify-center text-white text-2xl shadow-md shadow-cyan-500/10">
                   ✨
                 </div>
 
-                <div className="space-y-1.5 max-w-[280px]">
-                  <h4 className="text-sm font-bold text-slate-900 leading-snug">
+                <div className="space-y-2 max-w-[280px]">
+                  <h4 className="text-base font-bold leading-snug text-slate-800">
                     {role === 'merchant'
-                      ? 'How can I help with your revenue recovery today?'
-                      : 'How can I assist with your invoice today?'}
+                      ? 'How can I help with recovery today?'
+                      : 'How can I assist with your invoice?'}
                   </h4>
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                  <p className="text-xs leading-relaxed text-slate-500 font-normal">
                     {role === 'merchant'
-                      ? 'Ask about at-risk payments, inspect RBI mandate rules, get financial KPIs, or approve high-value invoices using voice or text.'
-                      : 'Ask why your payment was held, claim a 5% concession discount, or schedule a payment date using voice or text.'}
+                      ? 'Ask questions or instruct actions with voice or text. I analyze at-risk revenue, inspect RBI rules, and trigger automated outreach.'
+                      : 'Describe your payment issues. I can provide assistance and predict possible resolution paths based on your status.'}
                   </p>
                 </div>
 
-                <div className="text-[10px] text-amber-700 bg-amber-50/90 border border-amber-200/80 px-3 py-2 rounded-xl text-left flex items-start gap-1.5 max-w-[320px]">
+                <div className="text-[11px] font-medium text-amber-700 bg-amber-50/80 border border-amber-200/80 rounded-lg p-2.5 text-left max-w-[320px] flex items-start gap-1.5 mt-2">
                   <span>⚠️</span>
                   <span>
-                    <strong>Financial Guardrails Active:</strong> Automated recovery follows RBI rules
-                    and strict zero-duplicate-contact invariants.
+                    <strong>RBI & Zero-Spam Guardrails:</strong> Max 2 contacts/incident, 24h quiet period, and strict ₹1L HITL escalations active.
                   </span>
                 </div>
 
-                {/* Quick Prompts Chips */}
-                <div className="w-full pt-2 space-y-1.5 text-left">
+                {/* Suggested Chips */}
+                <div className="w-full pt-2 space-y-2 text-left">
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    Suggested Questions
+                    Suggested Quick Prompts
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {quickPrompts.map((chip, idx) => (
                       <button
                         key={idx}
                         onClick={() => handleSendText(chip)}
-                        className="px-2.5 py-1 rounded-full bg-white hover:bg-cyan-50 hover:text-[#00A3C4] hover:border-[#00A3C4] text-slate-700 text-[11px] font-medium transition-all border border-slate-200 shadow-2xs text-left"
+                        className="px-2.5 py-1 rounded-md text-xs font-medium transition-all shadow-xs text-left bg-slate-50 hover:bg-cyan-50 hover:text-[#00A3C4] hover:border-[#00A3C4] text-slate-700 border border-slate-200"
                       >
                         {chip}
                       </button>
@@ -502,28 +498,26 @@ export default function AIChatBot({
                   className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[88%] p-3.5 rounded-2xl text-xs leading-relaxed ${
+                    className={`max-w-[88%] p-3.5 rounded-xl text-xs leading-relaxed shadow-xs ${
                       msg.sender === 'user'
-                        ? 'bg-[#00A3C4] text-white rounded-br-none shadow-xs'
-                        : 'bg-white border border-slate-200/90 text-slate-800 rounded-bl-none shadow-xs'
+                        ? 'bg-[#00A3C4] text-white rounded-br-none'
+                        : 'bg-slate-50 border border-slate-200 text-slate-800 rounded-bl-none'
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-2 mb-1 opacity-75 text-[10px]">
-                      <span className="font-bold">
-                        {msg.sender === 'user' ? `👤 ${customerName}` : '✨ AI Copilot'}
-                      </span>
+                    <div className="font-bold text-[10px] flex items-center justify-between opacity-60 mb-1">
+                      <span>{msg.sender === 'user' ? 'You' : 'AI Copilot'}</span>
                       <span>{msg.time}</span>
                     </div>
 
-                    <MarkdownRenderer content={msg.text} />
+                    <MarkdownRenderer content={msg.text} isDark={false} />
 
                     {/* Tool Badges */}
                     {msg.toolsExecuted && msg.toolsExecuted.length > 0 && (
-                      <div className="mt-2 pt-2 border-t border-slate-100 space-y-1">
+                      <div className="mt-2.5 pt-2.5 border-t border-slate-200 space-y-1">
                         {msg.toolsExecuted.map((t, idx) => (
                           <div
                             key={idx}
-                            className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1"
+                            className="text-[10px] font-mono px-2 py-0.5 rounded flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200"
                           >
                             <span>⚡</span>
                             <span>
@@ -540,17 +534,17 @@ export default function AIChatBot({
 
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-white border border-slate-200 text-slate-500 p-3 rounded-2xl text-xs animate-pulse shadow-xs flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#00A3C4] animate-ping" />
-                  <span>Processing recovery intelligence with tools...</span>
+                <div className="p-3 rounded-xl text-xs animate-pulse shadow-xs flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-500">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00A3C4] animate-ping" />
+                  <span>Processing recovery reasoning...</span>
                 </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* 3. Bottom Input Dock (Speech-to-Text Mic + Send Button) */}
-          <div className="pt-3 border-t border-slate-200/80 space-y-1.5">
+          {/* 3. Bottom Input Dock */}
+          <div className="pt-3 border-t border-slate-200 space-y-1.5 shrink-0 bg-white">
             <form
               onSubmit={e => {
                 e.preventDefault();
@@ -558,94 +552,66 @@ export default function AIChatBot({
               }}
               className="flex items-center gap-2"
             >
-              <input
-                type="text"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder="Ask query or use voice typing..."
-                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#00A3C4] bg-white shadow-2xs placeholder:text-slate-400"
-              />
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  placeholder={
+                    role === 'merchant'
+                      ? 'Ask Copilot or type recovery instruction...'
+                      : 'Describe your payment issues...'
+                  }
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-[#00A3C4] focus:border-[#00A3C4] transition-all pr-9 bg-white text-slate-800 placeholder-slate-400 shadow-xs"
+                />
+                <button
+                  type="button"
+                  onClick={toggleTextMic}
+                  className={`absolute right-2.5 top-2 transition-colors text-base ${
+                    isListening ? 'text-red-500 animate-pulse' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                  title="Speech-to-Text Mic"
+                >
+                  🎙️
+                </button>
+              </div>
 
-              {/* Dedicated Speech-to-Text Mic button */}
-              <button
-                type="button"
-                onClick={toggleTextMic}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm transition-all shadow-xs ${
-                  isListening
-                    ? 'bg-red-600 text-white animate-pulse'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                }`}
-                title={isListening ? 'Listening (Speak into microphone)...' : 'Speech-to-Text Voice Typing'}
-              >
-                🎙️
-              </button>
-
-              {/* Send Button */}
               <button
                 type="submit"
-                disabled={loading || !input.trim()}
-                className="w-10 h-10 rounded-xl bg-[#00A3C4] hover:bg-[#008da8] text-white text-base font-bold transition-colors disabled:opacity-40 shadow-xs flex items-center justify-center"
-                title="Send"
+                disabled={!input.trim() || loading}
+                className="w-9 h-9 rounded-lg bg-[#00A3C4] hover:bg-[#008ea6] text-white flex items-center justify-center text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-xs shrink-0"
               >
-                ✈
+                &rarr;
               </button>
             </form>
-
-            <div className="text-[10px] text-slate-400 text-center leading-tight">
-              Razorpay Supervisory Copilot • RBI Compliant • 0 Duplicate Outreach
+            
+            <div className="text-[10px] text-center leading-tight text-slate-400">
+              Razorpay AI Copilot • RBI Compliant • Zero Duplicate Contacts
             </div>
           </div>
         </div>
       ) : (
-        /* LIVE VOICE CHAT MODE */
-        <div className="flex-1 flex flex-col justify-between overflow-hidden p-4 bg-slate-900 text-white">
-          {/* Header Status Card */}
-          <div className="bg-slate-800 p-3.5 rounded-xl border border-slate-700 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className={`w-3 h-3 rounded-full ${isSpeaking ? 'bg-cyan-400 animate-pulse' : isListening ? 'bg-red-500 animate-ping' : 'bg-emerald-400'}`} />
-              <div>
-                <div className="text-xs font-bold">
-                  {isSpeaking ? '🔊 Copilot is Speaking...' : isListening ? '🎙️ Listening to you...' : '🎙️ Voice Chat Active'}
-                </div>
-                <div className="text-[10px] text-slate-400">
-                  Speak naturally in English or Hindi &bull; AI mirrors your language
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={endVoiceChat}
-              className="px-2.5 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold"
-            >
-              End Voice
-            </button>
-          </div>
-
-          {/* Voice Turns Stream */}
-          <div className="flex-1 overflow-y-auto space-y-2.5 py-3 pr-1">
+        /* Voice Chat Mode */
+        <div className="flex-1 flex flex-col justify-between p-4 bg-[#0F172A] text-white">
+          <div className="flex-1 overflow-y-auto space-y-3 pr-1">
             {voiceTurns.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-center py-12 px-4 space-y-3 my-auto">
-                {/* Audio Wave Visualizer */}
-                <div className="flex items-center justify-center gap-1.5 h-10">
-                  <div className="w-1.5 bg-[#00A3C4] rounded-full animate-bounce [animation-delay:-0.3s] h-8" />
-                  <div className="w-1.5 bg-[#54D6D6] rounded-full animate-bounce [animation-delay:-0.15s] h-10" />
-                  <div className="w-1.5 bg-emerald-400 rounded-full animate-bounce h-6" />
-                  <div className="w-1.5 bg-[#54D6D6] rounded-full animate-bounce [animation-delay:-0.15s] h-10" />
-                  <div className="w-1.5 bg-[#00A3C4] rounded-full animate-bounce [animation-delay:-0.3s] h-8" />
+              <div className="flex flex-col items-center justify-center text-center py-10 space-y-4 my-auto">
+                <div className="w-16 h-16 rounded-3xl bg-[#00A3C4] flex items-center justify-center text-white text-2xl shadow-lg shadow-cyan-500/20 animate-pulse">
+                  🎙️
                 </div>
-
-                <div className="text-xs font-bold text-slate-200">Listening to your voice...</div>
-                <div className="text-[11px] text-slate-400 max-w-[260px] leading-relaxed">
-                  Speak now in English or Hindi (e.g. &ldquo;What is our financial status?&rdquo; or &ldquo;Can I get a discount?&rdquo;).
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-white">Gemini 3.1 Live Voice Engine</h4>
+                  <p className="text-[11px] text-slate-400 max-w-[280px]">
+                    Speak in English, Hindi, or Hinglish. Real-time language mirroring & automatic function calling active.
+                  </p>
                 </div>
               </div>
             ) : (
               voiceTurns.map((turn, idx) => (
                 <div key={idx} className="space-y-1">
                   <div
-                    className={`p-3 rounded-xl text-xs leading-relaxed ${
-                      turn.speaker === 'user'
-                        ? 'bg-[#00A3C4] text-white ml-6 shadow-xs'
-                        : 'bg-slate-800 text-slate-100 mr-6 border border-slate-700'
+                    className={`p-3 rounded-xl text-xs ${
+                      turn.speaker === 'user' ? 'bg-[#00A3C4] text-white ml-6' : 'bg-slate-800 text-slate-100 mr-6 border border-slate-700'
                     }`}
                   >
                     <span className="font-bold text-[9px] block opacity-70 mb-0.5">

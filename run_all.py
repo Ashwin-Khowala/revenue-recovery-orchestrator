@@ -74,7 +74,11 @@ def main():
         print("[2/3] Starting Next.js Dashboard on port 3000...")
         is_windows = sys.platform.startswith("win")
         npm_cmd = "npm.cmd" if is_windows else "npm"
-        p_frontend = subprocess.Popen([npm_cmd, "run", "dev"], cwd=DASHBOARD_DIR)
+        p_frontend = subprocess.Popen(
+            f"{npm_cmd} run dev" if is_windows else ["npm", "run", "dev"],
+            cwd=DASHBOARD_DIR,
+            shell=is_windows,
+        )
         processes.append(("Next.js Frontend", p_frontend))
 
         # 3. Start Telegram Bot Worker
