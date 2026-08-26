@@ -7,6 +7,8 @@ export interface AIChatBotProps {
   customerName?: string;
   amount?: number;
   rootCause?: string;
+  customerId?: string;
+  merchantId?: string;
   onToolAction?: (action: { tool: string; updatedAmount?: number; promisedDate?: string; approved?: boolean }) => void;
   defaultOpen?: boolean;
 }
@@ -16,14 +18,14 @@ interface ChatMessage {
   sender: 'user' | 'assistant';
   text: string;
   time: string;
-  toolsExecuted?: Array<{ tool: string; message: string }>;
+  toolsExecuted?: Array<{ tool: string; message: string; [key: string]: any }>;
 }
 
 interface VoiceTurn {
   speaker: 'user' | 'agent';
   text: string;
   time: string;
-  toolsExecuted?: Array<{ tool: string; message: string }>;
+  toolsExecuted?: Array<{ tool: string; message: string; [key: string]: any }>;
 }
 
 function FormattedText({ text }: { text: string }) {
@@ -56,6 +58,8 @@ export default function AIChatBot({
   customerName = 'Ashwin Khowala',
   amount = 4999,
   rootCause = 'subscription_failed',
+  customerId = 'cust_0001',
+  merchantId = 'merch_01',
   onToolAction,
   defaultOpen = true,
 }: AIChatBotProps) {
@@ -69,7 +73,6 @@ export default function AIChatBot({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Voice Chat State
-  const [callActive, setCallActive] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceTurns, setVoiceTurns] = useState<VoiceTurn[]>([]);
@@ -89,7 +92,7 @@ export default function AIChatBot({
     const isEnglish =
       detectedLang === 'english' ||
       (/^[a-zA-Z0-9\s.,!?'"₹$%&()/:;-]+$/.test(text) &&
-        !/(\b(?:namaste|kya|kyun|hai|aap|mera|meri|rupaye|somwar|shukriya|dhanyawad|badhiya|haan|chahiye|karo|bhej|gaya)\b)/i.test(
+        !/(\b(?:namaste|kya|kyun|hai|aap|mera|meri|rupaye|somwar|shukriya|dhanyawad|badhiya|haan|chahiye|karo|bhej|gaya|kitna|paisa)\b)/i.test(
           text
         ));
 
@@ -155,7 +158,7 @@ export default function AIChatBot({
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US'; // Supports English & Hinglish
+    recognition.lang = 'en-US';
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -213,6 +216,8 @@ export default function AIChatBot({
           customer_name: customerName,
           amount: amount,
           root_cause: rootCause,
+          customer_id: customerId,
+          merchant_id: merchantId,
           user_speech: textToSend,
         }),
       });
@@ -267,19 +272,16 @@ export default function AIChatBot({
     }
   };
 
-  // Start Live Voice Chat (NO HARDCODED SPOKEN INTRO)
+  // Start Voice Chat
   const startVoiceChat = () => {
-    setCallActive(true);
     setMode('voice');
     setVoiceTurns([]);
-    // Automatically trigger mic listening so user can speak immediately
     setTimeout(() => {
       startSpeechRecognition(handleSendVoice);
     }, 200);
   };
 
   const endVoiceChat = () => {
-    setCallActive(false);
     setIsListening(false);
     setIsSpeaking(false);
     if (recognitionRef.current) {
@@ -311,6 +313,8 @@ export default function AIChatBot({
           customer_name: customerName,
           amount: amount,
           root_cause: rootCause,
+          customer_id: customerId,
+          merchant_id: merchantId,
           user_speech: speechText,
         }),
       });
@@ -337,7 +341,6 @@ export default function AIChatBot({
           }
         }
 
-        // Play the AI's natural spoken response in the matching language
         playVoice(data.voice_reply, data.detected_language);
       } else {
         throw new Error('offline');
@@ -367,12 +370,12 @@ export default function AIChatBot({
     }
   };
 
-  // Collapsed Floating Pill
+  // Collapsed Floating Pill (Bottom Right)
   if (!isOpen) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-[#00A3C4] to-[#00829B] text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 hover:opacity-95 transition-all font-semibold text-xs border border-white/20"
+        className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-[#00A3C4] to-[#00829B] text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 hover:opacity-95 transition-all font-semibold text-xs border border-white/20 hover:scale-105"
       >
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-ping" />
         <span>✨ {role === 'merchant' ? 'AI Recovery Assistant' : 'AI Payment Assistant'}</span>
@@ -388,7 +391,7 @@ export default function AIChatBot({
           'What is my financial status?',
           'Why is TechMatrix paused?',
           'Approve TechMatrix Corp',
-          'Explain RBI mandate rule',
+          'Get customer intelligence',
         ]
       : [
           'Can I get a discount?',
@@ -399,24 +402,24 @@ export default function AIChatBot({
 
   return (
     <aside className="w-full lg:w-[400px] shrink-0 bg-white border border-slate-200/90 rounded-2xl shadow-xl flex flex-col h-[740px] sticky top-20 overflow-hidden transition-all duration-300">
-      {/* 1. Header (Exact Dhanvantari UI) */}
-      <div className="bg-white px-4 py-3.5 border-b border-slate-100 flex items-center justify-between">
+      {/* 1. Header with Mode Switcher & Collapse */}
+      <div className="bg-white px-4 py-3 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-[#00A3C4] flex items-center justify-center text-white text-base shadow-xs">
+          <div className="w-8 h-8 rounded-full bg-[#00A3C4] flex items-center justify-center text-white text-sm shadow-xs font-bold">
             ✨
           </div>
           <div>
             <h3 className="text-xs font-bold text-slate-900 leading-tight">
               {role === 'merchant' ? 'AI Recovery Assistant' : 'AI Payment Assistant'}
             </h3>
-            <div className="flex items-center gap-1.5 text-[11px] text-[#00A3C4] font-medium mt-0.5">
+            <div className="flex items-center gap-1.5 text-[10px] text-[#00A3C4] font-medium mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Online • Ready to help with {role === 'merchant' ? 'revenue' : 'payments'}</span>
+              <span>Online • {role === 'merchant' ? 'Supervisor Mode' : 'Payer Mode'}</span>
             </div>
           </div>
         </div>
 
-        {/* Top-Right Voice Chat Button + Close */}
+        {/* Action Buttons: Voice Chat Toggle + Collapse */}
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => {
@@ -430,7 +433,7 @@ export default function AIChatBot({
             className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all shadow-xs flex items-center gap-1.5 ${
               mode === 'voice'
                 ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
-                : 'bg-pink-100/80 text-pink-700 hover:bg-pink-200 border border-pink-200'
+                : 'bg-cyan-50 text-[#00A3C4] hover:bg-cyan-100 border border-cyan-200'
             }`}
           >
             <span>{mode === 'voice' ? '✕ Stop Voice' : '🎙️ Voice Chat'}</span>
@@ -550,7 +553,7 @@ export default function AIChatBot({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* 3. Bottom Input Dock (Speech-to-Text Mic + Cyan Send Button) */}
+          {/* 3. Bottom Input Dock (Speech-to-Text Mic + Send Button) */}
           <div className="pt-3 border-t border-slate-200/80 space-y-1.5">
             <form
               onSubmit={e => {
@@ -563,7 +566,7 @@ export default function AIChatBot({
                 type="text"
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder="Describe your query or ask for financial metrics..."
+                placeholder="Ask query or use voice typing..."
                 className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#00A3C4] bg-white shadow-2xs placeholder:text-slate-400"
               />
 
@@ -585,7 +588,7 @@ export default function AIChatBot({
               <button
                 type="submit"
                 disabled={loading || !input.trim()}
-                className="w-10 h-10 rounded-xl bg-[#54D6D6] hover:bg-[#38c2c2] text-white text-base font-bold transition-colors disabled:opacity-40 shadow-xs flex items-center justify-center"
+                className="w-10 h-10 rounded-xl bg-[#00A3C4] hover:bg-[#008da8] text-white text-base font-bold transition-colors disabled:opacity-40 shadow-xs flex items-center justify-center"
                 title="Send"
               >
                 ✈
@@ -593,7 +596,7 @@ export default function AIChatBot({
             </form>
 
             <div className="text-[10px] text-slate-400 text-center leading-tight">
-              This AI operates under strict Razorpay financial guardrails and zero-duplicate policies.
+              Razorpay Supervisory Copilot • RBI Compliant • 0 Duplicate Outreach
             </div>
           </div>
         </div>
@@ -606,7 +609,7 @@ export default function AIChatBot({
               <div className={`w-3 h-3 rounded-full ${isSpeaking ? 'bg-cyan-400 animate-pulse' : isListening ? 'bg-red-500 animate-ping' : 'bg-emerald-400'}`} />
               <div>
                 <div className="text-xs font-bold">
-                  {isSpeaking ? '🔊 Copilot is Speaking...' : isListening ? '🎙️ Listening to you...' : '🎙️ Live Voice Interaction Active'}
+                  {isSpeaking ? '🔊 Copilot is Speaking...' : isListening ? '🎙️ Listening to you...' : '🎙️ Voice Chat Active'}
                 </div>
                 <div className="text-[10px] text-slate-400">
                   Speak naturally in English or Hindi &bull; AI mirrors your language
@@ -650,7 +653,7 @@ export default function AIChatBot({
                     }`}
                   >
                     <span className="font-bold text-[9px] block opacity-70 mb-0.5">
-                      {turn.speaker === 'agent' ? '✨ Live Voice Copilot' : `👤 ${customerName}`}
+                      {turn.speaker === 'agent' ? '✨ Voice Copilot' : `👤 ${customerName}`}
                     </span>
                     {turn.text}
                   </div>

@@ -596,14 +596,16 @@ class VoiceAgentTurnRequest(BaseModel):
     customer_name: Optional[str] = "Ashwin Khowala"
     amount: Optional[float] = 4999.0
     root_cause: Optional[str] = "subscription_failed"
+    customer_id: Optional[str] = "cust_0001"
+    merchant_id: Optional[str] = "merch_01"
 
 
 @app.post("/api/orchestrator/voice-agent-turn")
 async def voice_agent_turn_endpoint(req: VoiceAgentTurnRequest):
     """
-    Executes real-time conversational voice turn with autonomous tool calling:
+    Executes real-time conversational voice turn with autonomous tool calling and data access:
     - Payer: apply_concession_discount (5%), register_promise_to_pay, get_invoice
-    - Merchant: approve_high_value_invoice (₹1.45L), get_financial_kpis
+    - Merchant: approve_high_value_invoice (₹1.45L), get_merchant_financial_overview, get_at_risk_incidents, get_customer_intelligence
     """
     from orchestrator.gemini_live_engine import run_voice_agent_turn
     result = run_voice_agent_turn(
@@ -612,6 +614,8 @@ async def voice_agent_turn_endpoint(req: VoiceAgentTurnRequest):
         customer_name=req.customer_name or "Ashwin Khowala",
         amount=req.amount or 4999.0,
         root_cause=req.root_cause or "subscription_failed",
+        customer_id=req.customer_id or "cust_0001",
+        merchant_id=req.merchant_id or "merch_01",
     )
     return result
 
@@ -679,11 +683,13 @@ async def gemini_live_websocket(websocket: WebSocket):
             data = await websocket.receive_text()
             payload = json.loads(data)
             
-            user_speech = payload.get("user_speech", "")
+            user_speech = payload.get("user_speech", "") or payload.get("text", "")
             role = payload.get("role", "payer")
             customer_name = payload.get("customer_name", "Customer")
             amount = payload.get("amount", 4999.0)
             root_cause = payload.get("root_cause", "subscription_failed")
+            customer_id = payload.get("customer_id", "cust_0001")
+            merchant_id = payload.get("merchant_id", "merch_01")
             
             # Execute turn with dynamic language mirroring and tool execution
             result = run_voice_agent_turn(
@@ -692,6 +698,8 @@ async def gemini_live_websocket(websocket: WebSocket):
                 customer_name=customer_name,
                 amount=amount,
                 root_cause=root_cause,
+                customer_id=customer_id,
+                merchant_id=merchant_id,
             )
             
             await websocket.send_text(json.dumps(result))
