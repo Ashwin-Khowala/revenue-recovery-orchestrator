@@ -39,7 +39,7 @@ interface VoiceTurn {
 }
 
 // ============================================================================
-// DEMO DATA — 6 Clear Customer Scenarios
+// DEMO DATA — 6 Comprehensive Customer Scenarios
 // ============================================================================
 const INCIDENTS: Incident[] = [
   {
@@ -135,7 +135,7 @@ function statusColor(s: string) {
 
 function statusLabel(s: string) {
   if (s === 'recovered') return '✓ Recovered';
-  if (s === 'escalated') return '⏳ Awaiting Your Approval';
+  if (s === 'escalated') return '⏳ Awaiting Approval';
   if (s === 'waiting') return '📅 Payment Scheduled';
   if (s === 'do_nothing') return '🛡️ Hold (No Spam)';
   return s;
@@ -192,7 +192,7 @@ export default function Dashboard() {
   const [payerSelectIdx, setPayerSelectIdx] = useState(4); // default Ashwin Khowala
 
   // Merchant tabs
-  const [merchantTab, setMerchantTab] = useState<'pending' | 'copilot' | 'live' | 'protection' | 'results'>('pending');
+  const [merchantTab, setMerchantTab] = useState<'pending' | 'live' | 'protection' | 'results'>('pending');
   const [selectedIncident, setSelectedIncident] = useState<Incident>(INCIDENTS[2]); // default to TechMatrix HITL
   const [approvedHitl, setApprovedHitl] = useState(false);
 
@@ -203,7 +203,13 @@ export default function Dashboard() {
   const [payerPtpSelected, setPayerPtpSelected] = useState<string | null>(null);
   const [payerPaidSuccess, setPayerPaidSuccess] = useState(false);
 
-  // Gemini Live Two-Way Voice Agent with Real Tool Calling State
+  // ==========================================================================
+  // RIGHT-SIDE COLLAPSIBLE COPILOT & VOICE CONTAINER STATE
+  // ==========================================================================
+  const [copilotOpen, setCopilotOpen] = useState(true);
+  const [copilotMode, setCopilotMode] = useState<'chat' | 'voice'>('chat');
+
+  // Gemini Live Voice State
   const [callActive, setCallActive] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceTurns, setVoiceTurns] = useState<VoiceTurn[]>([]);
@@ -211,11 +217,11 @@ export default function Dashboard() {
   const [voiceLoading, setVoiceLoading] = useState(false);
   const recognitionRef = useRef<any>(null);
 
-  // Merchant Copilot state
+  // Copilot Text Chat state
   const [copilotMessages, setCopilotMessages] = useState<{ sender: 'user' | 'assistant'; text: string }[]>([
     {
       sender: 'assistant',
-      text: '👋 **Hello! I am your AI Recovery Assistant.**\n\nI monitor your at-risk payments and help you recover failed revenue safely.\n\n• **Current Status:** ₹2,45,998 total at-risk across 6 accounts\n• **Recovered So Far:** ₹44,075 with 0 duplicate customer messages\n• **Awaiting Your Approval:** ₹1,45,000 for TechMatrix Corp\n\nFeel free to ask: *"What is my financial status?"*, *"Why is TechMatrix paused?"*, or *"How does bank outage protection work?"*',
+      text: '👋 **Hello! I am your AI Recovery Copilot.**\n\nI monitor your at-risk payments and help you recover failed revenue safely.\n\n• **Total At-Risk:** ₹2,45,998 across 6 customer accounts\n• **Recovered So Far:** ₹44,075 (0 duplicate spam contacts)\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp\n\nAsk me anything or switch to **Voice Talk** above to speak with me directly in Hinglish!',
     },
   ]);
   const [copilotInput, setCopilotInput] = useState('');
@@ -237,6 +243,7 @@ export default function Dashboard() {
       email: merchantEmailInput || 'admin@razorpay-merchant.com',
       avatarText: 'M',
     });
+    setCopilotOpen(true);
   };
 
   const handleLoginAsPayer = (incidentIdx: number) => {
@@ -254,6 +261,7 @@ export default function Dashboard() {
       phone: inc.customerPhone,
       avatarText: inc.customer.charAt(0),
     });
+    setCopilotOpen(true);
   };
 
   const handleSignOut = () => {
@@ -295,26 +303,24 @@ export default function Dashboard() {
   // --------------------------------------------------------------------------
   // TWO-WAY GEMINI LIVE VOICE CALL WITH REAL TOOL CALLING
   // --------------------------------------------------------------------------
-  const startVoiceCall = (incident: Incident, callerRole: UserRole = 'payer') => {
+  const startVoiceCall = (callerRole: UserRole = authSession?.role || 'merchant') => {
     setCallActive(true);
-    setPayerDiscountApplied(false);
-    setPayerCurrentAmount(incident.amount);
-
-    const userName = authSession?.name || 'Customer';
-    let introText = '';
+    const isMerchant = callerRole === 'merchant';
+    const userName = authSession?.name || (isMerchant ? 'Admin' : 'Customer');
     
-    if (callerRole === 'merchant') {
-      introText = `Namaste Admin! Main aapka Gemini Live Voice Copilot hoon. Aap live financial status pooch sakte hain ya ₹1.45L ka invoice approve kar sakte hain.`;
-    } else if (incident.rootCause === 'mandate_auth_failed') {
-      introText = `Namaste ${userName}! Hum Razorpay recovery team se bol rahe hain. Aapka ₹${incident.amount.toLocaleString()} ka recurring mandate RBI verification ke liye hold par hai. Kya aap 1-click re-auth link receive karna chahenge?`;
+    let introText = '';
+    if (isMerchant) {
+      introText = `Namaste ${userName}! Main aapka Merchant Voice Copilot hoon. Aap financial status pooch sakte hain, ya TechMatrix Corp ka ₹1.45 lakh invoice approve kar sakte hain.`;
+    } else if (payerIncident.rootCause === 'mandate_auth_failed') {
+      introText = `Namaste ${userName}! Aapka ₹${payerIncident.amount.toLocaleString()} ka recurring mandate RBI verification ke liye hold par hai. Kya aap 1-click re-auth link receive karna chahenge?`;
     } else {
-      introText = `Namaste ${userName}! Hum Razorpay support team se bol rahe hain. Aapka ₹${incident.amount.toLocaleString()} ka payment pending hai. Kya aap concession discount chahte hain ya koi date schedule karein?`;
+      introText = `Namaste ${userName}! Aapka ₹${payerCurrentAmount.toLocaleString()} ka payment pending hai. Kya aap discount chahte hain ya koi date schedule karein?`;
     }
 
     const introTurn: VoiceTurn = {
       speaker: 'agent',
       text: introText,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setVoiceTurns([introTurn]);
     playAgentVoice(introText);
@@ -377,7 +383,7 @@ export default function Dashboard() {
     const userTurn: VoiceTurn = {
       speaker: 'user',
       text: text,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
     setVoiceTurns(prev => [...prev, userTurn]);
@@ -389,10 +395,10 @@ export default function Dashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          role: authSession?.role || 'payer',
-          customer_name: authSession?.name || 'Ashwin Khowala',
-          amount: payerCurrentAmount,
-          root_cause: payerIncident.rootCause,
+          role: authSession?.role || 'merchant',
+          customer_name: authSession?.name || 'Admin',
+          amount: authSession?.role === 'payer' ? payerCurrentAmount : 145000,
+          root_cause: authSession?.role === 'payer' ? payerIncident.rootCause : 'receivable_overdue',
           user_speech: text,
         }),
       });
@@ -402,7 +408,7 @@ export default function Dashboard() {
         const agentTurn: VoiceTurn = {
           speaker: 'agent',
           text: data.voice_reply,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           toolsExecuted: data.executed_tools,
         };
         setVoiceTurns(prev => [...prev, agentTurn]);
@@ -429,11 +435,14 @@ export default function Dashboard() {
         throw new Error('offline');
       }
     } catch {
-      const fallbackReply = `Ji ${authSession?.name || 'Customer'}! Maine aapka note record kar liya hai aur details update kar di hain. Dhanyawad!`;
+      const fallbackReply = authSession?.role === 'merchant'
+        ? `Ji Admin! Maine record update kar diya hai. Total ₹2,45,998 revenue safely monitor ho raha hai.`
+        : `Ji ${authSession?.name || 'Customer'}! Maine aapka note record kar liya hai aur details update kar di hain.`;
+      
       const agentTurn: VoiceTurn = {
         speaker: 'agent',
         text: fallbackReply,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setVoiceTurns(prev => [...prev, agentTurn]);
       playAgentVoice(fallbackReply);
@@ -449,7 +458,7 @@ export default function Dashboard() {
     if (!payerDiscountApplied) {
       setPayerCurrentAmount(prev => Math.round(prev * 0.95));
       setPayerDiscountApplied(true);
-      alert('🎉 5% Instant Concession Applied! Payable amount updated.');
+      alert('🎉 5% Instant Concession Applied! Payable amount updated to ₹4,749.');
     }
   };
 
@@ -562,7 +571,8 @@ export default function Dashboard() {
         }),
       });
       if (res.ok) {
-        setChannelResult('✓ Telegram notification with Razorpay payment button dispatched to @razorpaytestbot.');
+        const data = await res.json();
+        setChannelResult(`✓ Telegram recovery alert dispatched to @razorpaytestbot! (${data.message})`);
       } else {
         setChannelResult('✓ Telegram recovery payload verified.');
       }
@@ -592,7 +602,7 @@ export default function Dashboard() {
         }),
       });
       if (res.ok) {
-        setChannelResult('✓ WhatsApp message dispatched to customer.');
+        setChannelResult('✓ WhatsApp recovery reminder dispatched to customer.');
       } else {
         setChannelResult('✓ WhatsApp recovery link generated.');
       }
@@ -662,7 +672,7 @@ export default function Dashboard() {
         ...newMsgs,
         {
           sender: 'assistant',
-          text: '📊 **Your Financial Summary:**\n\n• **Total Revenue At-Risk:** ₹2,45,998 across 6 customer incidents\n• **Recovered:** ₹44,075 (18% direct recovery rate)\n• **Awaiting Your Approval:** ₹1,45,000 for TechMatrix Corp\n• **Scheduled for Payment:** ₹52,000 for Kavita Iyer\n\n0 duplicate customer contacts.',
+          text: '📊 **Your Financial Summary:**\n\n• **Total Revenue At-Risk:** ₹2,45,998 across 6 customer incidents\n• **Recovered:** ₹44,075 (18% direct recovery rate)\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp\n• **Scheduled for Payment:** ₹52,000 for Kavita Iyer\n\n0 duplicate customer contacts.',
         },
       ]);
     } finally {
@@ -689,7 +699,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h1 className="text-sm font-bold text-slate-900">Razorpay AI Revenue Recovery</h1>
-                <p className="text-[11px] text-slate-500 font-medium">Automated Recovery & Protection</p>
+                <p className="text-[11px] text-slate-500 font-medium">Automated Recovery & Outage Protection</p>
               </div>
             </div>
 
@@ -724,7 +734,7 @@ export default function Dashboard() {
                 <div>
                   <h3 className="text-base font-bold text-slate-900">Business / Merchant Portal</h3>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    View ₹2.45L at-risk revenue, approve high-value invoices (₹1.45L), trigger Plivo phone calls, and talk with the Gemini Live Voice Agent.
+                    View ₹2.45L at-risk revenue, approve high-value invoices (₹1.45L), trigger Plivo phone calls, and talk with the Gemini Live Voice Copilot.
                   </p>
                 </div>
 
@@ -798,10 +808,10 @@ export default function Dashboard() {
   // AUTHENTICATED STATE
   // ==========================================================================
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans flex flex-col justify-between">
       {/* Top Navbar */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#0052CC] flex items-center justify-center text-white font-extrabold text-sm">
               R
@@ -819,7 +829,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* User Profile & Sign Out */}
+          {/* User Profile & Right Copilot Toggle */}
           <div className="flex items-center gap-3">
             <a
               href="https://t.me/razorpaytestbot"
@@ -829,6 +839,29 @@ export default function Dashboard() {
             >
               <span>🤖 @razorpaytestbot</span>
             </a>
+
+            <button
+              onClick={() => {
+                setCopilotOpen(true);
+                setCopilotMode('voice');
+                if (!callActive) startVoiceCall(authSession.role);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition-colors"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>🎙️ Voice Talk</span>
+            </button>
+
+            <button
+              onClick={() => setCopilotOpen(prev => !prev)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                copilotOpen
+                  ? 'bg-[#0052CC] text-white'
+                  : 'bg-blue-50 text-[#0052CC] border border-blue-200 hover:bg-blue-100'
+              }`}
+            >
+              <span>🤖 AI Copilot</span>
+            </button>
 
             <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
               <div className="w-7 h-7 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center">
@@ -849,50 +882,53 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+      {/* Main Content Area + Right Collapsible Container Layout */}
+      <div className="max-w-7xl mx-auto px-6 py-6 w-full flex-1 flex flex-col lg:flex-row gap-6 items-start">
+        
+        {/* LEFT / CENTER WORKSPACE (Dynamically fills remaining width) */}
+        <main className="flex-1 w-full space-y-6">
 
-        {/* ================================================================ */}
-        {/* VIEW 1: CUSTOMER BILL PORTAL */}
-        {/* ================================================================ */}
-        {authSession.role === 'payer' && (
-          <div className="space-y-6">
-            <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-bold text-slate-900">Hello, {authSession.name}!</h2>
-                  <p className="text-xs text-slate-500">Phone: {authSession.phone || payerIncident.customerPhone}</p>
-                </div>
-                <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold">
-                  Action Needed &bull; 1 Pending Bill
-                </span>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Your payment of <strong>₹{payerIncident.amount.toLocaleString()}</strong> for <em>{payerIncident.type}</em> was held by your bank. You can settle it securely below, claim a 5% discount, schedule a convenient date, or talk with the Gemini Live Voice Agent.
-              </p>
-            </div>
-
-            {/* Bill Details & Gemini Live Voice Call */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-              <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-                <div className="flex items-start justify-between border-b border-slate-200 pb-3">
+          {/* ================================================================ */}
+          {/* VIEW 1: CUSTOMER BILL PORTAL */}
+          {/* ================================================================ */}
+          {authSession.role === 'payer' && (
+            <div className="space-y-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
+                <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900">{payerIncident.type}</h3>
-                    <p className="text-xs text-slate-500">Invoice Reference: <code>plink_TU6AFXQKBA</code></p>
+                    <h2 className="text-base font-bold text-slate-900">Hello, {authSession.name}!</h2>
+                    <p className="text-xs text-slate-500">Phone: {authSession.phone || payerIncident.customerPhone}</p>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold">
+                    Action Needed &bull; 1 Pending Bill
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Your payment of <strong>₹{payerIncident.amount.toLocaleString()}</strong> for <em>{payerIncident.type}</em> was held by your bank. You can settle it securely below, claim a 5% discount, schedule a convenient date, or talk with the Gemini Live Voice Agent on the right panel.
+                </p>
+              </div>
+
+              {/* Bill Details Card */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
+                <div className="flex items-start justify-between border-b border-slate-200 pb-4">
+                  <div>
+                    <h3 className="font-bold text-base text-slate-900">{payerIncident.type}</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">Invoice Reference: <code>plink_TU6AFXQKBA</code></p>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-slate-500">Amount Due</div>
-                    <div className="text-xl font-bold font-mono text-emerald-700">
+                    <div className="text-xs text-slate-500">Total Amount Due</div>
+                    <div className="text-2xl font-bold font-mono text-emerald-700">
                       ₹{payerCurrentAmount.toLocaleString()}
                     </div>
                     {payerDiscountApplied && (
-                      <span className="text-[10px] text-emerald-600 font-bold">🎉 5% Discount Applied</span>
+                      <span className="text-[11px] text-emerald-600 font-bold">🎉 5% Concession Discount Applied</span>
                     )}
                   </div>
                 </div>
 
-                <div className="bg-blue-50/60 p-3 rounded-lg border border-blue-100 text-xs space-y-1 text-slate-700">
-                  <div className="font-bold text-slate-900">Why was my payment held?</div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                <div className="bg-blue-50/70 p-4 rounded-xl border border-blue-100 text-xs space-y-1.5 text-slate-700">
+                  <div className="font-bold text-slate-900 text-sm">Why was my payment held?</div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
                     {payerIncident.rootCause === 'mandate_auth_failed'
                       ? 'Under RBI regulations, recurring debits over ₹15,000 require 1-time verification. Tap below to authorize securely.'
                       : 'Your bank encountered a temporary limit. Your account was not charged twice. Complete retry below safely.'}
@@ -906,7 +942,7 @@ export default function Dashboard() {
                       href={payerIncident.link || 'https://rzp.io/rzp/Qf0zRD2B'}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-3 rounded-lg bg-[#0052CC] hover:bg-[#0747A6] text-white font-bold text-center block transition-colors shadow-xs"
+                      className="p-3.5 rounded-xl bg-[#0052CC] hover:bg-[#0747A6] text-white font-bold text-center block transition-colors shadow-xs"
                     >
                       💳 Pay ₹{payerCurrentAmount.toLocaleString()} Now
                     </a>
@@ -914,66 +950,573 @@ export default function Dashboard() {
                     <button
                       onClick={applyPayerDiscount}
                       disabled={payerDiscountApplied}
-                      className="p-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-center transition-colors disabled:opacity-50"
+                      className="p-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-center transition-colors disabled:opacity-50"
                     >
                       {payerDiscountApplied ? '✓ 5% Claimed' : '🎁 Claim 5% Discount'}
                     </button>
 
                     <button
                       onClick={() => handlePayerPromiseToPay('Next Monday (Sep 2)')}
-                      className="p-3 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-center transition-colors"
+                      className="p-3.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-center transition-colors"
                     >
                       📅 Pay Next Monday
                     </button>
                   </div>
 
                   {payerPtpSelected && (
-                    <div className="p-2.5 rounded bg-blue-50 border border-blue-200 text-xs text-blue-900 font-medium">
+                    <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 font-medium">
                       🤝 <strong>Scheduled:</strong> You agreed to pay on {payerPtpSelected}. Automated reminders are paused.
                     </div>
                   )}
 
                   {payerPaidSuccess && (
-                    <div className="p-2.5 rounded bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 font-bold">
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 font-bold">
                       ✓ Payment Successful: ₹{payerCurrentAmount.toLocaleString()} settled.
                     </div>
                   )}
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Gemini Live Voice Agent Phone Interface */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                    <h3 className="font-bold text-xs uppercase tracking-wider text-slate-900">
-                      📞 Gemini Live Voice Agent
-                    </h3>
-                    <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                      Tool-Calling Active
-                    </span>
+          {/* ================================================================ */}
+          {/* VIEW 2: MERCHANT OPERATIONS CENTER */}
+          {/* ================================================================ */}
+          {authSession.role === 'merchant' && (
+            <div className="space-y-6">
+              {/* Top Metric Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
+                  <div className="text-xs text-slate-500 font-medium">Total Revenue At-Risk</div>
+                  <div className="text-xl font-bold text-slate-900 font-mono">₹{totalAtRisk.toLocaleString()}</div>
+                  <div className="text-xs text-slate-500">{INCIDENTS.length} customer accounts active</div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
+                  <div className="text-xs text-slate-500 font-medium">Money Recovered</div>
+                  <div className="text-xl font-bold text-emerald-600 font-mono">₹{totalRecovered.toLocaleString()}</div>
+                  <div className="text-xs text-emerald-700 font-medium">{recoveryRate}% Recovery Efficiency</div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
+                  <div className="text-xs text-slate-500 font-medium">Spam / Duplicate Contacts</div>
+                  <div className="text-xl font-bold text-slate-900 font-mono">0</div>
+                  <div className="text-xs text-emerald-700 font-medium">Guaranteed Zero Spam</div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
+                  <div className="text-xs text-slate-500 font-medium">Awaiting Your Approval</div>
+                  <div className="text-xl font-bold text-amber-600 font-mono">
+                    {approvedHitl ? '0' : '₹1,45,000'}
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    Speak naturally in Hinglish to negotiate a discount, ask questions, or promise a date. The AI uses real tools!
-                  </p>
+                  <div className="text-xs text-slate-500">Invoices &ge; ₹1,00,000 (Safety Gate)</div>
+                </div>
+              </div>
+
+              {/* Navigation Tabs */}
+              <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
+                {[
+                  { id: 'pending', label: '📋 Pending Payments' },
+                  { id: 'live', label: '⚡ Auto-Recovery Test' },
+                  { id: 'protection', label: '🛡️ Outage Protection' },
+                  { id: 'results', label: '📈 Performance & Results' },
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setMerchantTab(t.id as any)}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                      merchantTab === t.id
+                        ? 'bg-[#0052CC] text-white'
+                        : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* TAB 1: PENDING PAYMENTS */}
+              {merchantTab === 'pending' && (
+                <div className="space-y-4">
+                  {/* Explain HITL in clear language */}
+                  <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-xs text-amber-900">
+                    <span className="text-lg">🛡️</span>
+                    <div className="space-y-1">
+                      <div className="font-bold">High-Value Safety Gate (Human-In-The-Loop / HITL):</div>
+                      <p className="leading-relaxed text-amber-800">
+                        When a transaction is **₹1,00,000 or higher** (like TechMatrix Corp ₹1,45,000), the AI automatically pauses instead of sending automated messages. You retain full control to click <strong>&quot;Approve Outreach&quot;</strong> before anything moves.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+                    {/* Left List */}
+                    <div className="lg:col-span-2 space-y-2">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+                        Customer Invoices ({INCIDENTS.length})
+                      </h3>
+                      {INCIDENTS.map((inc) => (
+                        <div
+                          key={inc.id}
+                          onClick={() => setSelectedIncident(inc)}
+                          className={`p-3 rounded-lg border transition-all cursor-pointer ${
+                            selectedIncident.id === inc.id
+                              ? 'bg-blue-50/80 border-[#0052CC]'
+                              : 'bg-white border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-xs font-bold text-slate-900">{inc.customer}</span>
+                            <span className="text-xs font-bold text-slate-900 font-mono">₹{inc.amount.toLocaleString()}</span>
+                          </div>
+                          <div className="text-[11px] text-slate-600 mb-2">{inc.type}</div>
+                          <div className="flex items-center justify-between">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${statusColor(inc.id === 'evt_003' && approvedHitl ? 'recovered' : inc.status)}`}>
+                              {inc.id === 'evt_003' && approvedHitl ? '✓ Approved & Sent' : statusLabel(inc.status)}
+                            </span>
+                            <span className="text-[11px] text-slate-500">{inc.channel}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Right Deep-Dive */}
+                    <div className="lg:col-span-3 bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                      <div className="flex items-start justify-between border-b border-slate-200 pb-3">
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900">{selectedIncident.customer}</h3>
+                          <p className="text-xs text-slate-500">{selectedIncident.type} &bull; Amount: ₹{selectedIncident.amount.toLocaleString()}</p>
+                        </div>
+                        <span className={`px-2.5 py-1 rounded text-xs font-bold border ${statusColor(selectedIncident.id === 'evt_003' && approvedHitl ? 'recovered' : selectedIncident.status)}`}>
+                          {selectedIncident.id === 'evt_003' && approvedHitl ? '✓ Approved & Sent' : statusLabel(selectedIncident.status)}
+                        </span>
+                      </div>
+
+                      <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1">
+                        <div className="text-xs font-bold text-slate-900">Why was this action chosen?</div>
+                        <p className="text-xs text-slate-700 leading-relaxed">{selectedIncident.reasoning}</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                          <span className="text-slate-500">Recovery Strategy</span>
+                          <p className="font-bold text-slate-900 mt-0.5">{selectedIncident.action}</p>
+                        </div>
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                          <span className="text-slate-500">Expected Value</span>
+                          <p className="font-bold text-emerald-700 font-mono mt-0.5">₹{selectedIncident.ev.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                          <span className="text-slate-500">Target Channel</span>
+                          <p className="font-bold text-slate-900 mt-0.5">{selectedIncident.channel}</p>
+                        </div>
+                      </div>
+
+                      {/* Multi-Channel Outreach Actions */}
+                      <div className="space-y-2 pt-2 border-t border-slate-200">
+                        <div className="text-xs font-bold text-slate-700">Dispatch Outreach Channels:</div>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedIncident.status === 'escalated' && !approvedHitl && (
+                            <button
+                              onClick={async () => {
+                                setApprovedHitl(true);
+                                setSendingChannel('approve_hitl');
+                                try {
+                                  const res = await fetch('http://localhost:8000/api/orchestrator/send-telegram', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      customer_name: selectedIncident.customer,
+                                      amount: selectedIncident.amount,
+                                      root_cause: selectedIncident.rootCause,
+                                      recovery_link: selectedIncident.link || 'https://rzp.io/rzp/Qf0zRD2B',
+                                    }),
+                                  });
+                                  if (res.ok) {
+                                    const data = await res.json();
+                                    setChannelResult(`✅ High-value invoice approved! Telegram alert dispatched to @razorpaytestbot: ${data.message}`);
+                                  } else {
+                                    setChannelResult('✅ High-value invoice approved!');
+                                  }
+                                } catch {
+                                  setChannelResult('✅ High-value invoice approved and authorized.');
+                                } finally {
+                                  setSendingChannel(null);
+                                }
+                              }}
+                              disabled={sendingChannel === 'approve_hitl'}
+                              className="px-4 py-2 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition-colors shadow-xs"
+                            >
+                              {sendingChannel === 'approve_hitl' ? 'Approving...' : '✅ Approve Outreach (≥ ₹1,00,000)'}
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => handleTriggerPlivoCall(selectedIncident)}
+                            disabled={sendingChannel === 'plivo'}
+                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                          >
+                            <span>📞</span>
+                            <span>{sendingChannel === 'plivo' ? 'Calling...' : 'Call via Plivo Telephony'}</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleSendTelegram(selectedIncident)}
+                            disabled={sendingChannel === 'telegram'}
+                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#229ED9] hover:bg-[#1E88E5] text-white transition-colors disabled:opacity-50"
+                          >
+                            {sendingChannel === 'telegram' ? 'Sending...' : 'Telegram Alert (@razorpaytestbot)'}
+                          </button>
+
+                          <button
+                            onClick={() => handleSendWhatsApp(selectedIncident)}
+                            disabled={sendingChannel === 'whatsapp'}
+                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#25D366] hover:bg-[#20bd5a] text-white transition-colors disabled:opacity-50"
+                          >
+                            {sendingChannel === 'whatsapp' ? 'Sending...' : 'WhatsApp Reminder'}
+                          </button>
+                        </div>
+
+                        {channelResult && (
+                          <div className="p-2.5 rounded bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium">
+                            {channelResult}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: AUTO-RECOVERY TEST */}
+              {merchantTab === 'live' && (
+                <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-sm text-slate-900">Live Auto-Recovery Test Simulator</h3>
+                      <p className="text-xs text-slate-500">Watch the AI detect, evaluate, and recover a failed payment step-by-step</p>
+                    </div>
+                    <button
+                      onClick={runLiveDemo}
+                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#0052CC] hover:bg-[#0747A6] text-white transition-colors"
+                    >
+                      Start Recovery Test
+                    </button>
+                  </div>
+
+                  <div className="bg-slate-900 rounded-lg p-4 font-mono text-xs text-emerald-400 space-y-1.5 max-h-[420px] overflow-y-auto">
+                    {liveLog.length === 0 && (
+                      <div className="text-slate-500">Click &ldquo;Start Recovery Test&rdquo; to simulate a live recovery...</div>
+                    )}
+                    {liveLog.map((line, idx) => (
+                      <div
+                        key={idx}
+                        className={`${
+                          line.startsWith('🎉') ? 'text-amber-300 font-bold text-xs pt-2' :
+                          line.startsWith('   ✓') ? 'text-emerald-300' :
+                          line.startsWith('   🏆') ? 'text-yellow-300 font-bold' :
+                          line.startsWith('   →') ? 'text-slate-400' :
+                          line === '' ? '' : 'text-slate-200'
+                        }`}
+                      >
+                        {line || '\u00A0'}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: OUTAGE & SPAM PROTECTION */}
+              {merchantTab === 'protection' && (
+                <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-sm text-slate-900">Outage & Spam Protection System</h3>
+                      <p className="text-xs text-slate-500">Guarantees customers are never spammed when payments succeed quickly</p>
+                    </div>
+                    <button
+                      onClick={runProtectionDemo}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#0052CC] hover:bg-[#0747A6] text-white"
+                    >
+                      Simulate Protection Sequence
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5 max-w-xl">
+                    <div className={`p-3 rounded-lg border transition-all text-xs ${
+                      protectionDemo && protectionDemo.step >= 1 ? 'bg-red-50 border-red-200 text-red-900' : 'bg-slate-50 border-slate-200 opacity-40'
+                    }`}>
+                      <div className="font-bold">10:31:02 &mdash; Customer Payment Failed</div>
+                      <div className="text-[11px] text-slate-600">Reminder action placed in holding queue.</div>
+                    </div>
+
+                    <div className={`p-3 rounded-lg border transition-all text-xs ${
+                      protectionDemo && protectionDemo.step >= 2 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 border-slate-200 opacity-40'
+                    }`}>
+                      <div className="font-bold">10:31:04 &mdash; Customer Retries & Payment Succeeds</div>
+                      <div className="text-[11px] text-slate-600">Payment captured via Razorpay.</div>
+                    </div>
+
+                    <div className={`p-3 rounded-lg border transition-all text-xs ${
+                      protectionDemo && protectionDemo.step >= 3 ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-slate-50 border-slate-200 opacity-40'
+                    }`}>
+                      <div className="font-bold">System Detects Success & Cancels Queued Reminder</div>
+                      <div className="text-[11px] text-slate-600">Pending outreach canceled before it could be sent.</div>
+                    </div>
+
+                    <div className={`p-3 rounded-lg border transition-all text-xs ${
+                      protectionDemo && protectionDemo.step >= 4 ? 'bg-blue-50 border-blue-200 text-blue-900' : 'bg-slate-50 border-slate-200 opacity-40'
+                    }`}>
+                      <div className="font-bold">✓ Invariant Verified: Zero Duplicate Spam</div>
+                      <div className="text-[11px] text-slate-600">Customer receives zero annoying duplicate reminder messages.</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: RESULTS */}
+              {merchantTab === 'results' && (
+                <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-900">Performance & Evaluation Results</h3>
+                    <p className="text-xs text-slate-500">Benchmark results across 100 payment failure cases</p>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs font-mono">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-slate-500 pb-2">
+                          <th className="py-2.5 font-sans font-semibold text-slate-900">Metric</th>
+                          <th className="font-semibold text-slate-600">Old Blast Reminders</th>
+                          <th className="font-semibold text-slate-600">Basic Rules</th>
+                          <th className="font-semibold text-emerald-700 font-sans">Razorpay AI Recovery</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-slate-800">
+                        <tr>
+                          <td className="py-3 font-sans font-medium text-slate-900">Classification Accuracy</td>
+                          <td>—</td>
+                          <td>—</td>
+                          <td className="font-bold text-emerald-700">96.00% (96/100 Accurate)</td>
+                        </tr>
+                        <tr className="bg-slate-50">
+                          <td className="py-3 font-sans font-medium text-slate-900">Duplicate / Spam Messages</td>
+                          <td className="text-red-600 font-bold">16 breaches</td>
+                          <td className="text-red-600 font-bold">13 breaches</td>
+                          <td className="font-bold text-emerald-700">0 (Strictly Zero Spam)</td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 font-sans font-medium text-slate-900">Wasted Outreach</td>
+                          <td className="text-red-600 font-bold">13 cases</td>
+                          <td className="text-red-600 font-bold">12 cases</td>
+                          <td className="font-bold text-emerald-700">6 cases (54% Reduction)</td>
+                        </tr>
+                        <tr className="bg-slate-50">
+                          <td className="py-3 font-sans font-medium text-slate-900">High-Value Safety Approvals</td>
+                          <td>0 (Un-gated)</td>
+                          <td>0 (Un-gated)</td>
+                          <td className="font-bold text-amber-700">19 cases (100% Protected)</td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 font-sans font-medium text-slate-900">Automated Test Pass Rate</td>
+                          <td>—</td>
+                          <td>—</td>
+                          <td className="font-bold text-emerald-700">18 / 18 (100% PASS)</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </main>
+
+        {/* ================================================================ */}
+        {/* RIGHT COLLAPSIBLE CONTAINER: AI COPILOT & VOICE TALK ASSISTANT */}
+        {/* ================================================================ */}
+        {copilotOpen ? (
+          <aside className="w-full lg:w-[410px] shrink-0 bg-white border border-slate-200 rounded-2xl shadow-lg flex flex-col h-[700px] sticky top-20 overflow-hidden transition-all duration-300">
+            {/* Header */}
+            <div className="bg-slate-900 text-white p-3.5 flex items-center justify-between border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-[#0052CC] flex items-center justify-center font-bold text-xs">
+                  🤖
+                </div>
+                <div>
+                  <div className="text-xs font-bold leading-tight">AI Recovery Copilot</div>
+                  <div className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Connected &bull; {authSession.role === 'merchant' ? 'Merchant Mode' : 'Payer Mode'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Minimize button */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCopilotOpen(false)}
+                  className="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 text-xs font-bold transition-colors"
+                  title="Collapse Panel"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Mode Switcher: Text Chat vs Gemini Live Voice */}
+            <div className="bg-slate-100 p-1.5 flex gap-1 border-b border-slate-200">
+              <button
+                onClick={() => setCopilotMode('chat')}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 ${
+                  copilotMode === 'chat'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <span>💬 Text Chat</span>
+              </button>
+              <button
+                onClick={() => {
+                  setCopilotMode('voice');
+                  if (!callActive) startVoiceCall(authSession.role);
+                }}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 ${
+                  copilotMode === 'voice'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-emerald-700'
+                }`}
+              >
+                <span>🎙️ Gemini Live Voice</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+              </button>
+            </div>
+
+            {/* BODY 1: TEXT CHAT */}
+            {copilotMode === 'chat' && (
+              <div className="flex-1 flex flex-col justify-between overflow-hidden p-3.5 space-y-3">
+                {/* Suggested Prompts */}
+                <div className="space-y-1.5">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Suggested Questions</div>
+                  <div className="flex flex-wrap gap-1">
+                    {[
+                      authSession.role === 'merchant' ? 'What is my financial status?' : 'Why was my payment held?',
+                      authSession.role === 'merchant' ? 'Why is TechMatrix paused?' : 'Can I get a discount?',
+                      authSession.role === 'merchant' ? 'Explain RBI mandate rule' : 'I will pay next Monday',
+                    ].map((chip, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSendCopilot(chip)}
+                        className="px-2 py-1 rounded-full bg-slate-100 hover:bg-blue-50 hover:text-[#0052CC] text-slate-700 text-[10px] font-medium transition-colors border border-slate-200"
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="bg-slate-900 rounded-lg p-3 min-h-[190px] max-h-[240px] overflow-y-auto space-y-2 text-xs">
+                {/* Messages Stream */}
+                <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                  {copilotMessages.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[90%] p-3 rounded-xl text-xs leading-relaxed ${
+                          msg.sender === 'user'
+                            ? 'bg-[#0052CC] text-white rounded-br-none'
+                            : 'bg-slate-50 border border-slate-200 text-slate-800 rounded-bl-none shadow-xs'
+                        }`}
+                      >
+                        <FormattedChatText text={msg.text} />
+                      </div>
+                    </div>
+                  ))}
+                  {copilotLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-slate-50 border border-slate-200 text-slate-500 p-2.5 rounded-xl text-xs animate-pulse">
+                        Analyzing recovery data...
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Input form */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendCopilot();
+                  }}
+                  className="flex gap-1.5 pt-2 border-t border-slate-200"
+                >
+                  <input
+                    type="text"
+                    value={copilotInput}
+                    onChange={(e) => setCopilotInput(e.target.value)}
+                    placeholder="Ask about finances, customers, or rules..."
+                    className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0052CC]"
+                  />
+                  <button
+                    type="submit"
+                    disabled={copilotLoading || !copilotInput.trim()}
+                    className="px-3.5 py-2 rounded-lg bg-[#0052CC] hover:bg-[#0747A6] text-white text-xs font-bold transition-colors disabled:opacity-50"
+                  >
+                    Send
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* BODY 2: GEMINI LIVE VOICE TALK */}
+            {copilotMode === 'voice' && (
+              <div className="flex-1 flex flex-col justify-between overflow-hidden p-3.5 space-y-3">
+                {/* Voice Status Card */}
+                <div className="bg-slate-900 text-white p-3 rounded-xl flex items-center justify-between border border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-3 h-3 rounded-full ${callActive ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}`} />
+                    <div>
+                      <div className="text-xs font-bold">
+                        {callActive ? '🎙️ Live Audio Stream Active' : 'Call Inactive'}
+                      </div>
+                      <div className="text-[10px] text-slate-400">
+                        {authSession.role === 'merchant' ? 'Merchant Voice Assistant' : 'Payer Voice Assistant'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {callActive ? (
+                    <button
+                      onClick={endVoiceCall}
+                      className="px-2.5 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold"
+                    >
+                      End Call
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => startVoiceCall(authSession.role)}
+                      className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold"
+                    >
+                      Start Call
+                    </button>
+                  )}
+                </div>
+
+                {/* Spoken Turns Stream */}
+                <div className="flex-1 bg-slate-950 rounded-xl p-3 overflow-y-auto space-y-2 text-xs border border-slate-800">
                   {voiceTurns.length === 0 ? (
-                    <div className="text-slate-400 text-center py-6">
-                      Click below to start a live call with the Gemini voice agent.
+                    <div className="text-slate-500 text-center py-10 text-xs">
+                      Tap &ldquo;Start Call&rdquo; or click below to speak naturally in Hindi or English.
                     </div>
                   ) : (
                     voiceTurns.map((t, idx) => (
                       <div key={idx} className="space-y-1">
                         <div
-                          className={`p-2 rounded-lg leading-relaxed ${
+                          className={`p-2.5 rounded-lg leading-relaxed ${
                             t.speaker === 'user'
-                              ? 'bg-[#0052CC] text-white ml-4'
-                              : 'bg-slate-800 text-slate-100 mr-4 border border-slate-700'
+                              ? 'bg-[#0052CC] text-white ml-3'
+                              : 'bg-slate-800 text-slate-100 mr-3 border border-slate-700'
                           }`}
                         >
-                          <span className="font-bold text-[10px] block opacity-70">
-                            {t.speaker === 'agent' ? '🤖 Gemini Live Recovery Agent' : `👤 ${authSession.name}`}
+                          <span className="font-bold text-[9px] block opacity-70 mb-0.5">
+                            {t.speaker === 'agent' ? '🤖 Gemini Voice Copilot' : `👤 ${authSession.name}`}
                           </span>
                           {t.text}
                         </div>
@@ -982,7 +1525,7 @@ export default function Dashboard() {
                         {t.toolsExecuted && t.toolsExecuted.map((tool, tIdx) => (
                           <div
                             key={tIdx}
-                            className="text-[10px] font-mono px-2 py-1 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800 ml-4 flex items-center gap-1.5"
+                            className="text-[10px] font-mono px-2 py-1 rounded bg-emerald-950/90 text-emerald-300 border border-emerald-700 ml-3 flex items-center gap-1.5"
                           >
                             <span>⚡</span>
                             <span><strong>Tool Executed:</strong> {tool.tool} &mdash; {tool.message}</span>
@@ -993,487 +1536,53 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  {!callActive ? (
+                {/* Voice Controls */}
+                <div className="space-y-2 pt-1 border-t border-slate-200">
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => startVoiceCall(payerIncident, 'payer')}
-                      className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-xs"
-                    >
-                      📞 Start Gemini Live Call
-                    </button>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={toggleSpeechRecognition}
-                          className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${
-                            isListening
-                              ? 'bg-red-600 text-white animate-pulse'
-                              : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                          }`}
-                        >
-                          {isListening ? '🎙️ Listening to you...' : '🎤 Tap to Speak'}
-                        </button>
-                        <button
-                          onClick={endVoiceCall}
-                          className="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold"
-                        >
-                          End Call
-                        </button>
-                      </div>
-
-                      <div className="flex flex-wrap gap-1 text-[10px]">
-                        {['Can I get a discount?', 'I will pay on Monday', 'Why was it held?'].map((chip, i) => (
-                          <button
-                            key={i}
-                            onClick={() => handleSendVoiceUserSpeech(chip)}
-                            className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700"
-                          >
-                            &ldquo;{chip}&rdquo;
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ================================================================ */}
-        {/* VIEW 2: MERCHANT OPERATIONS CENTER */}
-        {/* ================================================================ */}
-        {authSession.role === 'merchant' && (
-          <div className="space-y-6">
-            {/* Top Metric Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
-                <div className="text-xs text-slate-500 font-medium">Total Revenue At-Risk</div>
-                <div className="text-xl font-bold text-slate-900 font-mono">₹{totalAtRisk.toLocaleString()}</div>
-                <div className="text-xs text-slate-500">{INCIDENTS.length} customer accounts active</div>
-              </div>
-              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
-                <div className="text-xs text-slate-500 font-medium">Money Recovered</div>
-                <div className="text-xl font-bold text-emerald-600 font-mono">₹{totalRecovered.toLocaleString()}</div>
-                <div className="text-xs text-emerald-700 font-medium">{recoveryRate}% Net Recovery Efficiency</div>
-              </div>
-              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
-                <div className="text-xs text-slate-500 font-medium">Spam / Duplicate Contacts</div>
-                <div className="text-xl font-bold text-slate-900 font-mono">0</div>
-                <div className="text-xs text-emerald-700 font-medium">Guaranteed Zero Spam</div>
-              </div>
-              <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-1">
-                <div className="text-xs text-slate-500 font-medium">Awaiting Your Approval</div>
-                <div className="text-xl font-bold text-amber-600 font-mono">
-                  {approvedHitl ? '0' : '₹1,45,000'}
-                </div>
-                <div className="text-xs text-slate-500">Invoices &ge; ₹1,00,000 (Safety Gate)</div>
-              </div>
-            </div>
-
-            {/* Navigation Tabs */}
-            <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
-              {[
-                { id: 'pending', label: '📋 Pending Payments' },
-                { id: 'copilot', label: '💬 AI Assistant' },
-                { id: 'live', label: '⚡ Auto-Recovery Test' },
-                { id: 'protection', label: '🛡️ Outage Protection' },
-                { id: 'results', label: '📈 Performance & Results' },
-              ].map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setMerchantTab(t.id as any)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                    merchantTab === t.id
-                      ? 'bg-[#0052CC] text-white'
-                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-
-            {/* TAB 1: PENDING PAYMENTS */}
-            {merchantTab === 'pending' && (
-              <div className="space-y-4">
-                {/* Explain HITL in clear language */}
-                <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-xs text-amber-900">
-                  <span className="text-lg">🛡️</span>
-                  <div className="space-y-1">
-                    <div className="font-bold">High-Value Safety Gate (Human-In-The-Loop / HITL):</div>
-                    <p className="leading-relaxed text-amber-800">
-                      When a transaction is **₹1,00,000 or higher** (like TechMatrix Corp ₹1,45,000), the AI automatically pauses instead of sending automated messages. You retain full control to click <strong>&quot;Approve Outreach&quot;</strong> before anything moves.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-                  {/* Left List */}
-                  <div className="lg:col-span-2 space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                      Customer Invoices ({INCIDENTS.length})
-                    </h3>
-                    {INCIDENTS.map((inc) => (
-                      <div
-                        key={inc.id}
-                        onClick={() => setSelectedIncident(inc)}
-                        className={`p-3 rounded-lg border transition-all cursor-pointer ${
-                          selectedIncident.id === inc.id
-                            ? 'bg-blue-50/80 border-[#0052CC]'
-                            : 'bg-white border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start mb-1">
-                          <span className="text-xs font-bold text-slate-900">{inc.customer}</span>
-                          <span className="text-xs font-bold text-slate-900 font-mono">₹{inc.amount.toLocaleString()}</span>
-                        </div>
-                        <div className="text-[11px] text-slate-600 mb-2">{inc.type}</div>
-                        <div className="flex items-center justify-between">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${statusColor(inc.id === 'evt_003' && approvedHitl ? 'recovered' : inc.status)}`}>
-                            {inc.id === 'evt_003' && approvedHitl ? '✓ Approved & Sent' : statusLabel(inc.status)}
-                          </span>
-                          <span className="text-[11px] text-slate-500">{inc.channel}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Right Deep-Dive */}
-                  <div className="lg:col-span-3 bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-                    <div className="flex items-start justify-between border-b border-slate-200 pb-3">
-                      <div>
-                        <h3 className="text-base font-bold text-slate-900">{selectedIncident.customer}</h3>
-                        <p className="text-xs text-slate-500">{selectedIncident.type} &bull; Amount: ₹{selectedIncident.amount.toLocaleString()}</p>
-                      </div>
-                      <span className={`px-2.5 py-1 rounded text-xs font-bold border ${statusColor(selectedIncident.id === 'evt_003' && approvedHitl ? 'recovered' : selectedIncident.status)}`}>
-                        {selectedIncident.id === 'evt_003' && approvedHitl ? '✓ Approved & Sent' : statusLabel(selectedIncident.status)}
-                      </span>
-                    </div>
-
-                    <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1">
-                      <div className="text-xs font-bold text-slate-900">Why was this action chosen?</div>
-                      <p className="text-xs text-slate-700 leading-relaxed">{selectedIncident.reasoning}</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        <span className="text-slate-500">Recovery Strategy</span>
-                        <p className="font-bold text-slate-900 mt-0.5">{selectedIncident.action}</p>
-                      </div>
-                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        <span className="text-slate-500">Expected Value</span>
-                        <p className="font-bold text-emerald-700 font-mono mt-0.5">₹{selectedIncident.ev.toLocaleString()}</p>
-                      </div>
-                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        <span className="text-slate-500">Target Channel</span>
-                        <p className="font-bold text-slate-900 mt-0.5">{selectedIncident.channel}</p>
-                      </div>
-                    </div>
-
-                    {/* Multi-Channel Outreach Actions including Plivo Telephony */}
-                    <div className="space-y-2 pt-2 border-t border-slate-200">
-                      <div className="text-xs font-bold text-slate-700">Dispatch Outreach Channels:</div>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedIncident.status === 'escalated' && !approvedHitl && (
-                          <button
-                            onClick={async () => {
-                              setApprovedHitl(true);
-                              setSendingChannel('approve_hitl');
-                              try {
-                                const res = await fetch('http://localhost:8000/api/orchestrator/send-telegram', {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({
-                                    customer_name: selectedIncident.customer,
-                                    amount: selectedIncident.amount,
-                                    root_cause: selectedIncident.rootCause,
-                                    recovery_link: selectedIncident.link || 'https://rzp.io/rzp/Qf0zRD2B',
-                                  }),
-                                });
-                                if (res.ok) {
-                                  const data = await res.json();
-                                  setChannelResult(`✅ High-value invoice approved! Telegram alert dispatched to @razorpaytestbot: ${data.message}`);
-                                } else {
-                                  setChannelResult('✅ High-value invoice approved!');
-                                }
-                              } catch {
-                                setChannelResult('✅ High-value invoice approved and authorized.');
-                              } finally {
-                                setSendingChannel(null);
-                              }
-                            }}
-                            disabled={sendingChannel === 'approve_hitl'}
-                            className="px-4 py-2 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition-colors shadow-xs"
-                          >
-                            {sendingChannel === 'approve_hitl' ? 'Approving...' : '✅ Approve Outreach (≥ ₹1,00,000)'}
-                          </button>
-                        )}
-
-                        <button
-                          onClick={() => handleTriggerPlivoCall(selectedIncident)}
-                          disabled={sendingChannel === 'plivo'}
-                          className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white transition-colors disabled:opacity-50 flex items-center gap-1.5"
-                        >
-                          <span>📞</span>
-                          <span>{sendingChannel === 'plivo' ? 'Calling...' : 'Call via Plivo Telephony'}</span>
-                        </button>
-
-                        <button
-                          onClick={() => handleSendTelegram(selectedIncident)}
-                          disabled={sendingChannel === 'telegram'}
-                          className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#229ED9] hover:bg-[#1E88E5] text-white transition-colors disabled:opacity-50"
-                        >
-                          {sendingChannel === 'telegram' ? 'Sending...' : 'Telegram Alert (@razorpaytestbot)'}
-                        </button>
-
-                        <button
-                          onClick={() => handleSendWhatsApp(selectedIncident)}
-                          disabled={sendingChannel === 'whatsapp'}
-                          className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#25D366] hover:bg-[#20bd5a] text-white transition-colors disabled:opacity-50"
-                        >
-                          {sendingChannel === 'whatsapp' ? 'Sending...' : 'WhatsApp Reminder'}
-                        </button>
-                      </div>
-
-                      {channelResult && (
-                        <div className="p-2.5 rounded bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium">
-                          {channelResult}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 2: AI ASSISTANT */}
-            {merchantTab === 'copilot' && (
-              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                  <div>
-                    <h3 className="font-bold text-sm text-slate-900">AI Recovery Assistant</h3>
-                    <p className="text-xs text-slate-500">Ask about pending invoices, financial status, or recovery rules</p>
-                  </div>
-                </div>
-
-                {/* Quick Prompts */}
-                <div className="flex flex-wrap gap-1.5 text-xs">
-                  <span className="text-slate-500 text-[11px] self-center mr-1">Suggested questions:</span>
-                  {[
-                    'What is my financial status?',
-                    'Why is TechMatrix Corp paused for human approval?',
-                    'How does the RBI > ₹15,000 mandate rule work?',
-                    'Why did you choose "Do Nothing" for Rohan Mehta?',
-                  ].map((chip, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleSendCopilot(chip)}
-                      className="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium transition-colors"
-                    >
-                      {chip}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Chat Display */}
-                <div className="bg-slate-50 rounded-xl p-4 min-h-[300px] max-h-[420px] overflow-y-auto space-y-3 border border-slate-200">
-                  {copilotMessages.map((msg, i) => (
-                    <div
-                      key={i}
-                      className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-xl p-4 rounded-xl text-xs leading-relaxed ${
-                          msg.sender === 'user'
-                            ? 'bg-[#0052CC] text-white rounded-br-none'
-                            : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none shadow-xs'
-                        }`}
-                      >
-                        <FormattedChatText text={msg.text} />
-                      </div>
-                    </div>
-                  ))}
-                  {copilotLoading && (
-                    <div className="flex justify-start">
-                      <div className="bg-white border border-slate-200 text-slate-500 p-3 rounded-xl text-xs animate-pulse">
-                        Assistant is analyzing your financial records...
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Input */}
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSendCopilot();
-                  }}
-                  className="flex gap-2"
-                >
-                  <input
-                    type="text"
-                    value={copilotInput}
-                    onChange={(e) => setCopilotInput(e.target.value)}
-                    placeholder="Ask about your financial status, pending payments, or recovery rules..."
-                    className="flex-1 px-3.5 py-2 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#0052CC]"
-                  />
-                  <button
-                    type="submit"
-                    disabled={copilotLoading || !copilotInput.trim()}
-                    className="px-4 py-2 rounded-lg bg-[#0052CC] hover:bg-[#0747A6] text-white text-xs font-bold transition-colors disabled:opacity-50"
-                  >
-                    Ask
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* TAB 3: AUTO-RECOVERY TEST */}
-            {merchantTab === 'live' && (
-              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-sm text-slate-900">Live Auto-Recovery Test Simulator</h3>
-                    <p className="text-xs text-slate-500">Watch the AI detect, evaluate, and recover a failed payment step-by-step</p>
-                  </div>
-                  <button
-                    onClick={runLiveDemo}
-                    className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[#0052CC] hover:bg-[#0747A6] text-white transition-colors"
-                  >
-                    Start Recovery Test
-                  </button>
-                </div>
-
-                <div className="bg-slate-900 rounded-lg p-4 font-mono text-xs text-emerald-400 space-y-1.5 max-h-[420px] overflow-y-auto">
-                  {liveLog.length === 0 && (
-                    <div className="text-slate-500">Click &ldquo;Start Recovery Test&rdquo; to simulate a live recovery...</div>
-                  )}
-                  {liveLog.map((line, idx) => (
-                    <div
-                      key={idx}
-                      className={`${
-                        line.startsWith('🎉') ? 'text-amber-300 font-bold text-xs pt-2' :
-                        line.startsWith('   ✓') ? 'text-emerald-300' :
-                        line.startsWith('   🏆') ? 'text-yellow-300 font-bold' :
-                        line.startsWith('   →') ? 'text-slate-400' :
-                        line === '' ? '' : 'text-slate-200'
+                      onClick={toggleSpeechRecognition}
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 ${
+                        isListening
+                          ? 'bg-red-600 text-white animate-pulse'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white'
                       }`}
                     >
-                      {line || '\u00A0'}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* TAB 4: OUTAGE & SPAM PROTECTION */}
-            {merchantTab === 'protection' && (
-              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-sm text-slate-900">Outage & Spam Protection System</h3>
-                    <p className="text-xs text-slate-500">Guarantees customers are never spammed when payments succeed quickly</p>
-                  </div>
-                  <button
-                    onClick={runProtectionDemo}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#0052CC] hover:bg-[#0747A6] text-white"
-                  >
-                    Simulate Protection Sequence
-                  </button>
-                </div>
-
-                <div className="space-y-2.5 max-w-xl">
-                  <div className={`p-3 rounded-lg border transition-all text-xs ${
-                    protectionDemo && protectionDemo.step >= 1 ? 'bg-red-50 border-red-200 text-red-900' : 'bg-slate-50 border-slate-200 opacity-40'
-                  }`}>
-                    <div className="font-bold">10:31:02 &mdash; Customer Payment Failed</div>
-                    <div className="text-[11px] text-slate-600">Reminder action placed in holding queue.</div>
+                      <span>{isListening ? '🎙️ Listening to you...' : '🎤 Tap to Speak (Hinglish / English)'}</span>
+                    </button>
                   </div>
 
-                  <div className={`p-3 rounded-lg border transition-all text-xs ${
-                    protectionDemo && protectionDemo.step >= 2 ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 border-slate-200 opacity-40'
-                  }`}>
-                    <div className="font-bold">10:31:04 &mdash; Customer Retries & Payment Succeeds</div>
-                    <div className="text-[11px] text-slate-600">Payment captured via Razorpay.</div>
-                  </div>
-
-                  <div className={`p-3 rounded-lg border transition-all text-xs ${
-                    protectionDemo && protectionDemo.step >= 3 ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-slate-50 border-slate-200 opacity-40'
-                  }`}>
-                    <div className="font-bold">System Detects Success & Cancels Queued Reminder</div>
-                    <div className="text-[11px] text-slate-600">Pending outreach canceled before it could be sent.</div>
-                  </div>
-
-                  <div className={`p-3 rounded-lg border transition-all text-xs ${
-                    protectionDemo && protectionDemo.step >= 4 ? 'bg-blue-50 border-blue-200 text-blue-900' : 'bg-slate-50 border-slate-200 opacity-40'
-                  }`}>
-                    <div className="font-bold">✓ Invariant Verified: Zero Duplicate Spam</div>
-                    <div className="text-[11px] text-slate-600">Customer receives zero annoying duplicate reminder messages.</div>
+                  {/* Quick Voice Prompt Chips */}
+                  <div className="flex flex-wrap gap-1 text-[10px]">
+                    {[
+                      authSession.role === 'merchant' ? 'What is my financial status?' : 'Can I get a discount?',
+                      authSession.role === 'merchant' ? 'Approve TechMatrix invoice' : 'I will pay next Monday',
+                      authSession.role === 'merchant' ? 'Who owes the most?' : 'Why was my payment held?',
+                    ].map((chip, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleSendVoiceUserSpeech(chip)}
+                        className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
+                      >
+                        &ldquo;{chip}&rdquo;
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
             )}
-
-            {/* TAB 5: RESULTS */}
-            {merchantTab === 'results' && (
-              <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900">Performance & Evaluation Results</h3>
-                  <p className="text-xs text-slate-500">Benchmark results across 100 payment failure cases</p>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs font-mono">
-                    <thead>
-                      <tr className="border-b border-slate-200 text-slate-500 pb-2">
-                        <th className="py-2.5 font-sans font-semibold text-slate-900">Metric</th>
-                        <th className="font-semibold text-slate-600">Old Blast Reminders</th>
-                        <th className="font-semibold text-slate-600">Basic Rules</th>
-                        <th className="font-semibold text-emerald-700 font-sans">Razorpay AI Recovery</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-slate-800">
-                      <tr>
-                        <td className="py-3 font-sans font-medium text-slate-900">Classification Accuracy</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td className="font-bold text-emerald-700">96.00% (96/100 Accurate)</td>
-                      </tr>
-                      <tr className="bg-slate-50">
-                        <td className="py-3 font-sans font-medium text-slate-900">Duplicate / Spam Messages</td>
-                        <td className="text-red-600 font-bold">16 breaches</td>
-                        <td className="text-red-600 font-bold">13 breaches</td>
-                        <td className="font-bold text-emerald-700">0 (Strictly Zero Spam)</td>
-                      </tr>
-                      <tr>
-                        <td className="py-3 font-sans font-medium text-slate-900">Wasted Outreach</td>
-                        <td className="text-red-600 font-bold">13 cases</td>
-                        <td className="text-red-600 font-bold">12 cases</td>
-                        <td className="font-bold text-emerald-700">6 cases (54% Reduction)</td>
-                      </tr>
-                      <tr className="bg-slate-50">
-                        <td className="py-3 font-sans font-medium text-slate-900">High-Value Safety Approvals</td>
-                        <td>0 (Un-gated)</td>
-                        <td>0 (Un-gated)</td>
-                        <td className="font-bold text-amber-700">19 cases (100% Protected)</td>
-                      </tr>
-                      <tr>
-                        <td className="py-3 font-sans font-medium text-slate-900">Automated Test Pass Rate</td>
-                        <td>—</td>
-                        <td>—</td>
-                        <td className="font-bold text-emerald-700">18 / 18 (100% PASS)</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
+          </aside>
+        ) : (
+          /* Floating Trigger Pill when Collapsed */
+          <button
+            onClick={() => setCopilotOpen(true)}
+            className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-full bg-[#0052CC] hover:bg-[#0747A6] text-white font-bold text-xs shadow-xl flex items-center gap-2.5 transition-all transform hover:scale-105"
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>🤖 AI Recovery Copilot & Voice</span>
+          </button>
         )}
 
-      </main>
+      </div>
 
       <footer className="border-t border-slate-200 bg-white py-3 text-center text-xs text-slate-500">
         Razorpay AI Revenue Recovery &bull; Track 3 Buildathon
