@@ -97,7 +97,7 @@ def _sync_enrich_memory(event: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _sync_diagnose(state: Dict[str, Any]) -> Dict[str, Any]:
-    from orchestrator.nodes.root_cause import classify_root_cause
+    from orchestrator.nodes import classify_root_cause
     diff = classify_root_cause(state)  # type: ignore
     s = dict(state)
     s.update(diff)
@@ -105,7 +105,7 @@ def _sync_diagnose(state: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _sync_score_ev(state: Dict[str, Any]) -> Dict[str, Any]:
-    from orchestrator.nodes.policy_engine import score_policy_options
+    from orchestrator.nodes import score_policy_options
     diff = score_policy_options(state)  # type: ignore
     s = dict(state)
     s.update(diff)
@@ -113,7 +113,7 @@ def _sync_score_ev(state: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _sync_guardrails(state: Dict[str, Any]) -> Dict[str, Any]:
-    from orchestrator.nodes.guardrails import check_guardrails
+    from orchestrator.nodes import check_guardrails
     diff = check_guardrails(state)  # type: ignore
     s = dict(state)
     s.update(diff)
@@ -121,7 +121,7 @@ def _sync_guardrails(state: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _sync_execute(state: Dict[str, Any]) -> Dict[str, Any]:
-    from orchestrator.nodes.executor import execute_action
+    from orchestrator.nodes import execute_action
     diff = execute_action(state)  # type: ignore
     s = dict(state)
     s.update(diff)
@@ -129,8 +129,22 @@ def _sync_execute(state: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _sync_seal_audit(state: Dict[str, Any]) -> Dict[str, Any]:
-    from orchestrator.nodes.audit_logger import write_audit_entry
-    diff = write_audit_entry(state)  # type: ignore
+    from orchestrator.audit import log_audit_entry
+    event_id = state.get("event_id", "unknown")
+    action_taken = state.get("chosen_action", {}).get("action_type", "do_nothing")
+    audit_entry = log_audit_entry(
+        event_id=event_id,
+        node_name="inngest_recovery_workflow",
+        action_taken=action_taken,
+        details={
+            "payment_status": state.get("payment_status"),
+            "recovered_amount": state.get("recovered_amount", 0.0),
+            "guardrail_result": state.get("guardrail_result"),
+        },
+        reasoning=f"Inngest durable function executed: status={state.get('payment_status')}",
+    )
     s = dict(state)
-    s.update(diff)
+    trail = list(s.get("audit_trail", []))
+    trail.append(audit_entry)
+    s["audit_trail"] = trail
     return s
