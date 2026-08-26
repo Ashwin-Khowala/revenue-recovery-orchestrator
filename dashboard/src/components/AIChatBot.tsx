@@ -28,30 +28,7 @@ interface VoiceTurn {
   toolsExecuted?: Array<{ tool: string; message: string; [key: string]: any }>;
 }
 
-function FormattedText({ text }: { text: string }) {
-  const lines = text.split('\n');
-  return (
-    <div className="space-y-1.5 leading-relaxed text-xs">
-      {lines.map((line, idx) => {
-        if (!line.trim()) return <div key={idx} className="h-1" />;
-        const formattedLine = line
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-        if (line.trim().startsWith('• ') || line.trim().startsWith('- ')) {
-          return (
-            <div key={idx} className="flex items-start gap-1.5 ml-1">
-              <span className="text-cyan-500 font-bold">•</span>
-              <span dangerouslySetInnerHTML={{ __html: formattedLine.replace(/^[•\-]\s*/, '') }} />
-            </div>
-          );
-        }
-
-        return <p key={idx} dangerouslySetInnerHTML={{ __html: formattedLine }} />;
-      })}
-    </div>
-  );
-}
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 export default function AIChatBot({
   role,
@@ -519,7 +496,7 @@ export default function AIChatBot({
                       <span>{msg.time}</span>
                     </div>
 
-                    <FormattedText text={msg.text} />
+                    <MarkdownRenderer content={msg.text} />
 
                     {/* Tool Badges */}
                     {msg.toolsExecuted && msg.toolsExecuted.length > 0 && (
@@ -655,7 +632,7 @@ export default function AIChatBot({
                     <span className="font-bold text-[9px] block opacity-70 mb-0.5">
                       {turn.speaker === 'agent' ? '✨ Voice Copilot' : `👤 ${customerName}`}
                     </span>
-                    {turn.text}
+                    <MarkdownRenderer content={turn.text} isDark={turn.speaker !== 'user'} />
                   </div>
 
                   {turn.toolsExecuted &&

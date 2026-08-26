@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -136,7 +137,7 @@ export default function CustomerDetailPage({ params }: { params: { customerId: s
           {/* AI Overview */}
           <div style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #1a1f2e 100%)', border: '1px solid #1e40af', borderRadius: 12, padding: '20px 24px', marginBottom: 20 }}>
             <div style={{ fontSize: 12, color: '#60a5fa', marginBottom: 8, fontWeight: 600, letterSpacing: '0.08em' }}>🤖 AI RISK OVERVIEW</div>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: '#cbd5e1' }}>{ai_overview}</p>
+            <MarkdownRenderer content={ai_overview} isDark={true} />
           </div>
 
           {/* Stats row */}
