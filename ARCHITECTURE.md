@@ -1,8 +1,11 @@
 # Architecture — Revenue Recovery Intelligence Platform
 
-## 1. System High-Level Topology
+## 1. System High-Level Topology: Durable Outer Loop + Reasoning Engine
 
-The **Revenue Recovery Intelligence Platform** is built as an intelligent supervisory layer above transactional payment systems. Rather than relying on rigid, one-size-fits-all retry cron jobs or spammy messaging bots, it treats revenue loss as a diagnostic, memory-conditioned, and expected-value optimization problem.
+The **Revenue Recovery Intelligence Platform** is architected around a fundamental separation of concerns:
+1. **Durable Outer Workflow Engine (Temporal & Inngest)**: Owns the multi-day process lifecycle, durable timers (24h quiet windows, 3-day PTP pauses), retry backoff, webhook race-condition arbitration (`payment.captured` signals), and crash recovery across process restarts.
+2. **Deterministic Reasoning Sub-Step (LangGraph + EV Engine)**: Owns failure root-cause classification (rules-first + LLM fallback), deterministic Expected Value (EV) calculation, and hard financial guardrails.
+3. **Exact Structured Relational Memory (PostgreSQL via Prisma)**: Manages customer priors (54,779 historical episodes) and merchant contact policies using exact relational queries rather than fuzzy semantic vector recall.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -12,8 +15,12 @@ The **Revenue Recovery Intelligence Platform** is built as an intelligent superv
                                                  │ Event Object
                                                  ▼
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                         LANGGRAPH SUPERVISORY ORCHESTRATOR PIPELINE                              │
-│                                                                                                  │
+│                     DURABLE WORKFLOW OUTER LOOP (Temporal SDK / Inngest Engine)                  │
+│   • Persists workflow state across server restarts & multi-day sagas                             │
+│   • Durable wait conditions for payment webhooks & promise-to-pay commitment dates               │
+│   • External signal arbitration: 'signal_payment_captured' cancels pending outreach instantly    │
+│                                                │
+│                                                ▼ (Dispatches Discrete Activity)
 │  ┌────────────────────────────────────────────────────────────────────────────────────────────┐  │
 │  │ 0. MEMORY ENRICHMENT LAYER (Prisma + Supabase Postgres)                                    │  │
 │  │    • Fetches customer profile (reliability, risk score, channel effectiveness, language)  │  │
@@ -54,8 +61,8 @@ The **Revenue Recovery Intelligence Platform** is built as an intelligent superv
 │  ┌─────────────────────────────────────────────┐ ┌───────────────────────────────────────────┐  │
 │  │ 4. EXECUTION DISPATCHER                     │ │ 5. HITL ESCALATION NODE                   │  │
 │  │    • Primary: WhatsApp API / Telegram Bot   │ │    • Sends Telegram Alert to Merchant     │  │
-│  │    • Fallback: Resend Email / SMS           │ │    • LangGraph interrupt() pause          │  │
-│  │    • Infra: Silent Route Reroute / AFA Link │ │    • Resumes on human Command(resume=...) │  │
+│  │    • Fallback: Resend Email / SMS           │ │    • Durable Wait for Approval Signal     │  │
+│  │    • Infra: Silent Route Reroute / AFA Link │ │    • Resumes on merchant signal           │  │
 │  └─────────────────────────────┬───────────────┘ └─────────────┬─────────────────────────────┘  │
 │                                │                               │                                 │
 │                                └───────────────┬───────────────┘                                 │
