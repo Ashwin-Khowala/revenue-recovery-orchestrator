@@ -46,8 +46,15 @@ class RecoveryState(TypedDict, total=False):
     razorpay_ref: Optional[str]
     
     # --- Context & History ---
-    history: Dict[str, Any]  # { prior_contacts, prior_payment_success_rate, customer_avg_days_late }
+    history: Dict[str, Any]  # enriched by memory_enrichment with full behavioral signals
     metadata: Dict[str, Any] # { failure_bank, failure_route, cart_items, mandate_amount, afa_step }
+
+    # --- Memory Layer (Node 0 output) ---
+    customer_profile: Optional[Dict[str, Any]]    # full profile from customer_profiles table
+    episodic_history: Optional[List[Dict]]        # last N episodes from customer_episodes
+    merchant_policy: Optional[Dict[str, Any]]     # merchant's configured contact/escalation policy
+    channel_capacity: Optional[Dict[str, int]]    # remaining daily slots per channel
+    memory_context: Optional[str]                 # plain-text narrative for LLM injection
 
     # --- Step 1: Root Cause Classification Output ---
     root_cause: Optional[str]

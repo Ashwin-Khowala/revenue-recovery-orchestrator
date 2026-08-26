@@ -1,30 +1,192 @@
 datasource db {
-  provider = "postgresql"
-  url      = env("SUPABASE_DB_URI")
+  provider  = "postgresql"
+  url       = env("SUPABASE_DB_URI")
+  directUrl = env("SUPABASE_DIRECT_DB_URI")
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
+// ============================================================================
+// MERCHANT ENTITIES
+// ============================================================================
+
+model Merchant {
+  merchant_id          String   @id
+  name                 String
+  industry             String   @default("general")
+  email                String?
+  phone                String?
+  razorpay_merchant_id String?
+
+  // Behavioral aggregates (auto-updated)
+  avg_invoice_size_inr Float    @default(5000.0)
+  payment_success_rate Float    @default(0.85)
+  monthly_gmv_inr      Float    @default(100000.0)
+
+  // Per-day channel capacity
+  whatsapp_daily_limit   Int    @default(100)
+  email_daily_limit      Int    @default(500)
+  voice_daily_limit      Int    @default(20)
+  human_review_limit     Int    @default(20)
+
+  // Policy & rules (JSON for flexibility)
+  contact_policy         Json   @default("{\"max_whatsapp_per_case\": 2, \"max_email_per_case\": 3, \"voice_threshold_inr\": 50000, \"hitl_threshold_inr\": 100000}")
+  escalation_rules       Json   @default("{\"after_n_failed_interventions\": 3}")
+  recovery_budget_daily_inr Float @default(5000.0)
+
+  users          MerchantUser[]
+  customers      CustomerProfile[]
+  events         Event[]
+  evaluationRuns EvaluationRun[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("merchants")
+}
+
+// Who has access to merchant dashboard (role-based)
+model MerchantUser {
+  id               String   @id @default(uuid())
+  merchant_id      String
+  email            String
+  name             String
+  role             String   @default("viewer") // owner | admin | viewer | support
+  telegram_chat_id String?                      // linked Telegram account for HITL approvals
+
+  merchant Merchant @relation(fields: [merchant_id], references: [merchant_id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@unique([merchant_id, email])
+  @@map("merchant_users")
+}
+
+// ============================================================================
+// CUSTOMER / PAYER ENTITIES
+// ============================================================================
+
+model CustomerProfile {
+  customer_id   String @id // stable: "cust_0042"
+  merchant_id   String
+
+  // Identity
+  name          String
+  email         String
+  phone         String
+  language      String @default("english") // english | hindi | hinglish | tamil | bengali
+  city          String?
+  customer_type String @default("individual") // individual | sme | enterprise
+
+  // Linked outreach accounts
+  telegram_chat_id  String? // set when customer /start's bot
+  telegram_username String?
+  whatsapp_number   String?
+
+  // Behavioral profile (updated after each recovery outcome)
+  preferred_channel           String  @default("whatsapp")
+  contact_tolerance           String  @default("medium") // low | medium | high
+  typical_payment_delay_days  Float   @default(3.0)
+  payment_reliability         Float   @default(0.75)
+  historical_promise_accuracy Float   @default(0.80)
+  ltv_inr                     Float   @default(0.0)
+  risk_score                  Float   @default(0.5) // 0.0 safe → 1.0 risky
+
+  // Aggregated counters
+  total_payments         Int   @default(0)
+  total_failures         Int   @default(0)
+  total_recoveries       Int   @default(0)
+  total_ignored          Int   @default(0)
+  voice_response_rate    Float @default(0.0)
+  whatsapp_response_rate Float @default(0.0)
+
+  merchant      Merchant          @relation(fields: [merchant_id], references: [merchant_id])
+  episodes      CustomerEpisode[]
+  events        Event[]
+  promiseToPays PromiseToPay[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([merchant_id])
+  @@index([telegram_chat_id])
+  @@map("customer_profiles")
+}
+
+// Episodic memory: every meaningful event in a customer's life
+model CustomerEpisode {
+  id          String  @id @default(uuid())
+  customer_id String
+  merchant_id String
+
+  episode_type String // payment_failed | payment_success | whatsapp_sent | whatsapp_responded
+                      // whatsapp_ignored | email_sent | voice_call | voice_answered | voice_ignored
+                      // promise_made | promise_kept | promise_broken | checkout_abandoned | mandate_renewed
+  amount         Float?
+  channel        String? // whatsapp | email | voice | reroute | none
+  outcome        String? // recovered | no_response | promised | ignored | blocked | natural
+  response_hours Float?  // hours from contact to payment
+  notes          String? // "Customer said: Friday ko kar dunga"
+  metadata       Json?   @default("{}")
+
+  customer CustomerProfile @relation(fields: [customer_id], references: [customer_id])
+  event_id String?
+  event    Event?          @relation(fields: [event_id], references: [event_id])
+
+  created_at DateTime @default(now())
+
+  @@index([customer_id])
+  @@index([merchant_id, episode_type])
+  @@map("customer_episodes")
+}
+
+// ============================================================================
+// CORE EVENT + RECOVERY MODELS (EXTENDED)
+// ============================================================================
+
 model Event {
-  event_id        String            @id
-  event_type      String
-  amount          Float
-  currency        String            @default("INR")
-  merchant_id     String            @default("merch_01")
-  customer_id     String            @default("cust_01")
-  customer_email  String?
-  customer_phone  String?
-  razorpay_ref    String?
-  history         Json?             @default("{}")
-  metadata        Json?             @default("{}")
-  created_at      DateTime          @default(now())
-  
+  event_id       String @id
+  event_type     String
+  amount         Float
+  currency       String @default("INR")
+  merchant_id    String @default("merch_01")
+  customer_id    String @default("cust_0001")
+  customer_name  String @default("Unknown Customer")
+  customer_email String?
+  customer_phone String?
+  razorpay_ref   String?
+  history        Json?  @default("{}")
+  metadata       Json?  @default("{}")
+
+  // Resolution
+  payment_status   String   @default("unresolved") // unresolved | recovered | blocked | cancelled_by_webhook
+  recovered_amount Float    @default(0.0)
+  channel_used     String?
+  recovered_at     DateTime?
+  root_cause       String?
+  confidence       Float?
+  ev_score         Float?
+
+  // Ground truth (eval datasets)
+  ground_truth_root_cause      String?
+  natural_recovery_probability Float?
+  optimal_action               String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  merchant        Merchant?         @relation(fields: [merchant_id], references: [merchant_id])
+  customer        CustomerProfile?  @relation(fields: [customer_id], references: [customer_id])
   recoveryActions RecoveryAction[]
   auditLogs       AuditLog[]
   promiseToPays   PromiseToPay[]
+  episodes        CustomerEpisode[]
 
+  @@index([merchant_id, payment_status])
+  @@index([customer_id])
   @@map("events")
 }
 
@@ -38,7 +200,7 @@ model RecoveryAction {
   p_recovery       Float
   friction_penalty Float     @default(0.0)
   risk_penalty     Float     @default(0.0)
-  status           String    @default("pending")
+  status           String    @default("pending") // pending | executed | cancelled | skipped
   payment_link_id  String?
   short_url        String?
   executed_at      DateTime?
@@ -50,45 +212,74 @@ model RecoveryAction {
 }
 
 model PromiseToPay {
-  id            String    @id @default(uuid())
+  id            String   @id @default(uuid())
   event_id      String
   customer_id   String
+  merchant_id   String   @default("merch_01")
   promised_date DateTime
   amount        Float
-  status        String    @default("active")
+  status        String   @default("active") // active | kept | broken | cancelled
   notes         String?
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
-  event Event @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
+  event    Event           @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
+  customer CustomerProfile @relation(fields: [customer_id], references: [customer_id])
 
   @@map("promise_to_pay")
 }
 
 model AuditLog {
-  id           String   @id @default(uuid())
-  event_id     String
-  node_name    String
-  action_taken String
-  details      Json?    @default("{}")
-  reasoning    String?
-  timestamp    DateTime @default(now())
+  id              String   @id @default(uuid())
+  event_id        String
+  node_name       String
+  action_taken    String
+  details         Json?    @default("{}")
+  reasoning       String?
+  entry_hash      String   @default("") // SHA256 for tamper-evident chain
+  prev_entry_hash String   @default("GENESIS")
+  timestamp       DateTime @default(now())
 
   event Event @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
 
+  @@index([event_id])
   @@map("audit_log")
 }
 
 model EvaluationRun {
-  id                     String   @id @default(uuid())
-  run_name               String
-  model_name             String
-  dataset_size           Int
-  accuracy_pct           Float
-  recovery_rate_pct      Float
-  false_intervention_pct Float
-  duplicate_contacts     Int      @default(0)
-  created_at             DateTime @default(now())
+  id                       String   @id @default(uuid())
+  run_name                 String
+  model_name               String
+  dataset_size             Int
+  accuracy_pct             Float
+  recovery_rate_pct        Float
+  false_intervention_pct   Float
+  duplicate_contacts       Int      @default(0)
+  holdout_recovery_rate    Float    @default(0.0)
+  incremental_lift_pct     Float    @default(0.0)
+  total_cost_inr           Float    @default(0.0)
+  cost_per_recovered_rupee Float    @default(0.0)
+  merchant_id              String?
+  created_at               DateTime @default(now())
+
+  merchant Merchant? @relation(fields: [merchant_id], references: [merchant_id])
 
   @@map("evaluation_runs")
 }
+
+// Telegram chat registry — links chat_id to customer or merchant user
+model TelegramChat {
+  chat_id              String   @id  // Telegram numeric chat_id as string
+  customer_id          String?       // → CustomerProfile.customer_id
+  merchant_user_email  String?       // → MerchantUser.email
+  role                 String   @default("payer") // payer | merchant
+  username             String?
+  first_name           String?
+  last_active          DateTime @default(now())
+  created_at           DateTime @default(now())
+
+  @@index([customer_id])
+  @@map("telegram_chats")
+}
+
+

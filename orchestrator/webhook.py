@@ -705,5 +705,148 @@ async def gemini_live_websocket(websocket: WebSocket):
         except:
             pass
 
+# =============================================================================
+# CUSTOMER & MERCHANT PROFILE API ENDPOINTS
+# =============================================================================
+
+@app.get("/api/customers/{customer_id}")
+async def get_customer_detail(customer_id: str):
+    """Full customer intelligence profile with episodic history and AI overview."""
+    from orchestrator.memory import get_customer_profile, get_episodic_history, get_channel_effectiveness
+    profile = get_customer_profile(customer_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail=f"Customer {customer_id} not found")
+    episodes = get_episodic_history(customer_id, limit=20)
+    channel_effectiveness = get_channel_effectiveness(customer_id)
+    active_events = []
+    supabase = _get_supabase_client()
+    if supabase:
+        try:
+            res = (supabase.table("events")
+                .select("event_id,event_type,amount,payment_status,created_at,root_cause,ev_score")
+                .eq("customer_id", customer_id).order("created_at", desc=True).limit(10).execute())
+            active_events = res.data or []
+        except Exception as e:
+            logger.debug(f"Active events fetch: {e}")
+    ai_overview = _generate_customer_ai_overview(profile, episodes, channel_effectiveness)
+    return {
+        "customer_id": customer_id,
+        "profile": profile,
+        "channel_effectiveness": channel_effectiveness,
+        "episodic_history": episodes,
+        "active_events": active_events,
+        "ai_overview": ai_overview,
+        "risk_indicators": _compute_risk_indicators(profile, episodes),
+    }
 
 
+@app.get("/api/merchants/{merchant_id}/customers")
+async def get_merchant_customers(merchant_id: str, page: int = 1, page_size: int = 50, sort_by: str = "risk_score"):
+    """Paginated customer list ranked by risk score."""
+    supabase = _get_supabase_client()
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    offset = (page - 1) * page_size
+    try:
+        query = (supabase.table("customer_profiles")
+            .select("customer_id,name,email,phone,preferred_channel,language,payment_reliability,risk_score,total_failures,total_recoveries,ltv_inr,telegram_chat_id,whatsapp_response_rate,updated_at")
+            .eq("merchant_id", merchant_id).order(sort_by, desc=True).range(offset, offset + page_size - 1).execute())
+        customers = query.data or []
+        count_res = supabase.table("customer_profiles").select("customer_id", count="exact").eq("merchant_id", merchant_id).execute()
+        total = count_res.count or len(customers)
+        return {"merchant_id": merchant_id, "page": page, "page_size": page_size, "total": total, "customers": customers}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/merchants/{merchant_id}/at-risk-summary")
+async def get_at_risk_summary(merchant_id: str):
+    """Portfolio at-risk summary: amounts, root causes, channel performance."""
+    supabase = _get_supabase_client()
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+    try:
+        unresolved = (supabase.table("events").select("event_id,amount,event_type,root_cause").eq("merchant_id", merchant_id).eq("payment_status", "unresolved").execute()).data or []
+        all_events = (supabase.table("events").select("payment_status,amount,channel_used").eq("merchant_id", merchant_id).execute()).data or []
+        total_amount = sum(e["amount"] for e in all_events)
+        recovered = sum(e["amount"] for e in all_events if e["payment_status"] == "recovered")
+        at_risk = sum(e["amount"] for e in unresolved)
+        cause_counts: Dict[str, int] = {}
+        for e in unresolved:
+            cause = e.get("root_cause") or e.get("event_type") or "unknown"
+            cause_counts[cause] = cause_counts.get(cause, 0) + 1
+        return {
+            "merchant_id": merchant_id,
+            "at_risk_amount_inr": round(at_risk, 2),
+            "at_risk_count": len(unresolved),
+            "recovery_rate_pct": round((recovered / total_amount * 100) if total_amount else 0, 2),
+            "root_cause_breakdown": cause_counts,
+            "duplicate_contacts": 0,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/customers/{customer_id}/link-telegram")
+async def link_customer_telegram(customer_id: str, request: Request):
+    """Links a Telegram chat_id to a customer_id for proactive outreach."""
+    from orchestrator.memory import link_telegram_to_customer
+    body = await request.json()
+    chat_id = body.get("chat_id")
+    username = body.get("username", "")
+    if not chat_id:
+        raise HTTPException(status_code=400, detail="chat_id required")
+    link_telegram_to_customer(str(chat_id), customer_id, username)
+    return {"status": "linked", "customer_id": customer_id, "chat_id": chat_id}
+
+
+def _generate_customer_ai_overview(profile: dict, episodes: list, channel_effectiveness: dict) -> str:
+    try:
+        from openai import AzureOpenAI
+        client = AzureOpenAI(
+            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+            api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        )
+        name = profile.get("name", "Customer")
+        reliability = profile.get("payment_reliability", 0.75)
+        preferred = profile.get("preferred_channel", "whatsapp")
+        best_ch = max(channel_effectiveness, key=channel_effectiveness.get) if channel_effectiveness else preferred
+        best_rate = channel_effectiveness.get(best_ch, 0)
+        promise_acc = profile.get("historical_promise_accuracy", 0.80)
+        recent = [ep.get("outcome", "") for ep in episodes[:5]]
+        prompt = (
+            f"Write 2 sentences on payment recovery risk for {name}. "
+            f"Reliability {reliability:.0%}, preferred channel {preferred}, "
+            f"best performing channel {best_ch} ({best_rate:.0%} response rate), "
+            f"promise accuracy {promise_acc:.0%}. Recent outcomes: {recent}. Be specific and actionable."
+        )
+        res = client.chat.completions.create(
+            model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini"),
+            messages=[{"role": "user", "content": prompt}],
+            max_completion_tokens=120,
+        )
+        return res.choices[0].message.content.strip()
+    except Exception:
+        reliability = profile.get("payment_reliability", 0.75)
+        return (
+            f"{profile.get('name', 'Customer')} has {reliability:.0%} payment reliability. "
+            f"Preferred outreach: {profile.get('preferred_channel', 'whatsapp')}."
+        )
+
+
+def _compute_risk_indicators(profile: dict, episodes: list) -> list:
+    indicators = []
+    reliability = profile.get("payment_reliability", 0.75)
+    ignored = profile.get("total_ignored", 0)
+    promise_acc = profile.get("historical_promise_accuracy", 0.80)
+    if reliability < 0.60:
+        indicators.append({"type": "low_reliability", "severity": "high", "message": f"Only {reliability:.0%} reliability"})
+    if ignored > 3:
+        indicators.append({"type": "ignores_outreach", "severity": "medium", "message": f"{ignored} ignored contacts"})
+    if promise_acc < 0.65:
+        indicators.append({"type": "broken_promises", "severity": "high", "message": f"Only {promise_acc:.0%} promise accuracy"})
+    recent = [ep.get("outcome") for ep in episodes[:3]]
+    if recent.count("ignored") >= 2:
+        indicators.append({"type": "recently_unresponsive", "severity": "high", "message": "Ignored last 2+ recovery contacts"})
+    return indicators

@@ -1,2372 +1,4174 @@
 [
   {
     "event_id": "evt_0401",
-    "event_type": "payment_degraded",
-    "amount": 12000,
+    "event_type": "checkout_abandoned",
+    "amount": 999.0,
     "currency": "INR",
-    "merchant_id": "merch_03",
-    "customer_id": "cust_0401",
-    "customer_name": "Rohan Mehta",
-    "customer_email": "rohan.mehta@example.com",
-    "customer_phone": "+919669749759",
-    "created_at": "2026-08-23T14:09:40.926888+00:00",
+    "merchant_id": "merch_02",
+    "customer_id": "cust_0711",
+    "customer_name": "Dev Khanna",
+    "customer_email": "dev.khanna711@example.com",
+    "customer_phone": "+919265832458",
     "razorpay_ref": "order_synth_0401",
     "history": {
-      "prior_contacts": 2,
-      "prior_payment_success_rate": 0.69,
-      "customer_avg_days_late": 6
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.914,
+      "customer_avg_days_late": 2.8
     },
     "metadata": {
-      "failure_bank": "ICICI",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.74,
-      "error_code": "BAD_GATEWAY_TIMEOUT"
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 43,
+      "payment_method_attempted": "netbanking"
     },
-    "ground_truth_root_cause": "payment_degraded"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.5484,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0402",
-    "event_type": "checkout_abandoned",
-    "amount": 14872,
+    "event_type": "mandate_auth_failed",
+    "amount": 73015.0,
     "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0402",
-    "customer_name": "Diya Patel",
-    "customer_email": "diya.patel@example.com",
-    "customer_phone": "+919604623807",
-    "created_at": "2026-08-24T08:09:40.926900+00:00",
+    "merchant_id": "merch_14",
+    "customer_id": "cust_0552",
+    "customer_name": "Pallavi Rathi",
+    "customer_email": "pallavi.rathi552@example.com",
+    "customer_phone": "+919053766019",
     "razorpay_ref": "order_synth_0402",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.9,
-      "customer_avg_days_late": 4
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.871,
+      "customer_avg_days_late": 3.9
     },
     "metadata": {
-      "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
-      ],
-      "time_since_abandon_minutes": 75,
-      "payment_method_attempted": "netbanking"
+      "mandate_amount": 73015.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.5226,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0403",
-    "event_type": "checkout_abandoned",
-    "amount": 2563,
+    "event_type": "receivable_overdue",
+    "amount": 25000.0,
     "currency": "INR",
     "merchant_id": "merch_02",
-    "customer_id": "cust_0403",
-    "customer_name": "Ananya Verma",
-    "customer_email": "ananya.verma@example.com",
-    "customer_phone": "+919845424634",
-    "created_at": "2026-08-22T12:09:40.926912+00:00",
+    "customer_id": "cust_1761",
+    "customer_name": "Tanvi Desai",
+    "customer_email": "tanvi.desai1761@example.com",
+    "customer_phone": "+919981172495",
     "razorpay_ref": "order_synth_0403",
     "history": {
-      "prior_contacts": 3,
-      "prior_payment_success_rate": 0.54,
-      "customer_avg_days_late": 0
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.723,
+      "customer_avg_days_late": 2.2
     },
     "metadata": {
-      "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
-      ],
-      "time_since_abandon_minutes": 117,
-      "payment_method_attempted": "upi"
+      "invoice_id": "INV-2026-0403",
+      "days_overdue": 35,
+      "terms": "Net 30"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.4338,
+    "optimal_action": "email"
   },
   {
     "event_id": "evt_0404",
     "event_type": "checkout_abandoned",
-    "amount": 8378,
+    "amount": 4999.0,
     "currency": "INR",
-    "merchant_id": "merch_03",
-    "customer_id": "cust_0404",
-    "customer_name": "Aditya Roy",
-    "customer_email": "aditya.roy@example.com",
-    "customer_phone": "+919266897227",
-    "created_at": "2026-08-23T01:09:40.926922+00:00",
+    "merchant_id": "merch_16",
+    "customer_id": "cust_1531",
+    "customer_name": "Siddharth Sen",
+    "customer_email": "siddharth.sen1531@example.com",
+    "customer_phone": "+919088806059",
     "razorpay_ref": "order_synth_0404",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.82,
-      "customer_avg_days_late": 1
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.855,
+      "customer_avg_days_late": 3.4
     },
     "metadata": {
       "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
+        "Product A",
+        "Product B"
       ],
-      "time_since_abandon_minutes": 38,
-      "payment_method_attempted": "card"
+      "time_since_abandon_minutes": 23,
+      "payment_method_attempted": "upi"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.513,
+    "optimal_action": "email"
   },
   {
     "event_id": "evt_0405",
     "event_type": "mandate_auth_failed",
-    "amount": 18828,
+    "amount": 73903.0,
     "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0405",
-    "customer_name": "Karan Kapoor",
-    "customer_email": "karan.kapoor@example.com",
-    "customer_phone": "+919605309618",
-    "created_at": "2026-08-22T13:09:40.926933+00:00",
+    "merchant_id": "merch_02",
+    "customer_id": "cust_1163",
+    "customer_name": "Sneha Rao",
+    "customer_email": "sneha.rao1163@example.com",
+    "customer_phone": "+919313289430",
     "razorpay_ref": "order_synth_0405",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.51,
-      "customer_avg_days_late": 1
+      "prior_payment_success_rate": 0.916,
+      "customer_avg_days_late": 1.4
     },
     "metadata": {
-      "mandate_amount": 18828,
+      "mandate_amount": 73903.0,
       "afa_step_reached": false,
       "recurring_period": "monthly"
     },
-    "ground_truth_root_cause": "mandate_auth_failed"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.5496,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0406",
-    "event_type": "receivable_overdue",
-    "amount": 250000,
+    "event_type": "mandate_auth_failed",
+    "amount": 51233.0,
     "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0406",
-    "customer_name": "Aditya Roy",
-    "customer_email": "aditya.roy@example.com",
-    "customer_phone": "+919306126167",
-    "created_at": "2026-08-23T20:09:40.926944+00:00",
+    "merchant_id": "merch_11",
+    "customer_id": "cust_1247",
+    "customer_name": "Zenith Solutions",
+    "customer_email": "zenith.solutions1247@example.com",
+    "customer_phone": "+919982926465",
     "razorpay_ref": "order_synth_0406",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.43,
-      "customer_avg_days_late": 7
+      "prior_payment_success_rate": 0.819,
+      "customer_avg_days_late": 1.3
     },
     "metadata": {
-      "invoice_id": "INV-2026-0406",
-      "days_overdue": 14,
-      "terms": "Net 30"
+      "mandate_amount": 51233.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
     },
-    "ground_truth_root_cause": "receivable_overdue"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.4914,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0407",
     "event_type": "checkout_abandoned",
-    "amount": 13349,
+    "amount": 2999.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0407",
-    "customer_name": "Siddharth Sen",
-    "customer_email": "siddharth.sen@example.com",
-    "customer_phone": "+919142874977",
-    "created_at": "2026-08-23T09:09:40.926958+00:00",
+    "merchant_id": "merch_16",
+    "customer_id": "cust_0980",
+    "customer_name": "Ishaan Malhotra",
+    "customer_email": "ishaan.malhotra980@example.com",
+    "customer_phone": "+919867140722",
     "razorpay_ref": "order_synth_0407",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.74,
-      "customer_avg_days_late": 2
+      "prior_payment_success_rate": 0.852,
+      "customer_avg_days_late": 0.9
     },
     "metadata": {
       "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
+        "Product A",
+        "Product B"
       ],
-      "time_since_abandon_minutes": 110,
-      "payment_method_attempted": "card"
+      "time_since_abandon_minutes": 62,
+      "payment_method_attempted": "upi"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.5112,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0408",
-    "event_type": "payment_degraded",
-    "amount": 5999,
+    "event_type": "promise_to_pay",
+    "amount": 499.0,
     "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0408",
-    "customer_name": "Priya Nair",
-    "customer_email": "priya.nair@example.com",
-    "customer_phone": "+919300278331",
-    "created_at": "2026-08-23T04:09:40.926971+00:00",
+    "merchant_id": "merch_20",
+    "customer_id": "cust_0945",
+    "customer_name": "Ananya Verma",
+    "customer_email": "ananya.verma945@example.com",
+    "customer_phone": "+919880909985",
     "razorpay_ref": "order_synth_0408",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.95,
-      "customer_avg_days_late": 6
+      "prior_contacts": 2,
+      "prior_payment_success_rate": 0.751,
+      "customer_avg_days_late": 2.6
     },
     "metadata": {
-      "failure_bank": "HDFC",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.77,
-      "error_code": "BAD_GATEWAY_TIMEOUT"
+      "promised_pay_date": "2026-09-01",
+      "notes": "Customer confirmed next salary date"
     },
-    "ground_truth_root_cause": "payment_degraded"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.4506,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0409",
-    "event_type": "promise_to_pay",
-    "amount": 5999,
+    "event_type": "checkout_abandoned",
+    "amount": 12000.0,
     "currency": "INR",
     "merchant_id": "merch_04",
-    "customer_id": "cust_0409",
-    "customer_name": "Siddharth Sen",
-    "customer_email": "siddharth.sen@example.com",
-    "customer_phone": "+919812499942",
-    "created_at": "2026-08-22T11:09:40.926988+00:00",
+    "customer_id": "cust_1044",
+    "customer_name": "Simran Bhatia",
+    "customer_email": "simran.bhatia1044@example.com",
+    "customer_phone": "+919700478501",
     "razorpay_ref": "order_synth_0409",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.8,
-      "customer_avg_days_late": 12
+      "prior_payment_success_rate": 0.785,
+      "customer_avg_days_late": 0.8
     },
     "metadata": {
-      "promised_pay_date": "2026-08-31",
-      "notes": "Customer confirmed salary credit on 1st of month."
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 96,
+      "payment_method_attempted": "card"
     },
-    "ground_truth_root_cause": "promise_to_pay"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.471,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0410",
-    "event_type": "subscription_failed",
-    "amount": 1299,
-    "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0410",
-    "customer_name": "Vikram Singh",
-    "customer_email": "vikram.singh@example.com",
-    "customer_phone": "+919678487302",
-    "created_at": "2026-08-22T22:09:40.926999+00:00",
-    "razorpay_ref": "order_synth_0410",
-    "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.51,
-      "customer_avg_days_late": 11
-    },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
-  },
-  {
-    "event_id": "evt_0411",
-    "event_type": "receivable_overdue",
-    "amount": 500000,
-    "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0411",
-    "customer_name": "Ishaan Malhotra",
-    "customer_email": "ishaan.malhotra@example.com",
-    "customer_phone": "+919921872188",
-    "created_at": "2026-08-24T07:09:40.927010+00:00",
-    "razorpay_ref": "order_synth_0411",
-    "history": {
-      "prior_contacts": 2,
-      "prior_payment_success_rate": 0.82,
-      "customer_avg_days_late": 6
-    },
-    "metadata": {
-      "invoice_id": "INV-2026-0411",
-      "days_overdue": 39,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
-  },
-  {
-    "event_id": "evt_0412",
-    "event_type": "payment_degraded",
-    "amount": 12000,
-    "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0412",
-    "customer_name": "Aarav Sharma",
-    "customer_email": "aarav.sharma@example.com",
-    "customer_phone": "+919468310400",
-    "created_at": "2026-08-22T13:09:40.927021+00:00",
-    "razorpay_ref": "order_synth_0412",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.85,
-      "customer_avg_days_late": 1
-    },
-    "metadata": {
-      "failure_bank": "HDFC",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.51,
-      "error_code": "BAD_GATEWAY_TIMEOUT"
-    },
-    "ground_truth_root_cause": "payment_degraded"
-  },
-  {
-    "event_id": "evt_0413",
-    "event_type": "receivable_overdue",
-    "amount": 250000,
-    "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0413",
-    "customer_name": "Diya Patel",
-    "customer_email": "diya.patel@example.com",
-    "customer_phone": "+919623383915",
-    "created_at": "2026-08-23T10:09:40.927033+00:00",
-    "razorpay_ref": "order_synth_0413",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.65,
-      "customer_avg_days_late": 1
-    },
-    "metadata": {
-      "invoice_id": "INV-2026-0413",
-      "days_overdue": 25,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
-  },
-  {
-    "event_id": "evt_0414",
-    "event_type": "subscription_failed",
-    "amount": 499,
-    "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0414",
-    "customer_name": "Aarav Sharma",
-    "customer_email": "aarav.sharma@example.com",
-    "customer_phone": "+919399359000",
-    "created_at": "2026-08-23T16:09:40.927046+00:00",
-    "razorpay_ref": "order_synth_0414",
-    "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.89,
-      "customer_avg_days_late": 1
-    },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
-  },
-  {
-    "event_id": "evt_0415",
-    "event_type": "promise_to_pay",
-    "amount": 499,
-    "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0415",
-    "customer_name": "Siddharth Sen",
-    "customer_email": "siddharth.sen@example.com",
-    "customer_phone": "+919313145825",
-    "created_at": "2026-08-22T21:09:40.927061+00:00",
-    "razorpay_ref": "order_synth_0415",
-    "history": {
-      "prior_contacts": 3,
-      "prior_payment_success_rate": 0.87,
-      "customer_avg_days_late": 11
-    },
-    "metadata": {
-      "promised_pay_date": "2026-08-31",
-      "notes": "Customer confirmed salary credit on 1st of month."
-    },
-    "ground_truth_root_cause": "promise_to_pay"
-  },
-  {
-    "event_id": "evt_0416",
-    "event_type": "payment_degraded",
-    "amount": 499,
-    "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0416",
-    "customer_name": "Priya Nair",
-    "customer_email": "priya.nair@example.com",
-    "customer_phone": "+919311389394",
-    "created_at": "2026-08-23T09:09:40.927072+00:00",
-    "razorpay_ref": "order_synth_0416",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.54,
-      "customer_avg_days_late": 3
-    },
-    "metadata": {
-      "failure_bank": "ICICI",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.52,
-      "error_code": "BAD_GATEWAY_TIMEOUT"
-    },
-    "ground_truth_root_cause": "payment_degraded"
-  },
-  {
-    "event_id": "evt_0417",
-    "event_type": "receivable_overdue",
-    "amount": 500000,
+    "event_type": "checkout_abandoned",
+    "amount": 5999.0,
     "currency": "INR",
     "merchant_id": "merch_03",
     "customer_id": "cust_0417",
+    "customer_name": "Varun Pillai",
+    "customer_email": "varun.pillai417@example.com",
+    "customer_phone": "+919782035603",
+    "razorpay_ref": "order_synth_0410",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.937,
+      "customer_avg_days_late": 1.7
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 49,
+      "payment_method_attempted": "netbanking"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.5622,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0411",
+    "event_type": "subscription_failed",
+    "amount": 5999.0,
+    "currency": "INR",
+    "merchant_id": "merch_03",
+    "customer_id": "cust_1677",
+    "customer_name": "Alpha Consulting",
+    "customer_email": "alpha.consulting1677@example.com",
+    "customer_phone": "+919858777150",
+    "razorpay_ref": "order_synth_0411",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.577,
+      "customer_avg_days_late": 1.6
+    },
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.3462,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0412",
+    "event_type": "receivable_overdue",
+    "amount": 250000.0,
+    "currency": "INR",
+    "merchant_id": "merch_20",
+    "customer_id": "cust_0315",
+    "customer_name": "Delta Pharma",
+    "customer_email": "delta.pharma315@example.com",
+    "customer_phone": "+919908350135",
+    "razorpay_ref": "order_synth_0412",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.922,
+      "customer_avg_days_late": 1.5
+    },
+    "metadata": {
+      "invoice_id": "INV-2026-0412",
+      "days_overdue": 36,
+      "terms": "Net 30"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.5532,
+    "optimal_action": "email"
+  },
+  {
+    "event_id": "evt_0413",
+    "event_type": "subscription_failed",
+    "amount": 15999.0,
+    "currency": "INR",
+    "merchant_id": "merch_18",
+    "customer_id": "cust_1759",
     "customer_name": "Siddharth Sen",
-    "customer_email": "siddharth.sen@example.com",
-    "customer_phone": "+919021114980",
-    "created_at": "2026-08-23T06:09:40.927085+00:00",
-    "razorpay_ref": "order_synth_0417",
+    "customer_email": "siddharth.sen1759@example.com",
+    "customer_phone": "+919083788488",
+    "razorpay_ref": "order_synth_0413",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.371,
+      "customer_avg_days_late": 1.2
+    },
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.2226,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0414",
+    "event_type": "payment_degraded",
+    "amount": 250000.0,
+    "currency": "INR",
+    "merchant_id": "merch_19",
+    "customer_id": "cust_0892",
+    "customer_name": "Mansi Mishra",
+    "customer_email": "mansi.mishra892@example.com",
+    "customer_phone": "+919507469315",
+    "razorpay_ref": "order_synth_0414",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.811,
+      "customer_avg_days_late": 0.5
+    },
+    "metadata": {
+      "failure_bank": "SBI",
+      "failure_route": "gateway_yes_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.66,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.4866,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0415",
+    "event_type": "receivable_overdue",
+    "amount": 250000.0,
+    "currency": "INR",
+    "merchant_id": "merch_07",
+    "customer_id": "cust_1950",
+    "customer_name": "Karan Kapoor",
+    "customer_email": "karan.kapoor1950@example.com",
+    "customer_phone": "+919161977917",
+    "razorpay_ref": "order_synth_0415",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.511,
+      "customer_avg_days_late": 3.5
+    },
+    "metadata": {
+      "invoice_id": "INV-2026-0415",
+      "days_overdue": 29,
+      "terms": "Net 30"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.3066,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0416",
+    "event_type": "checkout_abandoned",
+    "amount": 999.0,
+    "currency": "INR",
+    "merchant_id": "merch_07",
+    "customer_id": "cust_0241",
+    "customer_name": "Tanvi Desai",
+    "customer_email": "tanvi.desai241@example.com",
+    "customer_phone": "+919526072176",
+    "razorpay_ref": "order_synth_0416",
     "history": {
       "prior_contacts": 0,
       "prior_payment_success_rate": 0.9,
-      "customer_avg_days_late": 2
+      "customer_avg_days_late": 2.4
     },
     "metadata": {
-      "invoice_id": "INV-2026-0417",
-      "days_overdue": 21,
-      "terms": "Net 30"
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 69,
+      "payment_method_attempted": "upi"
     },
-    "ground_truth_root_cause": "receivable_overdue"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.54,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0417",
+    "event_type": "promise_to_pay",
+    "amount": 599.0,
+    "currency": "INR",
+    "merchant_id": "merch_01",
+    "customer_id": "cust_1765",
+    "customer_name": "Aditi Chawla",
+    "customer_email": "aditi.chawla1765@example.com",
+    "customer_phone": "+919816426479",
+    "razorpay_ref": "order_synth_0417",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.918,
+      "customer_avg_days_late": 1.5
+    },
+    "metadata": {
+      "promised_pay_date": "2026-09-02",
+      "notes": "Customer confirmed next salary date"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.5508,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0418",
-    "event_type": "subscription_failed",
-    "amount": 25000,
+    "event_type": "receivable_overdue",
+    "amount": 120000.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0418",
-    "customer_name": "Diya Patel",
-    "customer_email": "diya.patel@example.com",
-    "customer_phone": "+919123909864",
-    "created_at": "2026-08-23T07:09:40.927097+00:00",
+    "merchant_id": "merch_01",
+    "customer_id": "cust_1283",
+    "customer_name": "Delta Pharma",
+    "customer_email": "delta.pharma1283@example.com",
+    "customer_phone": "+919281848009",
     "razorpay_ref": "order_synth_0418",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.77,
-      "customer_avg_days_late": 4
+      "prior_payment_success_rate": 0.63,
+      "customer_avg_days_late": 2.9
     },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "metadata": {
+      "invoice_id": "INV-2026-0418",
+      "days_overdue": 9,
+      "terms": "Net 30"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.378,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0419",
-    "event_type": "mandate_auth_failed",
-    "amount": 34460,
+    "event_type": "payment_degraded",
+    "amount": 599.0,
     "currency": "INR",
     "merchant_id": "merch_01",
-    "customer_id": "cust_0419",
-    "customer_name": "Sneha Rao",
-    "customer_email": "sneha.rao@example.com",
-    "customer_phone": "+919677507929",
-    "created_at": "2026-08-23T17:09:40.927108+00:00",
+    "customer_id": "cust_1510",
+    "customer_name": "Dev Khanna",
+    "customer_email": "dev.khanna1510@example.com",
+    "customer_phone": "+919293307756",
     "razorpay_ref": "order_synth_0419",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.76,
-      "customer_avg_days_late": 12
+      "prior_payment_success_rate": 0.738,
+      "customer_avg_days_late": 3.5
     },
     "metadata": {
-      "mandate_amount": 34460,
-      "afa_step_reached": false,
-      "recurring_period": "monthly"
+      "failure_bank": "INDUSIND",
+      "failure_route": "gateway_sbi_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.49,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
     },
-    "ground_truth_root_cause": "mandate_auth_failed"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.4428,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0420",
-    "event_type": "subscription_failed",
-    "amount": 12000,
+    "event_type": "checkout_abandoned",
+    "amount": 1999.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
+    "merchant_id": "merch_10",
     "customer_id": "cust_0420",
-    "customer_name": "Diya Patel",
-    "customer_email": "diya.patel@example.com",
-    "customer_phone": "+919549667122",
-    "created_at": "2026-08-24T09:09:40.927118+00:00",
+    "customer_name": "Riya Dubey",
+    "customer_email": "riya.dubey420@example.com",
+    "customer_phone": "+919011483320",
     "razorpay_ref": "order_synth_0420",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.76,
-      "customer_avg_days_late": 8
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.731,
+      "customer_avg_days_late": 1.5
     },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 23,
+      "payment_method_attempted": "netbanking"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.4386,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0421",
-    "event_type": "subscription_failed",
-    "amount": 5999,
+    "event_type": "receivable_overdue",
+    "amount": 120000.0,
     "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0421",
-    "customer_name": "Siddharth Sen",
-    "customer_email": "siddharth.sen@example.com",
-    "customer_phone": "+919266206561",
-    "created_at": "2026-08-23T11:09:40.927130+00:00",
+    "merchant_id": "merch_08",
+    "customer_id": "cust_1352",
+    "customer_name": "Arjun Kumar",
+    "customer_email": "arjun.kumar1352@example.com",
+    "customer_phone": "+919018169192",
     "razorpay_ref": "order_synth_0421",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.53,
-      "customer_avg_days_late": 5
+      "prior_payment_success_rate": 0.788,
+      "customer_avg_days_late": 3.9
     },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "metadata": {
+      "invoice_id": "INV-2026-0421",
+      "days_overdue": 15,
+      "terms": "Net 30"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.4728,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0422",
-    "event_type": "promise_to_pay",
-    "amount": 499,
+    "event_type": "checkout_abandoned",
+    "amount": 1499.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0422",
-    "customer_name": "Priya Nair",
-    "customer_email": "priya.nair@example.com",
-    "customer_phone": "+919607139510",
-    "created_at": "2026-08-23T22:09:40.927146+00:00",
+    "merchant_id": "merch_11",
+    "customer_id": "cust_1706",
+    "customer_name": "Alpha Consulting",
+    "customer_email": "alpha.consulting1706@example.com",
+    "customer_phone": "+919329911643",
     "razorpay_ref": "order_synth_0422",
     "history": {
-      "prior_contacts": 3,
-      "prior_payment_success_rate": 0.92,
-      "customer_avg_days_late": 0
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.871,
+      "customer_avg_days_late": 3.4
     },
     "metadata": {
-      "promised_pay_date": "2026-08-26",
-      "notes": "Customer confirmed salary credit on 1st of month."
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 76,
+      "payment_method_attempted": "netbanking"
     },
-    "ground_truth_root_cause": "promise_to_pay"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.5226,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0423",
-    "event_type": "subscription_failed",
-    "amount": 2999,
+    "event_type": "promise_to_pay",
+    "amount": 25000.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0423",
-    "customer_name": "Vikram Singh",
-    "customer_email": "vikram.singh@example.com",
-    "customer_phone": "+919307429993",
-    "created_at": "2026-08-24T00:09:40.927158+00:00",
+    "merchant_id": "merch_12",
+    "customer_id": "cust_0991",
+    "customer_name": "Delta Pharma",
+    "customer_email": "delta.pharma991@example.com",
+    "customer_phone": "+919864908666",
     "razorpay_ref": "order_synth_0423",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.56,
-      "customer_avg_days_late": 11
+      "prior_payment_success_rate": 0.663,
+      "customer_avg_days_late": 0.6
     },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "metadata": {
+      "promised_pay_date": "2026-08-31",
+      "notes": "Customer confirmed next salary date"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.3978,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0424",
     "event_type": "payment_degraded",
-    "amount": 12000,
+    "amount": 45000.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0424",
+    "merchant_id": "merch_19",
+    "customer_id": "cust_0921",
     "customer_name": "Pooja Joshi",
-    "customer_email": "pooja.joshi@example.com",
-    "customer_phone": "+919547100380",
-    "created_at": "2026-08-24T09:09:40.927170+00:00",
+    "customer_email": "pooja.joshi921@example.com",
+    "customer_phone": "+919673667319",
     "razorpay_ref": "order_synth_0424",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.69,
-      "customer_avg_days_late": 3
+      "prior_payment_success_rate": 0.78,
+      "customer_avg_days_late": 4.1
     },
     "metadata": {
-      "failure_bank": "AXIS",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.55,
+      "failure_bank": "YES",
+      "failure_route": "gateway_yes_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.47,
       "error_code": "BAD_GATEWAY_TIMEOUT"
     },
-    "ground_truth_root_cause": "payment_degraded"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.468,
+    "optimal_action": "email"
   },
   {
     "event_id": "evt_0425",
-    "event_type": "subscription_failed",
-    "amount": 1299,
+    "event_type": "checkout_abandoned",
+    "amount": 12000.0,
     "currency": "INR",
-    "merchant_id": "merch_03",
-    "customer_id": "cust_0425",
-    "customer_name": "Meera Iyer",
-    "customer_email": "meera.iyer@example.com",
-    "customer_phone": "+919016234409",
-    "created_at": "2026-08-23T05:09:40.927181+00:00",
+    "merchant_id": "merch_19",
+    "customer_id": "cust_1580",
+    "customer_name": "Zenith Solutions",
+    "customer_email": "zenith.solutions1580@example.com",
+    "customer_phone": "+919903546807",
     "razorpay_ref": "order_synth_0425",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.48,
-      "customer_avg_days_late": 8
-    },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
-  },
-  {
-    "event_id": "evt_0426",
-    "event_type": "checkout_abandoned",
-    "amount": 12070,
-    "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0426",
-    "customer_name": "Tanvi Desai",
-    "customer_email": "tanvi.desai@example.com",
-    "customer_phone": "+919757029751",
-    "created_at": "2026-08-23T10:09:40.927198+00:00",
-    "razorpay_ref": "order_synth_0426",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.87,
-      "customer_avg_days_late": 6
+      "prior_payment_success_rate": 0.848,
+      "customer_avg_days_late": 8.5
     },
     "metadata": {
       "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
+        "Product A",
+        "Product B"
       ],
-      "time_since_abandon_minutes": 19,
+      "time_since_abandon_minutes": 114,
       "payment_method_attempted": "upi"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.5088,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0426",
+    "event_type": "payment_degraded",
+    "amount": 24000.0,
+    "currency": "INR",
+    "merchant_id": "merch_04",
+    "customer_id": "cust_1014",
+    "customer_name": "Pallavi Rathi",
+    "customer_email": "pallavi.rathi1014@example.com",
+    "customer_phone": "+919945764561",
+    "razorpay_ref": "order_synth_0426",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.506,
+      "customer_avg_days_late": 1.2
+    },
+    "metadata": {
+      "failure_bank": "AXIS",
+      "failure_route": "gateway_hdfc_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.57,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3036,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0427",
     "event_type": "checkout_abandoned",
-    "amount": 12869,
+    "amount": 1999.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0427",
-    "customer_name": "Aditya Roy",
-    "customer_email": "aditya.roy@example.com",
-    "customer_phone": "+919680646574",
-    "created_at": "2026-08-23T18:09:40.927216+00:00",
+    "merchant_id": "merch_11",
+    "customer_id": "cust_0940",
+    "customer_name": "Omega Logistics",
+    "customer_email": "omega.logistics940@example.com",
+    "customer_phone": "+919233686812",
     "razorpay_ref": "order_synth_0427",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.44,
-      "customer_avg_days_late": 10
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.546,
+      "customer_avg_days_late": 3.0
     },
     "metadata": {
       "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
+        "Product A",
+        "Product B"
       ],
-      "time_since_abandon_minutes": 31,
-      "payment_method_attempted": "upi"
+      "time_since_abandon_minutes": 76,
+      "payment_method_attempted": "netbanking"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.3276,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0428",
-    "event_type": "payment_degraded",
-    "amount": 2999,
+    "event_type": "checkout_abandoned",
+    "amount": 1999.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0428",
-    "customer_name": "Vikram Singh",
-    "customer_email": "vikram.singh@example.com",
-    "customer_phone": "+919384008314",
-    "created_at": "2026-08-24T08:09:40.927232+00:00",
+    "merchant_id": "merch_15",
+    "customer_id": "cust_1321",
+    "customer_name": "Anika Bajaj",
+    "customer_email": "anika.bajaj1321@example.com",
+    "customer_phone": "+919930944474",
     "razorpay_ref": "order_synth_0428",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.86,
-      "customer_avg_days_late": 7
-    },
-    "metadata": {
-      "failure_bank": "HDFC",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.76,
-      "error_code": "BAD_GATEWAY_TIMEOUT"
-    },
-    "ground_truth_root_cause": "payment_degraded"
-  },
-  {
-    "event_id": "evt_0429",
-    "event_type": "receivable_overdue",
-    "amount": 48000,
-    "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0429",
-    "customer_name": "Kabir Gupta",
-    "customer_email": "kabir.gupta@example.com",
-    "customer_phone": "+919764012886",
-    "created_at": "2026-08-23T00:09:40.927244+00:00",
-    "razorpay_ref": "order_synth_0429",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.56,
-      "customer_avg_days_late": 2
-    },
-    "metadata": {
-      "invoice_id": "INV-2026-0429",
-      "days_overdue": 7,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
-  },
-  {
-    "event_id": "evt_0430",
-    "event_type": "payment_degraded",
-    "amount": 2999,
-    "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0430",
-    "customer_name": "Diya Patel",
-    "customer_email": "diya.patel@example.com",
-    "customer_phone": "+919276536869",
-    "created_at": "2026-08-22T21:09:40.927256+00:00",
-    "razorpay_ref": "order_synth_0430",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.65,
-      "customer_avg_days_late": 1
-    },
-    "metadata": {
-      "failure_bank": "KOTAK",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.68,
-      "error_code": "BAD_GATEWAY_TIMEOUT"
-    },
-    "ground_truth_root_cause": "payment_degraded"
-  },
-  {
-    "event_id": "evt_0431",
-    "event_type": "receivable_overdue",
-    "amount": 250000,
-    "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0431",
-    "customer_name": "Sneha Rao",
-    "customer_email": "sneha.rao@example.com",
-    "customer_phone": "+919122570875",
-    "created_at": "2026-08-23T00:09:40.927266+00:00",
-    "razorpay_ref": "order_synth_0431",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.66,
-      "customer_avg_days_late": 4
-    },
-    "metadata": {
-      "invoice_id": "INV-2026-0431",
-      "days_overdue": 4,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
-  },
-  {
-    "event_id": "evt_0432",
-    "event_type": "subscription_failed",
-    "amount": 499,
-    "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0432",
-    "customer_name": "Meera Iyer",
-    "customer_email": "meera.iyer@example.com",
-    "customer_phone": "+919909837027",
-    "created_at": "2026-08-23T22:09:40.927277+00:00",
-    "razorpay_ref": "order_synth_0432",
-    "history": {
-      "prior_contacts": 2,
-      "prior_payment_success_rate": 0.89,
-      "customer_avg_days_late": 3
-    },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
-  },
-  {
-    "event_id": "evt_0433",
-    "event_type": "receivable_overdue",
-    "amount": 48000,
-    "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0433",
-    "customer_name": "Karan Kapoor",
-    "customer_email": "karan.kapoor@example.com",
-    "customer_phone": "+919494813877",
-    "created_at": "2026-08-23T09:09:40.927289+00:00",
-    "razorpay_ref": "order_synth_0433",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.6,
-      "customer_avg_days_late": 9
-    },
-    "metadata": {
-      "invoice_id": "INV-2026-0433",
-      "days_overdue": 41,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
-  },
-  {
-    "event_id": "evt_0434",
-    "event_type": "subscription_failed",
-    "amount": 499,
-    "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0434",
-    "customer_name": "Ananya Verma",
-    "customer_email": "ananya.verma@example.com",
-    "customer_phone": "+919408559997",
-    "created_at": "2026-08-23T06:09:40.927302+00:00",
-    "razorpay_ref": "order_synth_0434",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.86,
-      "customer_avg_days_late": 4
-    },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
-  },
-  {
-    "event_id": "evt_0435",
-    "event_type": "promise_to_pay",
-    "amount": 499,
-    "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0435",
-    "customer_name": "Aditya Roy",
-    "customer_email": "aditya.roy@example.com",
-    "customer_phone": "+919881522027",
-    "created_at": "2026-08-22T11:09:40.927319+00:00",
-    "razorpay_ref": "order_synth_0435",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.57,
-      "customer_avg_days_late": 9
-    },
-    "metadata": {
-      "promised_pay_date": "2026-08-27",
-      "notes": "Customer confirmed salary credit on 1st of month."
-    },
-    "ground_truth_root_cause": "promise_to_pay"
-  },
-  {
-    "event_id": "evt_0436",
-    "event_type": "checkout_abandoned",
-    "amount": 6463,
-    "currency": "INR",
-    "merchant_id": "merch_03",
-    "customer_id": "cust_0436",
-    "customer_name": "Tanvi Desai",
-    "customer_email": "tanvi.desai@example.com",
-    "customer_phone": "+919808143227",
-    "created_at": "2026-08-23T19:09:40.927333+00:00",
-    "razorpay_ref": "order_synth_0436",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.49,
-      "customer_avg_days_late": 3
+      "prior_payment_success_rate": 0.709,
+      "customer_avg_days_late": 1.3
     },
     "metadata": {
       "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
+        "Product A",
+        "Product B"
       ],
-      "time_since_abandon_minutes": 115,
+      "time_since_abandon_minutes": 98,
+      "payment_method_attempted": "netbanking"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.4254,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0429",
+    "event_type": "payment_degraded",
+    "amount": 12000.0,
+    "currency": "INR",
+    "merchant_id": "merch_04",
+    "customer_id": "cust_1654",
+    "customer_name": "Deepika Kulkarni",
+    "customer_email": "deepika.kulkarni1654@example.com",
+    "customer_phone": "+919422339554",
+    "razorpay_ref": "order_synth_0429",
+    "history": {
+      "prior_contacts": 2,
+      "prior_payment_success_rate": 0.907,
+      "customer_avg_days_late": 8.6
+    },
+    "metadata": {
+      "failure_bank": "INDUSIND",
+      "failure_route": "gateway_kotak_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.82,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.5442,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0430",
+    "event_type": "checkout_abandoned",
+    "amount": 1299.0,
+    "currency": "INR",
+    "merchant_id": "merch_05",
+    "customer_id": "cust_0469",
+    "customer_name": "Delta Pharma",
+    "customer_email": "delta.pharma469@example.com",
+    "customer_phone": "+919566143648",
+    "razorpay_ref": "order_synth_0430",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.55,
+      "customer_avg_days_late": 1.4
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 102,
       "payment_method_attempted": "card"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.33,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0431",
+    "event_type": "payment_degraded",
+    "amount": 45000.0,
+    "currency": "INR",
+    "merchant_id": "merch_14",
+    "customer_id": "cust_0749",
+    "customer_name": "Arnav Sinha",
+    "customer_email": "arnav.sinha749@example.com",
+    "customer_phone": "+919406192359",
+    "razorpay_ref": "order_synth_0431",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.271,
+      "customer_avg_days_late": 5.9
+    },
+    "metadata": {
+      "failure_bank": "SBI",
+      "failure_route": "gateway_kotak_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.5,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.1626,
+    "optimal_action": "email"
+  },
+  {
+    "event_id": "evt_0432",
+    "event_type": "checkout_abandoned",
+    "amount": 1499.0,
+    "currency": "INR",
+    "merchant_id": "merch_06",
+    "customer_id": "cust_0213",
+    "customer_name": "Delta Pharma",
+    "customer_email": "delta.pharma213@example.com",
+    "customer_phone": "+919997040864",
+    "razorpay_ref": "order_synth_0432",
+    "history": {
+      "prior_contacts": 2,
+      "prior_payment_success_rate": 0.642,
+      "customer_avg_days_late": 2.7
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 76,
+      "payment_method_attempted": "card"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.3852,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0433",
+    "event_type": "payment_degraded",
+    "amount": 899.0,
+    "currency": "INR",
+    "merchant_id": "merch_20",
+    "customer_id": "cust_1166",
+    "customer_name": "Rohan Mehta",
+    "customer_email": "rohan.mehta1166@example.com",
+    "customer_phone": "+919555510091",
+    "razorpay_ref": "order_synth_0433",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.553,
+      "customer_avg_days_late": 2.9
+    },
+    "metadata": {
+      "failure_bank": "YES",
+      "failure_route": "gateway_kotak_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.44,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3318,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0434",
+    "event_type": "mandate_auth_failed",
+    "amount": 39620.0,
+    "currency": "INR",
+    "merchant_id": "merch_13",
+    "customer_id": "cust_1824",
+    "customer_name": "Mansi Mishra",
+    "customer_email": "mansi.mishra1824@example.com",
+    "customer_phone": "+919412510815",
+    "razorpay_ref": "order_synth_0434",
+    "history": {
+      "prior_contacts": 2,
+      "prior_payment_success_rate": 0.779,
+      "customer_avg_days_late": 3.7
+    },
+    "metadata": {
+      "mandate_amount": 39620.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.4674,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0435",
+    "event_type": "subscription_failed",
+    "amount": 120000.0,
+    "currency": "INR",
+    "merchant_id": "merch_02",
+    "customer_id": "cust_1620",
+    "customer_name": "DataNinja Inc",
+    "customer_email": "dataninja.inc1620@example.com",
+    "customer_phone": "+919387311776",
+    "razorpay_ref": "order_synth_0435",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.531,
+      "customer_avg_days_late": 9.1
+    },
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.3186,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0436",
+    "event_type": "receivable_overdue",
+    "amount": 48000.0,
+    "currency": "INR",
+    "merchant_id": "merch_07",
+    "customer_id": "cust_1389",
+    "customer_name": "Simran Bhatia",
+    "customer_email": "simran.bhatia1389@example.com",
+    "customer_phone": "+919253721239",
+    "razorpay_ref": "order_synth_0436",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.99,
+      "customer_avg_days_late": 1.4
+    },
+    "metadata": {
+      "invoice_id": "INV-2026-0436",
+      "days_overdue": 44,
+      "terms": "Net 30"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.594,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0437",
-    "event_type": "subscription_failed",
-    "amount": 25000,
+    "event_type": "promise_to_pay",
+    "amount": 15999.0,
     "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0437",
-    "customer_name": "Sneha Rao",
-    "customer_email": "sneha.rao@example.com",
-    "customer_phone": "+919004488978",
-    "created_at": "2026-08-23T09:09:40.927348+00:00",
+    "merchant_id": "merch_03",
+    "customer_id": "cust_1415",
+    "customer_name": "DataNinja Inc",
+    "customer_email": "dataninja.inc1415@example.com",
+    "customer_phone": "+919846456209",
     "razorpay_ref": "order_synth_0437",
     "history": {
-      "prior_contacts": 3,
-      "prior_payment_success_rate": 0.52,
-      "customer_avg_days_late": 9
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.957,
+      "customer_avg_days_late": 1.7
     },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "metadata": {
+      "promised_pay_date": "2026-08-30",
+      "notes": "Customer confirmed next salary date"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.5742,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0438",
-    "event_type": "subscription_failed",
-    "amount": 2999,
+    "event_type": "checkout_abandoned",
+    "amount": 499.0,
     "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0438",
-    "customer_name": "Siddharth Sen",
-    "customer_email": "siddharth.sen@example.com",
-    "customer_phone": "+919926084747",
-    "created_at": "2026-08-22T23:09:40.927360+00:00",
+    "merchant_id": "merch_20",
+    "customer_id": "cust_1304",
+    "customer_name": "Delta Pharma",
+    "customer_email": "delta.pharma1304@example.com",
+    "customer_phone": "+919618615243",
     "razorpay_ref": "order_synth_0438",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.66,
-      "customer_avg_days_late": 8
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.861,
+      "customer_avg_days_late": 10.0
     },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 93,
+      "payment_method_attempted": "upi"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.5166,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0439",
     "event_type": "subscription_failed",
-    "amount": 2999,
+    "amount": 999.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0439",
-    "customer_name": "Diya Patel",
-    "customer_email": "diya.patel@example.com",
-    "customer_phone": "+919469973749",
-    "created_at": "2026-08-22T20:09:40.927372+00:00",
+    "merchant_id": "merch_13",
+    "customer_id": "cust_1845",
+    "customer_name": "Anika Bajaj",
+    "customer_email": "anika.bajaj1845@example.com",
+    "customer_phone": "+919799991421",
     "razorpay_ref": "order_synth_0439",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.98,
-      "customer_avg_days_late": 3
+      "prior_payment_success_rate": 0.777,
+      "customer_avg_days_late": 6.3
     },
     "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.4662,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0440",
-    "event_type": "mandate_auth_failed",
-    "amount": 41140,
+    "event_type": "checkout_abandoned",
+    "amount": 4999.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0440",
-    "customer_name": "Aditya Roy",
-    "customer_email": "aditya.roy@example.com",
-    "customer_phone": "+919515705886",
-    "created_at": "2026-08-23T21:09:40.927383+00:00",
+    "merchant_id": "merch_16",
+    "customer_id": "cust_0659",
+    "customer_name": "Sneha Rao",
+    "customer_email": "sneha.rao659@example.com",
+    "customer_phone": "+919691384795",
     "razorpay_ref": "order_synth_0440",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.72,
-      "customer_avg_days_late": 4
-    },
-    "metadata": {
-      "mandate_amount": 41140,
-      "afa_step_reached": false,
-      "recurring_period": "monthly"
-    },
-    "ground_truth_root_cause": "mandate_auth_failed"
-  },
-  {
-    "event_id": "evt_0441",
-    "event_type": "promise_to_pay",
-    "amount": 1299,
-    "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0441",
-    "customer_name": "Diya Patel",
-    "customer_email": "diya.patel@example.com",
-    "customer_phone": "+919439573202",
-    "created_at": "2026-08-23T23:09:40.927403+00:00",
-    "razorpay_ref": "order_synth_0441",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.67,
-      "customer_avg_days_late": 3
-    },
-    "metadata": {
-      "promised_pay_date": "2026-08-27",
-      "notes": "Customer confirmed salary credit on 1st of month."
-    },
-    "ground_truth_root_cause": "promise_to_pay"
-  },
-  {
-    "event_id": "evt_0442",
-    "event_type": "promise_to_pay",
-    "amount": 499,
-    "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0442",
-    "customer_name": "Pooja Joshi",
-    "customer_email": "pooja.joshi@example.com",
-    "customer_phone": "+919396719110",
-    "created_at": "2026-08-22T18:09:40.927420+00:00",
-    "razorpay_ref": "order_synth_0442",
-    "history": {
-      "prior_contacts": 2,
-      "prior_payment_success_rate": 0.65,
-      "customer_avg_days_late": 7
-    },
-    "metadata": {
-      "promised_pay_date": "2026-08-26",
-      "notes": "Customer confirmed salary credit on 1st of month."
-    },
-    "ground_truth_root_cause": "promise_to_pay"
-  },
-  {
-    "event_id": "evt_0443",
-    "event_type": "receivable_overdue",
-    "amount": 250000,
-    "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0443",
-    "customer_name": "Aditya Roy",
-    "customer_email": "aditya.roy@example.com",
-    "customer_phone": "+919747864704",
-    "created_at": "2026-08-22T18:09:40.927433+00:00",
-    "razorpay_ref": "order_synth_0443",
-    "history": {
-      "prior_contacts": 2,
-      "prior_payment_success_rate": 0.82,
-      "customer_avg_days_late": 6
-    },
-    "metadata": {
-      "invoice_id": "INV-2026-0443",
-      "days_overdue": 20,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
-  },
-  {
-    "event_id": "evt_0444",
-    "event_type": "subscription_failed",
-    "amount": 5999,
-    "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0444",
-    "customer_name": "Meera Iyer",
-    "customer_email": "meera.iyer@example.com",
-    "customer_phone": "+919354573453",
-    "created_at": "2026-08-22T15:09:40.927443+00:00",
-    "razorpay_ref": "order_synth_0444",
-    "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.76,
-      "customer_avg_days_late": 2
-    },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
-  },
-  {
-    "event_id": "evt_0445",
-    "event_type": "checkout_abandoned",
-    "amount": 11304,
-    "currency": "INR",
-    "merchant_id": "merch_03",
-    "customer_id": "cust_0445",
-    "customer_name": "Sneha Rao",
-    "customer_email": "sneha.rao@example.com",
-    "customer_phone": "+919963446379",
-    "created_at": "2026-08-24T09:09:40.927456+00:00",
-    "razorpay_ref": "order_synth_0445",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.43,
-      "customer_avg_days_late": 9
+      "prior_payment_success_rate": 0.726,
+      "customer_avg_days_late": 3.2
     },
     "metadata": {
       "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
+        "Product A",
+        "Product B"
       ],
       "time_since_abandon_minutes": 94,
       "payment_method_attempted": "card"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.4356,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0441",
+    "event_type": "payment_degraded",
+    "amount": 24000.0,
+    "currency": "INR",
+    "merchant_id": "merch_14",
+    "customer_id": "cust_1602",
+    "customer_name": "Dev Khanna",
+    "customer_email": "dev.khanna1602@example.com",
+    "customer_phone": "+919681189708",
+    "razorpay_ref": "order_synth_0441",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.877,
+      "customer_avg_days_late": 1.6
+    },
+    "metadata": {
+      "failure_bank": "ICICI",
+      "failure_route": "gateway_indusind_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.73,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.5262,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0442",
+    "event_type": "checkout_abandoned",
+    "amount": 1999.0,
+    "currency": "INR",
+    "merchant_id": "merch_15",
+    "customer_id": "cust_1406",
+    "customer_name": "SkyHigh Ventures",
+    "customer_email": "skyhigh.ventures1406@example.com",
+    "customer_phone": "+919177987202",
+    "razorpay_ref": "order_synth_0442",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.724,
+      "customer_avg_days_late": 2.7
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 120,
+      "payment_method_attempted": "card"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.4344,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0443",
+    "event_type": "checkout_abandoned",
+    "amount": 2999.0,
+    "currency": "INR",
+    "merchant_id": "merch_11",
+    "customer_id": "cust_1430",
+    "customer_name": "Simran Bhatia",
+    "customer_email": "simran.bhatia1430@example.com",
+    "customer_phone": "+919740536977",
+    "razorpay_ref": "order_synth_0443",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.907,
+      "customer_avg_days_late": 9.2
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 41,
+      "payment_method_attempted": "netbanking"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.5442,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0444",
+    "event_type": "promise_to_pay",
+    "amount": 2999.0,
+    "currency": "INR",
+    "merchant_id": "merch_11",
+    "customer_id": "cust_1668",
+    "customer_name": "Sigma Exports",
+    "customer_email": "sigma.exports1668@example.com",
+    "customer_phone": "+919684432700",
+    "razorpay_ref": "order_synth_0444",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.335,
+      "customer_avg_days_late": 1.4
+    },
+    "metadata": {
+      "promised_pay_date": "2026-09-02",
+      "notes": "Customer confirmed next salary date"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.201,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0445",
+    "event_type": "payment_degraded",
+    "amount": 1299.0,
+    "currency": "INR",
+    "merchant_id": "merch_10",
+    "customer_id": "cust_0107",
+    "customer_name": "Diya Patel",
+    "customer_email": "diya.patel107@example.com",
+    "customer_phone": "+919287037751",
+    "razorpay_ref": "order_synth_0445",
+    "history": {
+      "prior_contacts": 2,
+      "prior_payment_success_rate": 0.747,
+      "customer_avg_days_late": 1.2
+    },
+    "metadata": {
+      "failure_bank": "KOTAK",
+      "failure_route": "gateway_yes_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.55,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.4482,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0446",
     "event_type": "payment_degraded",
-    "amount": 25000,
+    "amount": 1999.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0446",
-    "customer_name": "Pooja Joshi",
-    "customer_email": "pooja.joshi@example.com",
-    "customer_phone": "+919469835807",
-    "created_at": "2026-08-23T02:09:40.927469+00:00",
+    "merchant_id": "merch_15",
+    "customer_id": "cust_1781",
+    "customer_name": "Varun Pillai",
+    "customer_email": "varun.pillai1781@example.com",
+    "customer_phone": "+919441441142",
     "razorpay_ref": "order_synth_0446",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.75,
-      "customer_avg_days_late": 12
+      "prior_payment_success_rate": 0.521,
+      "customer_avg_days_late": 0.6
     },
     "metadata": {
-      "failure_bank": "AXIS",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.76,
+      "failure_bank": "YES",
+      "failure_route": "gateway_kotak_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.57,
       "error_code": "BAD_GATEWAY_TIMEOUT"
     },
-    "ground_truth_root_cause": "payment_degraded"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3126,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0447",
     "event_type": "checkout_abandoned",
-    "amount": 3095,
+    "amount": 12000.0,
     "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0447",
-    "customer_name": "Pooja Joshi",
-    "customer_email": "pooja.joshi@example.com",
-    "customer_phone": "+919243719818",
-    "created_at": "2026-08-23T14:09:40.927484+00:00",
+    "merchant_id": "merch_14",
+    "customer_id": "cust_1491",
+    "customer_name": "Rohan Mehta",
+    "customer_email": "rohan.mehta1491@example.com",
+    "customer_phone": "+919032037354",
     "razorpay_ref": "order_synth_0447",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.95,
-      "customer_avg_days_late": 7
+      "prior_payment_success_rate": 0.751,
+      "customer_avg_days_late": 6.1
     },
     "metadata": {
       "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
+        "Product A",
+        "Product B"
       ],
-      "time_since_abandon_minutes": 115,
-      "payment_method_attempted": "upi"
+      "time_since_abandon_minutes": 111,
+      "payment_method_attempted": "card"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.4506,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0448",
-    "event_type": "checkout_abandoned",
-    "amount": 3735,
+    "event_type": "subscription_failed",
+    "amount": 4999.0,
     "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0448",
+    "merchant_id": "merch_16",
+    "customer_id": "cust_0066",
     "customer_name": "Meera Iyer",
-    "customer_email": "meera.iyer@example.com",
-    "customer_phone": "+919504181025",
-    "created_at": "2026-08-23T14:09:40.927495+00:00",
+    "customer_email": "meera.iyer66@example.com",
+    "customer_phone": "+919663606238",
     "razorpay_ref": "order_synth_0448",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.7,
-      "customer_avg_days_late": 5
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.874,
+      "customer_avg_days_late": 0.8
     },
-    "metadata": {
-      "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
-      ],
-      "time_since_abandon_minutes": 116,
-      "payment_method_attempted": "netbanking"
-    },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.5244,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0449",
-    "event_type": "receivable_overdue",
-    "amount": 25000,
+    "event_type": "subscription_failed",
+    "amount": 15999.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0449",
-    "customer_name": "Rohan Mehta",
-    "customer_email": "rohan.mehta@example.com",
-    "customer_phone": "+919309485756",
-    "created_at": "2026-08-23T02:09:40.927507+00:00",
+    "merchant_id": "merch_13",
+    "customer_id": "cust_1887",
+    "customer_name": "Yash Mathur",
+    "customer_email": "yash.mathur1887@example.com",
+    "customer_phone": "+919925389043",
     "razorpay_ref": "order_synth_0449",
     "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.49,
-      "customer_avg_days_late": 5
+      "prior_contacts": 2,
+      "prior_payment_success_rate": 0.846,
+      "customer_avg_days_late": 3.8
     },
-    "metadata": {
-      "invoice_id": "INV-2026-0449",
-      "days_overdue": 13,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.5076,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0450",
-    "event_type": "checkout_abandoned",
-    "amount": 3828,
+    "event_type": "promise_to_pay",
+    "amount": 120000.0,
     "currency": "INR",
-    "merchant_id": "merch_03",
-    "customer_id": "cust_0450",
-    "customer_name": "Ananya Verma",
-    "customer_email": "ananya.verma@example.com",
-    "customer_phone": "+919767177386",
-    "created_at": "2026-08-23T15:09:40.927518+00:00",
+    "merchant_id": "merch_17",
+    "customer_id": "cust_1439",
+    "customer_name": "Anika Bajaj",
+    "customer_email": "anika.bajaj1439@example.com",
+    "customer_phone": "+919405148896",
     "razorpay_ref": "order_synth_0450",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.86,
-      "customer_avg_days_late": 1
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.603,
+      "customer_avg_days_late": 2.1
     },
     "metadata": {
-      "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
-      ],
-      "time_since_abandon_minutes": 51,
-      "payment_method_attempted": "card"
+      "promised_pay_date": "2026-09-02",
+      "notes": "Customer confirmed next salary date"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.3618,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0451",
     "event_type": "subscription_failed",
-    "amount": 5999,
+    "amount": 125000.0,
     "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0451",
-    "customer_name": "Meera Iyer",
-    "customer_email": "meera.iyer@example.com",
-    "customer_phone": "+919771982246",
-    "created_at": "2026-08-22T21:09:40.927528+00:00",
+    "merchant_id": "merch_09",
+    "customer_id": "cust_0467",
+    "customer_name": "Yash Mathur",
+    "customer_email": "yash.mathur467@example.com",
+    "customer_phone": "+919668845554",
     "razorpay_ref": "order_synth_0451",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.61,
-      "customer_avg_days_late": 3
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.498,
+      "customer_avg_days_late": 1.4
     },
     "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.2988,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0452",
-    "event_type": "payment_degraded",
-    "amount": 25000,
+    "event_type": "subscription_failed",
+    "amount": 25000.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0452",
-    "customer_name": "Meera Iyer",
-    "customer_email": "meera.iyer@example.com",
-    "customer_phone": "+919793811642",
-    "created_at": "2026-08-22T11:09:40.927540+00:00",
+    "merchant_id": "merch_07",
+    "customer_id": "cust_0721",
+    "customer_name": "Varun Pillai",
+    "customer_email": "varun.pillai721@example.com",
+    "customer_phone": "+919817021681",
     "razorpay_ref": "order_synth_0452",
     "history": {
       "prior_contacts": 1,
-      "prior_payment_success_rate": 0.69,
-      "customer_avg_days_late": 5
+      "prior_payment_success_rate": 0.262,
+      "customer_avg_days_late": 0.8
     },
-    "metadata": {
-      "failure_bank": "HDFC",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.71,
-      "error_code": "BAD_GATEWAY_TIMEOUT"
-    },
-    "ground_truth_root_cause": "payment_degraded"
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.1572,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0453",
-    "event_type": "mandate_auth_failed",
-    "amount": 72149,
+    "event_type": "promise_to_pay",
+    "amount": 48000.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0453",
-    "customer_name": "Aarav Sharma",
-    "customer_email": "aarav.sharma@example.com",
-    "customer_phone": "+919632786154",
-    "created_at": "2026-08-22T23:09:40.927551+00:00",
+    "merchant_id": "merch_17",
+    "customer_id": "cust_1577",
+    "customer_name": "Akash Pandey",
+    "customer_email": "akash.pandey1577@example.com",
+    "customer_phone": "+919517925298",
     "razorpay_ref": "order_synth_0453",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.42,
-      "customer_avg_days_late": 1
+      "prior_payment_success_rate": 0.478,
+      "customer_avg_days_late": 1.7
     },
     "metadata": {
-      "mandate_amount": 72149,
-      "afa_step_reached": false,
-      "recurring_period": "monthly"
+      "promised_pay_date": "2026-09-02",
+      "notes": "Customer confirmed next salary date"
     },
-    "ground_truth_root_cause": "mandate_auth_failed"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.2868,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0454",
-    "event_type": "receivable_overdue",
-    "amount": 250000,
+    "event_type": "subscription_failed",
+    "amount": 500000.0,
     "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0454",
-    "customer_name": "Meera Iyer",
-    "customer_email": "meera.iyer@example.com",
-    "customer_phone": "+919509925467",
-    "created_at": "2026-08-23T11:09:40.927565+00:00",
+    "merchant_id": "merch_12",
+    "customer_id": "cust_1708",
+    "customer_name": "Arjun Kumar",
+    "customer_email": "arjun.kumar1708@example.com",
+    "customer_phone": "+919994860672",
     "razorpay_ref": "order_synth_0454",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.98,
-      "customer_avg_days_late": 4
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.588,
+      "customer_avg_days_late": 2.7
     },
-    "metadata": {
-      "invoice_id": "INV-2026-0454",
-      "days_overdue": 38,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.3528,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0455",
     "event_type": "receivable_overdue",
-    "amount": 120000,
+    "amount": 120000.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0455",
-    "customer_name": "Rohan Mehta",
-    "customer_email": "rohan.mehta@example.com",
-    "customer_phone": "+919734402559",
-    "created_at": "2026-08-23T17:09:40.927580+00:00",
+    "merchant_id": "merch_07",
+    "customer_id": "cust_1862",
+    "customer_name": "Aditya Roy",
+    "customer_email": "aditya.roy1862@example.com",
+    "customer_phone": "+919113172589",
     "razorpay_ref": "order_synth_0455",
     "history": {
-      "prior_contacts": 3,
-      "prior_payment_success_rate": 0.62,
-      "customer_avg_days_late": 0
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.781,
+      "customer_avg_days_late": 3.2
     },
     "metadata": {
       "invoice_id": "INV-2026-0455",
-      "days_overdue": 43,
+      "days_overdue": 8,
       "terms": "Net 30"
     },
-    "ground_truth_root_cause": "receivable_overdue"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.4686,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0456",
     "event_type": "subscription_failed",
-    "amount": 499,
+    "amount": 199.0,
     "currency": "INR",
-    "merchant_id": "merch_03",
-    "customer_id": "cust_0456",
-    "customer_name": "Siddharth Sen",
-    "customer_email": "siddharth.sen@example.com",
-    "customer_phone": "+919721560442",
-    "created_at": "2026-08-23T20:09:40.927592+00:00",
+    "merchant_id": "merch_05",
+    "customer_id": "cust_1317",
+    "customer_name": "Tanvi Desai",
+    "customer_email": "tanvi.desai1317@example.com",
+    "customer_phone": "+919607197001",
     "razorpay_ref": "order_synth_0456",
     "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.6,
-      "customer_avg_days_late": 9
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.706,
+      "customer_avg_days_late": 2.1
     },
     "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.4236,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0457",
-    "event_type": "receivable_overdue",
-    "amount": 120000,
+    "event_type": "mandate_auth_failed",
+    "amount": 43814.0,
     "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0457",
-    "customer_name": "Rohan Mehta",
-    "customer_email": "rohan.mehta@example.com",
-    "customer_phone": "+919443415395",
-    "created_at": "2026-08-22T22:09:40.927606+00:00",
+    "merchant_id": "merch_13",
+    "customer_id": "cust_0735",
+    "customer_name": "Neha Agarwal",
+    "customer_email": "neha.agarwal735@example.com",
+    "customer_phone": "+919978643678",
     "razorpay_ref": "order_synth_0457",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.6,
-      "customer_avg_days_late": 7
+      "prior_payment_success_rate": 0.658,
+      "customer_avg_days_late": 6.4
     },
     "metadata": {
-      "invoice_id": "INV-2026-0457",
-      "days_overdue": 17,
-      "terms": "Net 30"
+      "mandate_amount": 43814.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
     },
-    "ground_truth_root_cause": "receivable_overdue"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.3948,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0458",
-    "event_type": "checkout_abandoned",
-    "amount": 14482,
+    "event_type": "subscription_failed",
+    "amount": 2999.0,
     "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0458",
-    "customer_name": "Meera Iyer",
-    "customer_email": "meera.iyer@example.com",
-    "customer_phone": "+919229520523",
-    "created_at": "2026-08-22T12:09:40.927620+00:00",
+    "merchant_id": "merch_08",
+    "customer_id": "cust_0830",
+    "customer_name": "Zenith Solutions",
+    "customer_email": "zenith.solutions830@example.com",
+    "customer_phone": "+919632113521",
     "razorpay_ref": "order_synth_0458",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.79,
-      "customer_avg_days_late": 4
+      "prior_payment_success_rate": 0.864,
+      "customer_avg_days_late": 6.0
     },
-    "metadata": {
-      "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
-      ],
-      "time_since_abandon_minutes": 46,
-      "payment_method_attempted": "upi"
-    },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.5184,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0459",
-    "event_type": "receivable_overdue",
-    "amount": 25000,
+    "event_type": "payment_degraded",
+    "amount": 125000.0,
     "currency": "INR",
-    "merchant_id": "merch_03",
-    "customer_id": "cust_0459",
-    "customer_name": "Siddharth Sen",
-    "customer_email": "siddharth.sen@example.com",
-    "customer_phone": "+919979305783",
-    "created_at": "2026-08-22T18:09:40.927632+00:00",
+    "merchant_id": "merch_09",
+    "customer_id": "cust_1088",
+    "customer_name": "Pooja Joshi",
+    "customer_email": "pooja.joshi1088@example.com",
+    "customer_phone": "+919689601604",
     "razorpay_ref": "order_synth_0459",
     "history": {
       "prior_contacts": 2,
-      "prior_payment_success_rate": 0.5,
-      "customer_avg_days_late": 5
+      "prior_payment_success_rate": 0.798,
+      "customer_avg_days_late": 0.8
     },
     "metadata": {
-      "invoice_id": "INV-2026-0459",
-      "days_overdue": 21,
-      "terms": "Net 30"
+      "failure_bank": "YES",
+      "failure_route": "gateway_indusind_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.72,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
     },
-    "ground_truth_root_cause": "receivable_overdue"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.4788,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0460",
-    "event_type": "checkout_abandoned",
-    "amount": 5811,
+    "event_type": "payment_degraded",
+    "amount": 1999.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0460",
-    "customer_name": "Kabir Gupta",
-    "customer_email": "kabir.gupta@example.com",
-    "customer_phone": "+919662466229",
-    "created_at": "2026-08-23T20:09:40.927645+00:00",
+    "merchant_id": "merch_10",
+    "customer_id": "cust_0080",
+    "customer_name": "Priya Nair",
+    "customer_email": "priya.nair80@example.com",
+    "customer_phone": "+919670529419",
     "razorpay_ref": "order_synth_0460",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.86,
-      "customer_avg_days_late": 8
+      "prior_payment_success_rate": 0.607,
+      "customer_avg_days_late": 1.9
     },
     "metadata": {
-      "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
-      ],
-      "time_since_abandon_minutes": 53,
-      "payment_method_attempted": "upi"
+      "failure_bank": "HDFC",
+      "failure_route": "gateway_icici_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.52,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3642,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0461",
     "event_type": "promise_to_pay",
-    "amount": 499,
+    "amount": 5999.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0461",
-    "customer_name": "Tanvi Desai",
-    "customer_email": "tanvi.desai@example.com",
-    "customer_phone": "+919952915772",
-    "created_at": "2026-08-22T20:09:40.927663+00:00",
+    "merchant_id": "merch_13",
+    "customer_id": "cust_1346",
+    "customer_name": "Vivek Prasad",
+    "customer_email": "vivek.prasad1346@example.com",
+    "customer_phone": "+919576267690",
     "razorpay_ref": "order_synth_0461",
     "history": {
-      "prior_contacts": 3,
-      "prior_payment_success_rate": 0.7,
-      "customer_avg_days_late": 4
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.456,
+      "customer_avg_days_late": 1.9
     },
     "metadata": {
-      "promised_pay_date": "2026-08-26",
-      "notes": "Customer confirmed salary credit on 1st of month."
+      "promised_pay_date": "2026-08-28",
+      "notes": "Customer confirmed next salary date"
     },
-    "ground_truth_root_cause": "promise_to_pay"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.2736,
+    "optimal_action": "email"
   },
   {
     "event_id": "evt_0462",
-    "event_type": "payment_degraded",
-    "amount": 2999,
+    "event_type": "subscription_failed",
+    "amount": 45000.0,
     "currency": "INR",
-    "merchant_id": "merch_03",
-    "customer_id": "cust_0462",
-    "customer_name": "Kabir Gupta",
-    "customer_email": "kabir.gupta@example.com",
-    "customer_phone": "+919770194568",
-    "created_at": "2026-08-24T05:09:40.927675+00:00",
+    "merchant_id": "merch_19",
+    "customer_id": "cust_0371",
+    "customer_name": "Omega Logistics",
+    "customer_email": "omega.logistics371@example.com",
+    "customer_phone": "+919905037037",
     "razorpay_ref": "order_synth_0462",
     "history": {
       "prior_contacts": 1,
-      "prior_payment_success_rate": 0.78,
-      "customer_avg_days_late": 8
+      "prior_payment_success_rate": 0.822,
+      "customer_avg_days_late": 1.4
     },
-    "metadata": {
-      "failure_bank": "HDFC",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.55,
-      "error_code": "BAD_GATEWAY_TIMEOUT"
-    },
-    "ground_truth_root_cause": "payment_degraded"
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.4932,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0463",
-    "event_type": "payment_degraded",
-    "amount": 5999,
+    "event_type": "receivable_overdue",
+    "amount": 500000.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0463",
-    "customer_name": "Tanvi Desai",
-    "customer_email": "tanvi.desai@example.com",
-    "customer_phone": "+919724700430",
-    "created_at": "2026-08-23T17:09:40.927687+00:00",
+    "merchant_id": "merch_17",
+    "customer_id": "cust_0692",
+    "customer_name": "Varun Pillai",
+    "customer_email": "varun.pillai692@example.com",
+    "customer_phone": "+919875164910",
     "razorpay_ref": "order_synth_0463",
     "history": {
-      "prior_contacts": 3,
-      "prior_payment_success_rate": 0.82,
-      "customer_avg_days_late": 0
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.656,
+      "customer_avg_days_late": 1.6
     },
     "metadata": {
-      "failure_bank": "SBI",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.82,
-      "error_code": "BAD_GATEWAY_TIMEOUT"
+      "invoice_id": "INV-2026-0463",
+      "days_overdue": 17,
+      "terms": "Net 30"
     },
-    "ground_truth_root_cause": "payment_degraded"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.3936,
+    "optimal_action": "email"
   },
   {
     "event_id": "evt_0464",
-    "event_type": "subscription_failed",
-    "amount": 499,
+    "event_type": "checkout_abandoned",
+    "amount": 1999.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0464",
-    "customer_name": "Karan Kapoor",
-    "customer_email": "karan.kapoor@example.com",
-    "customer_phone": "+919879035433",
-    "created_at": "2026-08-22T18:09:40.927698+00:00",
+    "merchant_id": "merch_11",
+    "customer_id": "cust_1536",
+    "customer_name": "TechMatrix Corp",
+    "customer_email": "techmatrix.corp1536@example.com",
+    "customer_phone": "+919914776296",
     "razorpay_ref": "order_synth_0464",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.69,
-      "customer_avg_days_late": 6
+      "prior_payment_success_rate": 0.927,
+      "customer_avg_days_late": 1.1
     },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 57,
+      "payment_method_attempted": "card"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.5562,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0465",
-    "event_type": "receivable_overdue",
-    "amount": 120000,
+    "event_type": "promise_to_pay",
+    "amount": 68000.0,
     "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0465",
-    "customer_name": "Ishaan Malhotra",
-    "customer_email": "ishaan.malhotra@example.com",
-    "customer_phone": "+919264061892",
-    "created_at": "2026-08-22T10:09:40.927710+00:00",
+    "merchant_id": "merch_09",
+    "customer_id": "cust_1633",
+    "customer_name": "Aditi Chawla",
+    "customer_email": "aditi.chawla1633@example.com",
+    "customer_phone": "+919376646770",
     "razorpay_ref": "order_synth_0465",
     "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.68,
-      "customer_avg_days_late": 7
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.518,
+      "customer_avg_days_late": 2.5
     },
     "metadata": {
-      "invoice_id": "INV-2026-0465",
-      "days_overdue": 10,
-      "terms": "Net 30"
+      "promised_pay_date": "2026-08-29",
+      "notes": "Customer confirmed next salary date"
     },
-    "ground_truth_root_cause": "receivable_overdue"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.3108,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0466",
-    "event_type": "promise_to_pay",
-    "amount": 12000,
+    "event_type": "payment_degraded",
+    "amount": 2999.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0466",
-    "customer_name": "Aarav Sharma",
-    "customer_email": "aarav.sharma@example.com",
-    "customer_phone": "+919397662170",
-    "created_at": "2026-08-22T12:09:40.927729+00:00",
+    "merchant_id": "merch_18",
+    "customer_id": "cust_0163",
+    "customer_name": "Siddharth Sen",
+    "customer_email": "siddharth.sen163@example.com",
+    "customer_phone": "+919799089320",
     "razorpay_ref": "order_synth_0466",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.61,
-      "customer_avg_days_late": 1
+      "prior_contacts": 2,
+      "prior_payment_success_rate": 0.504,
+      "customer_avg_days_late": 3.4
     },
     "metadata": {
-      "promised_pay_date": "2026-08-30",
-      "notes": "Customer confirmed salary credit on 1st of month."
+      "failure_bank": "YES",
+      "failure_route": "gateway_kotak_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.41,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
     },
-    "ground_truth_root_cause": "promise_to_pay"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3024,
+    "optimal_action": "email"
   },
   {
     "event_id": "evt_0467",
-    "event_type": "subscription_failed",
-    "amount": 499,
+    "event_type": "promise_to_pay",
+    "amount": 499.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0467",
-    "customer_name": "Vikram Singh",
-    "customer_email": "vikram.singh@example.com",
-    "customer_phone": "+919118613994",
-    "created_at": "2026-08-24T03:09:40.927744+00:00",
+    "merchant_id": "merch_10",
+    "customer_id": "cust_0016",
+    "customer_name": "Varun Pillai",
+    "customer_email": "varun.pillai16@example.com",
+    "customer_phone": "+919804745462",
     "razorpay_ref": "order_synth_0467",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.7,
-      "customer_avg_days_late": 8
+      "prior_contacts": 2,
+      "prior_payment_success_rate": 0.644,
+      "customer_avg_days_late": 1.4
     },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "metadata": {
+      "promised_pay_date": "2026-08-28",
+      "notes": "Customer confirmed next salary date"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.3864,
+    "optimal_action": "email"
   },
   {
     "event_id": "evt_0468",
     "event_type": "payment_degraded",
-    "amount": 25000,
+    "amount": 199.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0468",
-    "customer_name": "Aditya Roy",
-    "customer_email": "aditya.roy@example.com",
-    "customer_phone": "+919706108002",
-    "created_at": "2026-08-23T03:09:40.927757+00:00",
+    "merchant_id": "merch_15",
+    "customer_id": "cust_0294",
+    "customer_name": "Arnav Sinha",
+    "customer_email": "arnav.sinha294@example.com",
+    "customer_phone": "+919238525147",
     "razorpay_ref": "order_synth_0468",
     "history": {
-      "prior_contacts": 2,
-      "prior_payment_success_rate": 0.87,
-      "customer_avg_days_late": 5
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.743,
+      "customer_avg_days_late": 2.4
     },
     "metadata": {
       "failure_bank": "SBI",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.71,
+      "failure_route": "gateway_icici_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.77,
       "error_code": "BAD_GATEWAY_TIMEOUT"
     },
-    "ground_truth_root_cause": "payment_degraded"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.4458,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0469",
-    "event_type": "receivable_overdue",
-    "amount": 48000,
+    "event_type": "subscription_failed",
+    "amount": 250000.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0469",
-    "customer_name": "Karan Kapoor",
-    "customer_email": "karan.kapoor@example.com",
-    "customer_phone": "+919272834303",
-    "created_at": "2026-08-23T02:09:40.927768+00:00",
+    "merchant_id": "merch_07",
+    "customer_id": "cust_0584",
+    "customer_name": "Nisha Tiwari",
+    "customer_email": "nisha.tiwari584@example.com",
+    "customer_phone": "+919812399890",
     "razorpay_ref": "order_synth_0469",
     "history": {
       "prior_contacts": 1,
-      "prior_payment_success_rate": 0.97,
-      "customer_avg_days_late": 1
+      "prior_payment_success_rate": 0.676,
+      "customer_avg_days_late": 3.7
     },
-    "metadata": {
-      "invoice_id": "INV-2026-0469",
-      "days_overdue": 18,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.4056,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0470",
-    "event_type": "checkout_abandoned",
-    "amount": 8172,
+    "event_type": "receivable_overdue",
+    "amount": 500000.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0470",
-    "customer_name": "Ishaan Malhotra",
-    "customer_email": "ishaan.malhotra@example.com",
-    "customer_phone": "+919105488168",
-    "created_at": "2026-08-22T16:09:40.927779+00:00",
+    "merchant_id": "merch_16",
+    "customer_id": "cust_1462",
+    "customer_name": "Nexus Retail",
+    "customer_email": "nexus.retail1462@example.com",
+    "customer_phone": "+919424093222",
     "razorpay_ref": "order_synth_0470",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.62,
-      "customer_avg_days_late": 9
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.701,
+      "customer_avg_days_late": 3.9
     },
     "metadata": {
-      "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
-      ],
-      "time_since_abandon_minutes": 98,
-      "payment_method_attempted": "upi"
+      "invoice_id": "INV-2026-0470",
+      "days_overdue": 13,
+      "terms": "Net 30"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.4206,
+    "optimal_action": "email"
   },
   {
     "event_id": "evt_0471",
-    "event_type": "receivable_overdue",
-    "amount": 48000,
+    "event_type": "checkout_abandoned",
+    "amount": 1999.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0471",
-    "customer_name": "Aarav Sharma",
-    "customer_email": "aarav.sharma@example.com",
-    "customer_phone": "+919036005705",
-    "created_at": "2026-08-22T18:09:40.927790+00:00",
+    "merchant_id": "merch_16",
+    "customer_id": "cust_0251",
+    "customer_name": "Anika Bajaj",
+    "customer_email": "anika.bajaj251@example.com",
+    "customer_phone": "+919728209159",
     "razorpay_ref": "order_synth_0471",
     "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.76,
-      "customer_avg_days_late": 6
-    },
-    "metadata": {
-      "invoice_id": "INV-2026-0471",
-      "days_overdue": 9,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
-  },
-  {
-    "event_id": "evt_0472",
-    "event_type": "subscription_failed",
-    "amount": 25000,
-    "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0472",
-    "customer_name": "Meera Iyer",
-    "customer_email": "meera.iyer@example.com",
-    "customer_phone": "+919612601975",
-    "created_at": "2026-08-23T06:09:40.927800+00:00",
-    "razorpay_ref": "order_synth_0472",
-    "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.96,
-      "customer_avg_days_late": 2
-    },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
-  },
-  {
-    "event_id": "evt_0473",
-    "event_type": "checkout_abandoned",
-    "amount": 1002,
-    "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0473",
-    "customer_name": "Meera Iyer",
-    "customer_email": "meera.iyer@example.com",
-    "customer_phone": "+919350288430",
-    "created_at": "2026-08-23T20:09:40.927814+00:00",
-    "razorpay_ref": "order_synth_0473",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.59,
-      "customer_avg_days_late": 3
+      "prior_payment_success_rate": 0.805,
+      "customer_avg_days_late": 2.0
     },
     "metadata": {
       "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
+        "Product A",
+        "Product B"
       ],
-      "time_since_abandon_minutes": 16,
+      "time_since_abandon_minutes": 22,
       "payment_method_attempted": "netbanking"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.483,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0472",
+    "event_type": "checkout_abandoned",
+    "amount": 4999.0,
+    "currency": "INR",
+    "merchant_id": "merch_11",
+    "customer_id": "cust_1279",
+    "customer_name": "BrightPath Edu",
+    "customer_email": "brightpath.edu1279@example.com",
+    "customer_phone": "+919760599173",
+    "razorpay_ref": "order_synth_0472",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.757,
+      "customer_avg_days_late": 6.2
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 86,
+      "payment_method_attempted": "card"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.4542,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0473",
+    "event_type": "mandate_auth_failed",
+    "amount": 43513.0,
+    "currency": "INR",
+    "merchant_id": "merch_02",
+    "customer_id": "cust_1390",
+    "customer_name": "Nexus Retail",
+    "customer_email": "nexus.retail1390@example.com",
+    "customer_phone": "+919483710292",
+    "razorpay_ref": "order_synth_0473",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.388,
+      "customer_avg_days_late": 1.9
+    },
+    "metadata": {
+      "mandate_amount": 43513.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.2328,
+    "optimal_action": "email"
   },
   {
     "event_id": "evt_0474",
-    "event_type": "receivable_overdue",
-    "amount": 25000,
+    "event_type": "payment_degraded",
+    "amount": 24000.0,
     "currency": "INR",
     "merchant_id": "merch_04",
-    "customer_id": "cust_0474",
-    "customer_name": "Aditya Roy",
-    "customer_email": "aditya.roy@example.com",
-    "customer_phone": "+919206237646",
-    "created_at": "2026-08-23T18:09:40.927828+00:00",
+    "customer_id": "cust_0596",
+    "customer_name": "Nikhil Ghosh",
+    "customer_email": "nikhil.ghosh596@example.com",
+    "customer_phone": "+919809870047",
     "razorpay_ref": "order_synth_0474",
     "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.81,
-      "customer_avg_days_late": 1
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.586,
+      "customer_avg_days_late": 4.4
     },
     "metadata": {
-      "invoice_id": "INV-2026-0474",
-      "days_overdue": 43,
-      "terms": "Net 30"
+      "failure_bank": "KOTAK",
+      "failure_route": "gateway_indusind_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.59,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
     },
-    "ground_truth_root_cause": "receivable_overdue"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3516,
+    "optimal_action": "email"
   },
   {
     "event_id": "evt_0475",
     "event_type": "checkout_abandoned",
-    "amount": 1903,
+    "amount": 12000.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0475",
-    "customer_name": "Ananya Verma",
-    "customer_email": "ananya.verma@example.com",
-    "customer_phone": "+919670725233",
-    "created_at": "2026-08-22T23:09:40.927841+00:00",
+    "merchant_id": "merch_04",
+    "customer_id": "cust_1611",
+    "customer_name": "Omega Logistics",
+    "customer_email": "omega.logistics1611@example.com",
+    "customer_phone": "+919839978716",
     "razorpay_ref": "order_synth_0475",
     "history": {
       "prior_contacts": 1,
-      "prior_payment_success_rate": 0.77,
-      "customer_avg_days_late": 8
+      "prior_payment_success_rate": 0.865,
+      "customer_avg_days_late": 4.5
     },
     "metadata": {
       "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
+        "Product A",
+        "Product B"
       ],
-      "time_since_abandon_minutes": 47,
-      "payment_method_attempted": "netbanking"
+      "time_since_abandon_minutes": 42,
+      "payment_method_attempted": "upi"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.519,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0476",
-    "event_type": "subscription_failed",
-    "amount": 499,
+    "event_type": "checkout_abandoned",
+    "amount": 899.0,
     "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0476",
-    "customer_name": "Sneha Rao",
-    "customer_email": "sneha.rao@example.com",
-    "customer_phone": "+919273639930",
-    "created_at": "2026-08-23T07:09:40.927853+00:00",
+    "merchant_id": "merch_05",
+    "customer_id": "cust_0931",
+    "customer_name": "TechMatrix Corp",
+    "customer_email": "techmatrix.corp931@example.com",
+    "customer_phone": "+919627554783",
     "razorpay_ref": "order_synth_0476",
     "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.65,
-      "customer_avg_days_late": 7
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.617,
+      "customer_avg_days_late": 4.0
     },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 92,
+      "payment_method_attempted": "netbanking"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.3702,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0477",
     "event_type": "subscription_failed",
-    "amount": 5999,
+    "amount": 2999.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0477",
-    "customer_name": "Kabir Gupta",
-    "customer_email": "kabir.gupta@example.com",
-    "customer_phone": "+919175259182",
-    "created_at": "2026-08-23T23:09:40.927866+00:00",
+    "merchant_id": "merch_08",
+    "customer_id": "cust_0593",
+    "customer_name": "Delta Pharma",
+    "customer_email": "delta.pharma593@example.com",
+    "customer_phone": "+919570017400",
     "razorpay_ref": "order_synth_0477",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.84,
-      "customer_avg_days_late": 7
+      "prior_payment_success_rate": 0.476,
+      "customer_avg_days_late": 1.1
     },
     "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.2856,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0478",
-    "event_type": "promise_to_pay",
-    "amount": 1299,
+    "event_type": "receivable_overdue",
+    "amount": 250000.0,
     "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0478",
-    "customer_name": "Meera Iyer",
-    "customer_email": "meera.iyer@example.com",
-    "customer_phone": "+919518703466",
-    "created_at": "2026-08-22T13:09:40.927883+00:00",
+    "merchant_id": "merch_07",
+    "customer_id": "cust_0616",
+    "customer_name": "Aditya Roy",
+    "customer_email": "aditya.roy616@example.com",
+    "customer_phone": "+919740226363",
     "razorpay_ref": "order_synth_0478",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.73,
-      "customer_avg_days_late": 4
+      "prior_payment_success_rate": 0.83,
+      "customer_avg_days_late": 5.1
     },
     "metadata": {
-      "promised_pay_date": "2026-08-27",
-      "notes": "Customer confirmed salary credit on 1st of month."
+      "invoice_id": "INV-2026-0478",
+      "days_overdue": 25,
+      "terms": "Net 30"
     },
-    "ground_truth_root_cause": "promise_to_pay"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.498,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0479",
-    "event_type": "promise_to_pay",
-    "amount": 499,
+    "event_type": "payment_degraded",
+    "amount": 1299.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0479",
-    "customer_name": "Tanvi Desai",
-    "customer_email": "tanvi.desai@example.com",
-    "customer_phone": "+919513350169",
-    "created_at": "2026-08-22T10:09:40.927900+00:00",
+    "merchant_id": "merch_10",
+    "customer_id": "cust_1436",
+    "customer_name": "Rahul Tripathi",
+    "customer_email": "rahul.tripathi1436@example.com",
+    "customer_phone": "+919387044871",
     "razorpay_ref": "order_synth_0479",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.59,
-      "customer_avg_days_late": 8
+      "prior_payment_success_rate": 0.922,
+      "customer_avg_days_late": 3.8
     },
     "metadata": {
-      "promised_pay_date": "2026-08-31",
-      "notes": "Customer confirmed salary credit on 1st of month."
+      "failure_bank": "KOTAK",
+      "failure_route": "gateway_kotak_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.8,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
     },
-    "ground_truth_root_cause": "promise_to_pay"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.5532,
+    "optimal_action": "email"
   },
   {
     "event_id": "evt_0480",
     "event_type": "payment_degraded",
-    "amount": 5999,
+    "amount": 125000.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0480",
-    "customer_name": "Karan Kapoor",
-    "customer_email": "karan.kapoor@example.com",
-    "customer_phone": "+919233018965",
-    "created_at": "2026-08-22T11:09:40.927914+00:00",
+    "merchant_id": "merch_09",
+    "customer_id": "cust_1057",
+    "customer_name": "Varun Pillai",
+    "customer_email": "varun.pillai1057@example.com",
+    "customer_phone": "+919806074127",
     "razorpay_ref": "order_synth_0480",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.84,
-      "customer_avg_days_late": 4
+      "prior_payment_success_rate": 0.658,
+      "customer_avg_days_late": 0.6
     },
     "metadata": {
-      "failure_bank": "SBI",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.46,
+      "failure_bank": "YES",
+      "failure_route": "gateway_yes_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.5,
       "error_code": "BAD_GATEWAY_TIMEOUT"
     },
-    "ground_truth_root_cause": "payment_degraded"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3948,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0481",
-    "event_type": "subscription_failed",
-    "amount": 25000,
+    "event_type": "mandate_auth_failed",
+    "amount": 49957.0,
     "currency": "INR",
-    "merchant_id": "merch_03",
-    "customer_id": "cust_0481",
-    "customer_name": "Diya Patel",
-    "customer_email": "diya.patel@example.com",
-    "customer_phone": "+919174147158",
-    "created_at": "2026-08-23T03:09:40.927925+00:00",
+    "merchant_id": "merch_18",
+    "customer_id": "cust_0613",
+    "customer_name": "Nisha Tiwari",
+    "customer_email": "nisha.tiwari613@example.com",
+    "customer_phone": "+919558178034",
     "razorpay_ref": "order_synth_0481",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.91,
-      "customer_avg_days_late": 3
+      "prior_payment_success_rate": 0.88,
+      "customer_avg_days_late": 0.6
     },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "metadata": {
+      "mandate_amount": 49957.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.528,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0482",
-    "event_type": "receivable_overdue",
-    "amount": 25000,
+    "event_type": "mandate_auth_failed",
+    "amount": 61558.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0482",
-    "customer_name": "Meera Iyer",
-    "customer_email": "meera.iyer@example.com",
-    "customer_phone": "+919150422469",
-    "created_at": "2026-08-23T11:09:40.927936+00:00",
+    "merchant_id": "merch_03",
+    "customer_id": "cust_1936",
+    "customer_name": "Dev Khanna",
+    "customer_email": "dev.khanna1936@example.com",
+    "customer_phone": "+919879544254",
     "razorpay_ref": "order_synth_0482",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.95,
-      "customer_avg_days_late": 12
+      "prior_payment_success_rate": 0.712,
+      "customer_avg_days_late": 2.4
     },
     "metadata": {
-      "invoice_id": "INV-2026-0482",
-      "days_overdue": 43,
-      "terms": "Net 30"
+      "mandate_amount": 61558.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
     },
-    "ground_truth_root_cause": "receivable_overdue"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.4272,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0483",
-    "event_type": "checkout_abandoned",
-    "amount": 13271,
+    "event_type": "receivable_overdue",
+    "amount": 250000.0,
     "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0483",
-    "customer_name": "Aditya Roy",
-    "customer_email": "aditya.roy@example.com",
-    "customer_phone": "+919516712655",
-    "created_at": "2026-08-23T07:09:40.927949+00:00",
+    "merchant_id": "merch_13",
+    "customer_id": "cust_0908",
+    "customer_name": "Aditi Chawla",
+    "customer_email": "aditi.chawla908@example.com",
+    "customer_phone": "+919997438567",
     "razorpay_ref": "order_synth_0483",
     "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.8,
-      "customer_avg_days_late": 8
+      "prior_contacts": 2,
+      "prior_payment_success_rate": 0.674,
+      "customer_avg_days_late": 2.2
     },
     "metadata": {
-      "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
-      ],
-      "time_since_abandon_minutes": 118,
-      "payment_method_attempted": "netbanking"
+      "invoice_id": "INV-2026-0483",
+      "days_overdue": 33,
+      "terms": "Net 30"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.4044,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0484",
-    "event_type": "checkout_abandoned",
-    "amount": 12349,
+    "event_type": "mandate_auth_failed",
+    "amount": 65936.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0484",
-    "customer_name": "Rohan Mehta",
-    "customer_email": "rohan.mehta@example.com",
-    "customer_phone": "+919827770769",
-    "created_at": "2026-08-22T10:09:40.927961+00:00",
+    "merchant_id": "merch_19",
+    "customer_id": "cust_1615",
+    "customer_name": "Pooja Joshi",
+    "customer_email": "pooja.joshi1615@example.com",
+    "customer_phone": "+919875733778",
     "razorpay_ref": "order_synth_0484",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.74,
-      "customer_avg_days_late": 1
+      "prior_payment_success_rate": 0.901,
+      "customer_avg_days_late": 6.0
     },
     "metadata": {
-      "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
-      ],
-      "time_since_abandon_minutes": 37,
-      "payment_method_attempted": "netbanking"
+      "mandate_amount": 65936.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.5406,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0485",
-    "event_type": "checkout_abandoned",
-    "amount": 8479,
+    "event_type": "receivable_overdue",
+    "amount": 250000.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0485",
-    "customer_name": "Rohan Mehta",
-    "customer_email": "rohan.mehta@example.com",
-    "customer_phone": "+919523011730",
-    "created_at": "2026-08-22T22:09:40.927973+00:00",
+    "merchant_id": "merch_12",
+    "customer_id": "cust_1477",
+    "customer_name": "TechMatrix Corp",
+    "customer_email": "techmatrix.corp1477@example.com",
+    "customer_phone": "+919739449654",
     "razorpay_ref": "order_synth_0485",
     "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.57,
-      "customer_avg_days_late": 10
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.439,
+      "customer_avg_days_late": 2.5
     },
     "metadata": {
-      "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
-      ],
-      "time_since_abandon_minutes": 116,
-      "payment_method_attempted": "upi"
+      "invoice_id": "INV-2026-0485",
+      "days_overdue": 25,
+      "terms": "Net 30"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.2634,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0486",
-    "event_type": "subscription_failed",
-    "amount": 1299,
+    "event_type": "payment_degraded",
+    "amount": 45000.0,
     "currency": "INR",
-    "merchant_id": "merch_03",
-    "customer_id": "cust_0486",
-    "customer_name": "Ananya Verma",
-    "customer_email": "ananya.verma@example.com",
-    "customer_phone": "+919169937347",
-    "created_at": "2026-08-24T04:09:40.927983+00:00",
+    "merchant_id": "merch_09",
+    "customer_id": "cust_0319",
+    "customer_name": "Sigma Exports",
+    "customer_email": "sigma.exports319@example.com",
+    "customer_phone": "+919413057975",
     "razorpay_ref": "order_synth_0486",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.9,
-      "customer_avg_days_late": 10
+      "prior_payment_success_rate": 0.969,
+      "customer_avg_days_late": 3.8
     },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
+    "metadata": {
+      "failure_bank": "YES",
+      "failure_route": "gateway_hdfc_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.44,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.5814,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0487",
     "event_type": "mandate_auth_failed",
-    "amount": 35885,
+    "amount": 53043.0,
     "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0487",
-    "customer_name": "Pooja Joshi",
-    "customer_email": "pooja.joshi@example.com",
-    "customer_phone": "+919518556265",
-    "created_at": "2026-08-23T17:09:40.927998+00:00",
+    "merchant_id": "merch_10",
+    "customer_id": "cust_1050",
+    "customer_name": "Rishi Shah",
+    "customer_email": "rishi.shah1050@example.com",
+    "customer_phone": "+919070532937",
     "razorpay_ref": "order_synth_0487",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.81,
-      "customer_avg_days_late": 7
+      "prior_payment_success_rate": 0.774,
+      "customer_avg_days_late": 3.0
     },
     "metadata": {
-      "mandate_amount": 35885,
+      "mandate_amount": 53043.0,
       "afa_step_reached": false,
       "recurring_period": "monthly"
     },
-    "ground_truth_root_cause": "mandate_auth_failed"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.4644,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0488",
-    "event_type": "receivable_overdue",
-    "amount": 120000,
+    "event_type": "checkout_abandoned",
+    "amount": 1499.0,
     "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0488",
-    "customer_name": "Priya Nair",
-    "customer_email": "priya.nair@example.com",
-    "customer_phone": "+919903865960",
-    "created_at": "2026-08-22T20:09:40.928009+00:00",
+    "merchant_id": "merch_06",
+    "customer_id": "cust_1453",
+    "customer_name": "Tanvi Desai",
+    "customer_email": "tanvi.desai1453@example.com",
+    "customer_phone": "+919733919725",
     "razorpay_ref": "order_synth_0488",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.86,
-      "customer_avg_days_late": 6
-    },
-    "metadata": {
-      "invoice_id": "INV-2026-0488",
-      "days_overdue": 30,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
-  },
-  {
-    "event_id": "evt_0489",
-    "event_type": "receivable_overdue",
-    "amount": 25000,
-    "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0489",
-    "customer_name": "Vikram Singh",
-    "customer_email": "vikram.singh@example.com",
-    "customer_phone": "+919877441625",
-    "created_at": "2026-08-24T05:09:40.928022+00:00",
-    "razorpay_ref": "order_synth_0489",
-    "history": {
-      "prior_contacts": 2,
-      "prior_payment_success_rate": 0.44,
-      "customer_avg_days_late": 8
-    },
-    "metadata": {
-      "invoice_id": "INV-2026-0489",
-      "days_overdue": 36,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
-  },
-  {
-    "event_id": "evt_0490",
-    "event_type": "payment_degraded",
-    "amount": 2999,
-    "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0490",
-    "customer_name": "Diya Patel",
-    "customer_email": "diya.patel@example.com",
-    "customer_phone": "+919807526884",
-    "created_at": "2026-08-24T03:09:40.928033+00:00",
-    "razorpay_ref": "order_synth_0490",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.74,
-      "customer_avg_days_late": 7
-    },
-    "metadata": {
-      "failure_bank": "SBI",
-      "failure_route": "gateway_axis_netbanking_v1",
-      "pct_merchant_failures_same_route": 0.67,
-      "error_code": "BAD_GATEWAY_TIMEOUT"
-    },
-    "ground_truth_root_cause": "payment_degraded"
-  },
-  {
-    "event_id": "evt_0491",
-    "event_type": "subscription_failed",
-    "amount": 499,
-    "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0491",
-    "customer_name": "Kabir Gupta",
-    "customer_email": "kabir.gupta@example.com",
-    "customer_phone": "+919732585490",
-    "created_at": "2026-08-22T13:09:40.928044+00:00",
-    "razorpay_ref": "order_synth_0491",
-    "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.92,
-      "customer_avg_days_late": 7
-    },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
-  },
-  {
-    "event_id": "evt_0492",
-    "event_type": "subscription_failed",
-    "amount": 25000,
-    "currency": "INR",
-    "merchant_id": "merch_02",
-    "customer_id": "cust_0492",
-    "customer_name": "Kabir Gupta",
-    "customer_email": "kabir.gupta@example.com",
-    "customer_phone": "+919399256049",
-    "created_at": "2026-08-23T19:09:40.928055+00:00",
-    "razorpay_ref": "order_synth_0492",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.83,
-      "customer_avg_days_late": 2
-    },
-    "metadata": {},
-    "ground_truth_root_cause": "subscription_failed"
-  },
-  {
-    "event_id": "evt_0493",
-    "event_type": "promise_to_pay",
-    "amount": 5999,
-    "currency": "INR",
-    "merchant_id": "merch_04",
-    "customer_id": "cust_0493",
-    "customer_name": "Aditya Roy",
-    "customer_email": "aditya.roy@example.com",
-    "customer_phone": "+919637182458",
-    "created_at": "2026-08-22T15:09:40.928070+00:00",
-    "razorpay_ref": "order_synth_0493",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.8,
-      "customer_avg_days_late": 12
-    },
-    "metadata": {
-      "promised_pay_date": "2026-08-27",
-      "notes": "Customer confirmed salary credit on 1st of month."
-    },
-    "ground_truth_root_cause": "promise_to_pay"
-  },
-  {
-    "event_id": "evt_0494",
-    "event_type": "receivable_overdue",
-    "amount": 250000,
-    "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0494",
-    "customer_name": "Priya Nair",
-    "customer_email": "priya.nair@example.com",
-    "customer_phone": "+919967812916",
-    "created_at": "2026-08-23T16:09:40.928084+00:00",
-    "razorpay_ref": "order_synth_0494",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.8,
-      "customer_avg_days_late": 10
-    },
-    "metadata": {
-      "invoice_id": "INV-2026-0494",
-      "days_overdue": 26,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
-  },
-  {
-    "event_id": "evt_0495",
-    "event_type": "receivable_overdue",
-    "amount": 250000,
-    "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0495",
-    "customer_name": "Meera Iyer",
-    "customer_email": "meera.iyer@example.com",
-    "customer_phone": "+919739769813",
-    "created_at": "2026-08-22T20:09:40.928097+00:00",
-    "razorpay_ref": "order_synth_0495",
-    "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.51,
-      "customer_avg_days_late": 5
-    },
-    "metadata": {
-      "invoice_id": "INV-2026-0495",
-      "days_overdue": 27,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
-  },
-  {
-    "event_id": "evt_0496",
-    "event_type": "receivable_overdue",
-    "amount": 48000,
-    "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0496",
-    "customer_name": "Sneha Rao",
-    "customer_email": "sneha.rao@example.com",
-    "customer_phone": "+919241983104",
-    "created_at": "2026-08-23T02:09:40.928109+00:00",
-    "razorpay_ref": "order_synth_0496",
-    "history": {
-      "prior_contacts": 0,
-      "prior_payment_success_rate": 0.55,
-      "customer_avg_days_late": 8
-    },
-    "metadata": {
-      "invoice_id": "INV-2026-0496",
-      "days_overdue": 20,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
-  },
-  {
-    "event_id": "evt_0497",
-    "event_type": "checkout_abandoned",
-    "amount": 2100,
-    "currency": "INR",
-    "merchant_id": "merch_05",
-    "customer_id": "cust_0497",
-    "customer_name": "Kabir Gupta",
-    "customer_email": "kabir.gupta@example.com",
-    "customer_phone": "+919378585127",
-    "created_at": "2026-08-24T02:09:40.928121+00:00",
-    "razorpay_ref": "order_synth_0497",
-    "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.86,
-      "customer_avg_days_late": 3
+      "prior_payment_success_rate": 0.704,
+      "customer_avg_days_late": 1.5
     },
     "metadata": {
       "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
+        "Product A",
+        "Product B"
       ],
-      "time_since_abandon_minutes": 21,
+      "time_since_abandon_minutes": 91,
+      "payment_method_attempted": "netbanking"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.4224,
+    "optimal_action": "email"
+  },
+  {
+    "event_id": "evt_0489",
+    "event_type": "promise_to_pay",
+    "amount": 2999.0,
+    "currency": "INR",
+    "merchant_id": "merch_16",
+    "customer_id": "cust_0981",
+    "customer_name": "FutureWave Tech",
+    "customer_email": "futurewave.tech981@example.com",
+    "customer_phone": "+919380940552",
+    "razorpay_ref": "order_synth_0489",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.379,
+      "customer_avg_days_late": 0.5
+    },
+    "metadata": {
+      "promised_pay_date": "2026-09-02",
+      "notes": "Customer confirmed next salary date"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.2274,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0490",
+    "event_type": "checkout_abandoned",
+    "amount": 12000.0,
+    "currency": "INR",
+    "merchant_id": "merch_14",
+    "customer_id": "cust_1177",
+    "customer_name": "TechMatrix Corp",
+    "customer_email": "techmatrix.corp1177@example.com",
+    "customer_phone": "+919437730349",
+    "razorpay_ref": "order_synth_0490",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.46,
+      "customer_avg_days_late": 0.3
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 55,
       "payment_method_attempted": "card"
     },
-    "ground_truth_root_cause": "checkout_abandoned"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.276,
+    "optimal_action": "voice"
+  },
+  {
+    "event_id": "evt_0491",
+    "event_type": "mandate_auth_failed",
+    "amount": 71221.0,
+    "currency": "INR",
+    "merchant_id": "merch_02",
+    "customer_id": "cust_0509",
+    "customer_name": "Tanvi Desai",
+    "customer_email": "tanvi.desai509@example.com",
+    "customer_phone": "+919017306759",
+    "razorpay_ref": "order_synth_0491",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.447,
+      "customer_avg_days_late": 3.6
+    },
+    "metadata": {
+      "mandate_amount": 71221.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.2682,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0492",
+    "event_type": "receivable_overdue",
+    "amount": 48000.0,
+    "currency": "INR",
+    "merchant_id": "merch_03",
+    "customer_id": "cust_0238",
+    "customer_name": "Nexus Retail",
+    "customer_email": "nexus.retail238@example.com",
+    "customer_phone": "+919141489248",
+    "razorpay_ref": "order_synth_0492",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.621,
+      "customer_avg_days_late": 1.5
+    },
+    "metadata": {
+      "invoice_id": "INV-2026-0492",
+      "days_overdue": 10,
+      "terms": "Net 30"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.3726,
+    "optimal_action": "voice"
+  },
+  {
+    "event_id": "evt_0493",
+    "event_type": "subscription_failed",
+    "amount": 2999.0,
+    "currency": "INR",
+    "merchant_id": "merch_11",
+    "customer_id": "cust_0060",
+    "customer_name": "Pooja Joshi",
+    "customer_email": "pooja.joshi60@example.com",
+    "customer_phone": "+919800801837",
+    "razorpay_ref": "order_synth_0493",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.612,
+      "customer_avg_days_late": 0.8
+    },
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.3672,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0494",
+    "event_type": "checkout_abandoned",
+    "amount": 899.0,
+    "currency": "INR",
+    "merchant_id": "merch_20",
+    "customer_id": "cust_1176",
+    "customer_name": "Harsh Goel",
+    "customer_email": "harsh.goel1176@example.com",
+    "customer_phone": "+919432631689",
+    "razorpay_ref": "order_synth_0494",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.91,
+      "customer_avg_days_late": 3.1
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 34,
+      "payment_method_attempted": "netbanking"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.546,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0495",
+    "event_type": "payment_degraded",
+    "amount": 1999.0,
+    "currency": "INR",
+    "merchant_id": "merch_20",
+    "customer_id": "cust_0634",
+    "customer_name": "Vikram Singh",
+    "customer_email": "vikram.singh634@example.com",
+    "customer_phone": "+919771219787",
+    "razorpay_ref": "order_synth_0495",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.318,
+      "customer_avg_days_late": 0.9
+    },
+    "metadata": {
+      "failure_bank": "AXIS",
+      "failure_route": "gateway_axis_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.44,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.1908,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0496",
+    "event_type": "checkout_abandoned",
+    "amount": 12000.0,
+    "currency": "INR",
+    "merchant_id": "merch_14",
+    "customer_id": "cust_0942",
+    "customer_name": "Rahul Tripathi",
+    "customer_email": "rahul.tripathi942@example.com",
+    "customer_phone": "+919718264518",
+    "razorpay_ref": "order_synth_0496",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.683,
+      "customer_avg_days_late": 4.4
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 27,
+      "payment_method_attempted": "upi"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.4098,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0497",
+    "event_type": "payment_degraded",
+    "amount": 999.0,
+    "currency": "INR",
+    "merchant_id": "merch_08",
+    "customer_id": "cust_1954",
+    "customer_name": "Aditya Roy",
+    "customer_email": "aditya.roy1954@example.com",
+    "customer_phone": "+919896619351",
+    "razorpay_ref": "order_synth_0497",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.61,
+      "customer_avg_days_late": 3.9
+    },
+    "metadata": {
+      "failure_bank": "ICICI",
+      "failure_route": "gateway_axis_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.76,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.366,
+    "optimal_action": "whatsapp"
   },
   {
     "event_id": "evt_0498",
     "event_type": "receivable_overdue",
-    "amount": 250000,
+    "amount": 500000.0,
     "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0498",
-    "customer_name": "Ananya Verma",
-    "customer_email": "ananya.verma@example.com",
-    "customer_phone": "+919428086218",
-    "created_at": "2026-08-22T14:09:40.928132+00:00",
+    "merchant_id": "merch_12",
+    "customer_id": "cust_0161",
+    "customer_name": "Gaurav Saxena",
+    "customer_email": "gaurav.saxena161@example.com",
+    "customer_phone": "+919555439758",
     "razorpay_ref": "order_synth_0498",
     "history": {
       "prior_contacts": 0,
-      "prior_payment_success_rate": 0.53,
-      "customer_avg_days_late": 2
+      "prior_payment_success_rate": 0.834,
+      "customer_avg_days_late": 0.6
     },
     "metadata": {
       "invoice_id": "INV-2026-0498",
-      "days_overdue": 16,
-      "terms": "Net 30"
-    },
-    "ground_truth_root_cause": "receivable_overdue"
-  },
-  {
-    "event_id": "evt_0499",
-    "event_type": "checkout_abandoned",
-    "amount": 2333,
-    "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0499",
-    "customer_name": "Ishaan Malhotra",
-    "customer_email": "ishaan.malhotra@example.com",
-    "customer_phone": "+919750244820",
-    "created_at": "2026-08-22T20:09:40.928143+00:00",
-    "razorpay_ref": "order_synth_0499",
-    "history": {
-      "prior_contacts": 1,
-      "prior_payment_success_rate": 0.53,
-      "customer_avg_days_late": 10
-    },
-    "metadata": {
-      "cart_items": [
-        "SaaS Pro Subscription",
-        "API Tier Add-on"
-      ],
-      "time_since_abandon_minutes": 72,
-      "payment_method_attempted": "card"
-    },
-    "ground_truth_root_cause": "checkout_abandoned"
-  },
-  {
-    "event_id": "evt_0500",
-    "event_type": "receivable_overdue",
-    "amount": 120000,
-    "currency": "INR",
-    "merchant_id": "merch_01",
-    "customer_id": "cust_0500",
-    "customer_name": "Sneha Rao",
-    "customer_email": "sneha.rao@example.com",
-    "customer_phone": "+919205684604",
-    "created_at": "2026-08-23T22:09:40.928156+00:00",
-    "razorpay_ref": "order_synth_0500",
-    "history": {
-      "prior_contacts": 3,
-      "prior_payment_success_rate": 0.74,
-      "customer_avg_days_late": 11
-    },
-    "metadata": {
-      "invoice_id": "INV-2026-0500",
       "days_overdue": 19,
       "terms": "Net 30"
     },
-    "ground_truth_root_cause": "receivable_overdue"
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.5004,
+    "optimal_action": "email"
+  },
+  {
+    "event_id": "evt_0499",
+    "event_type": "receivable_overdue",
+    "amount": 250000.0,
+    "currency": "INR",
+    "merchant_id": "merch_12",
+    "customer_id": "cust_0208",
+    "customer_name": "Karan Kapoor",
+    "customer_email": "karan.kapoor208@example.com",
+    "customer_phone": "+919820600973",
+    "razorpay_ref": "order_synth_0499",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.776,
+      "customer_avg_days_late": 4.0
+    },
+    "metadata": {
+      "invoice_id": "INV-2026-0499",
+      "days_overdue": 21,
+      "terms": "Net 30"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.4656,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "evt_0500",
+    "event_type": "mandate_auth_failed",
+    "amount": 46529.0,
+    "currency": "INR",
+    "merchant_id": "merch_17",
+    "customer_id": "cust_0167",
+    "customer_name": "Arnav Sinha",
+    "customer_email": "arnav.sinha167@example.com",
+    "customer_phone": "+919780791577",
+    "razorpay_ref": "order_synth_0500",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.871,
+      "customer_avg_days_late": 2.9
+    },
+    "metadata": {
+      "mandate_amount": 46529.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.5226,
+    "optimal_action": "whatsapp"
+  },
+  {
+    "event_id": "adv_0000",
+    "event_type": "payment_degraded",
+    "amount": 1299.0,
+    "currency": "INR",
+    "merchant_id": "merch_20",
+    "customer_id": "cust_1835",
+    "customer_name": "Priya Nair",
+    "customer_email": "priya.nair1835@example.com",
+    "customer_phone": "+919043476282",
+    "razorpay_ref": "order_synth_9000",
+    "history": {
+      "prior_contacts": 2,
+      "prior_payment_success_rate": 0.699,
+      "customer_avg_days_late": 2.2
+    },
+    "metadata": {
+      "failure_bank": "KOTAK",
+      "failure_route": "gateway_axis_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.75,
+      "error_code": "BAD_GATEWAY_TIMEOUT",
+      "opt_out": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.4194,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "opted_out_customer"
+  },
+  {
+    "event_id": "adv_0001",
+    "event_type": "payment_degraded",
+    "amount": 2999.0,
+    "currency": "INR",
+    "merchant_id": "merch_08",
+    "customer_id": "cust_1790",
+    "customer_name": "Nikhil Ghosh",
+    "customer_email": "nikhil.ghosh1790@example.com",
+    "customer_phone": "+919383216428",
+    "razorpay_ref": "order_synth_9001",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.622,
+      "customer_avg_days_late": 2.3
+    },
+    "metadata": {
+      "failure_bank": "KOTAK",
+      "failure_route": "gateway_kotak_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.78,
+      "error_code": "BAD_GATEWAY_TIMEOUT",
+      "webhook_captured_early": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3732,
+    "optimal_action": "email",
+    "_adversarial_label": "webhook_race"
+  },
+  {
+    "event_id": "adv_0002",
+    "event_type": "mandate_auth_failed",
+    "amount": 64820.0,
+    "currency": "INR",
+    "merchant_id": "merch_11",
+    "customer_id": "cust_1458",
+    "customer_name": "CoreBuild Systems",
+    "customer_email": "corebuild.systems1458@example.com",
+    "customer_phone": "+919601636318",
+    "razorpay_ref": "order_synth_9002",
+    "history": {
+      "prior_contacts": 3,
+      "prior_payment_success_rate": 0.7,
+      "customer_avg_days_late": 5
+    },
+    "metadata": {
+      "mandate_amount": 64820.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.2808,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "contact_cap_exceeded"
+  },
+  {
+    "event_id": "adv_0003",
+    "event_type": "mandate_auth_failed",
+    "amount": 145000.0,
+    "currency": "INR",
+    "merchant_id": "merch_13",
+    "customer_id": "cust_1569",
+    "customer_name": "Sigma Exports",
+    "customer_email": "sigma.exports1569@example.com",
+    "customer_phone": "+919073017897",
+    "razorpay_ref": "order_synth_9003",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.917,
+      "customer_avg_days_late": 0.9
+    },
+    "metadata": {
+      "mandate_amount": 39977.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.5502,
+    "optimal_action": "email",
+    "_adversarial_label": "high_value_hitl"
+  },
+  {
+    "event_id": "adv_0004",
+    "event_type": "payment_degraded",
+    "amount": 1299.0,
+    "currency": "INR",
+    "merchant_id": "merch_15",
+    "customer_id": "cust_1185",
+    "customer_name": "Swati Banerjee",
+    "customer_email": "swati.banerjee1185@example.com",
+    "customer_phone": "+919688079363",
+    "razorpay_ref": "order_synth_9004",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.783,
+      "customer_avg_days_late": 2.7
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 31,
+      "payment_method_attempted": "netbanking"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.4698,
+    "optimal_action": "email",
+    "_adversarial_label": "payment_degraded_no_contact"
+  },
+  {
+    "event_id": "adv_0005",
+    "event_type": "subscription_failed",
+    "amount": 8999.0,
+    "currency": "INR",
+    "merchant_id": "merch_03",
+    "customer_id": "cust_0602",
+    "customer_name": "TechMatrix Corp",
+    "customer_email": "techmatrix.corp602@example.com",
+    "customer_phone": "+919810429026",
+    "razorpay_ref": "order_synth_9005",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.613,
+      "customer_avg_days_late": 1.4
+    },
+    "metadata": {
+      "opt_out": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.3678,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "opted_out_customer"
+  },
+  {
+    "event_id": "adv_0006",
+    "event_type": "checkout_abandoned",
+    "amount": 1999.0,
+    "currency": "INR",
+    "merchant_id": "merch_11",
+    "customer_id": "cust_1330",
+    "customer_name": "Vikram Singh",
+    "customer_email": "vikram.singh1330@example.com",
+    "customer_phone": "+919286445481",
+    "razorpay_ref": "order_synth_9006",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.477,
+      "customer_avg_days_late": 0.8
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 44,
+      "payment_method_attempted": "netbanking",
+      "webhook_captured_early": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.2862,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "webhook_race"
+  },
+  {
+    "event_id": "adv_0007",
+    "event_type": "receivable_overdue",
+    "amount": 120000.0,
+    "currency": "INR",
+    "merchant_id": "merch_07",
+    "customer_id": "cust_0077",
+    "customer_name": "Vivek Prasad",
+    "customer_email": "vivek.prasad77@example.com",
+    "customer_phone": "+919311774120",
+    "razorpay_ref": "order_synth_9007",
+    "history": {
+      "prior_contacts": 3,
+      "prior_payment_success_rate": 0.7,
+      "customer_avg_days_late": 5
+    },
+    "metadata": {
+      "invoice_id": "INV-2026-9007",
+      "days_overdue": 35,
+      "terms": "Net 30"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.3918,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "contact_cap_exceeded"
+  },
+  {
+    "event_id": "adv_0008",
+    "event_type": "mandate_auth_failed",
+    "amount": 145000.0,
+    "currency": "INR",
+    "merchant_id": "merch_03",
+    "customer_id": "cust_0581",
+    "customer_name": "Delta Pharma",
+    "customer_email": "delta.pharma581@example.com",
+    "customer_phone": "+919431070910",
+    "razorpay_ref": "order_synth_9008",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.778,
+      "customer_avg_days_late": 2.0
+    },
+    "metadata": {
+      "mandate_amount": 69760.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.4668,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "high_value_hitl"
+  },
+  {
+    "event_id": "adv_0009",
+    "event_type": "payment_degraded",
+    "amount": 12000.0,
+    "currency": "INR",
+    "merchant_id": "merch_04",
+    "customer_id": "cust_0460",
+    "customer_name": "Aditi Chawla",
+    "customer_email": "aditi.chawla460@example.com",
+    "customer_phone": "+919969237823",
+    "razorpay_ref": "order_synth_9009",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.574,
+      "customer_avg_days_late": 0.2
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 114,
+      "payment_method_attempted": "upi"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3444,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "payment_degraded_no_contact"
+  },
+  {
+    "event_id": "adv_0010",
+    "event_type": "receivable_overdue",
+    "amount": 500000.0,
+    "currency": "INR",
+    "merchant_id": "merch_06",
+    "customer_id": "cust_0067",
+    "customer_name": "Nexus Retail",
+    "customer_email": "nexus.retail67@example.com",
+    "customer_phone": "+919842211135",
+    "razorpay_ref": "order_synth_9010",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.6,
+      "customer_avg_days_late": 2.6
+    },
+    "metadata": {
+      "invoice_id": "INV-2026-9010",
+      "days_overdue": 9,
+      "terms": "Net 30",
+      "opt_out": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.36,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "opted_out_customer"
+  },
+  {
+    "event_id": "adv_0011",
+    "event_type": "checkout_abandoned",
+    "amount": 2999.0,
+    "currency": "INR",
+    "merchant_id": "merch_16",
+    "customer_id": "cust_1452",
+    "customer_name": "DataNinja Inc",
+    "customer_email": "dataninja.inc1452@example.com",
+    "customer_phone": "+919479779041",
+    "razorpay_ref": "order_synth_9011",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.794,
+      "customer_avg_days_late": 0.2
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 99,
+      "payment_method_attempted": "card",
+      "webhook_captured_early": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.4764,
+    "optimal_action": "email",
+    "_adversarial_label": "webhook_race"
+  },
+  {
+    "event_id": "adv_0012",
+    "event_type": "checkout_abandoned",
+    "amount": 199.0,
+    "currency": "INR",
+    "merchant_id": "merch_10",
+    "customer_id": "cust_1795",
+    "customer_name": "Gaurav Saxena",
+    "customer_email": "gaurav.saxena1795@example.com",
+    "customer_phone": "+919015252543",
+    "razorpay_ref": "order_synth_9012",
+    "history": {
+      "prior_contacts": 3,
+      "prior_payment_success_rate": 0.7,
+      "customer_avg_days_late": 5
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 42,
+      "payment_method_attempted": "card"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.4134,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "contact_cap_exceeded"
+  },
+  {
+    "event_id": "adv_0013",
+    "event_type": "promise_to_pay",
+    "amount": 145000.0,
+    "currency": "INR",
+    "merchant_id": "merch_02",
+    "customer_id": "cust_0897",
+    "customer_name": "Dev Khanna",
+    "customer_email": "dev.khanna897@example.com",
+    "customer_phone": "+919363290298",
+    "razorpay_ref": "order_synth_9013",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.81,
+      "customer_avg_days_late": 6.5
+    },
+    "metadata": {
+      "promised_pay_date": "2026-09-02",
+      "notes": "Customer confirmed next salary date"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.486,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "high_value_hitl"
+  },
+  {
+    "event_id": "adv_0014",
+    "event_type": "payment_degraded",
+    "amount": 54415.0,
+    "currency": "INR",
+    "merchant_id": "merch_06",
+    "customer_id": "cust_1145",
+    "customer_name": "Rishi Shah",
+    "customer_email": "rishi.shah1145@example.com",
+    "customer_phone": "+919910880393",
+    "razorpay_ref": "order_synth_9014",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.739,
+      "customer_avg_days_late": 1.5
+    },
+    "metadata": {
+      "mandate_amount": 54415.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.4434,
+    "optimal_action": "email",
+    "_adversarial_label": "payment_degraded_no_contact"
+  },
+  {
+    "event_id": "adv_0015",
+    "event_type": "mandate_auth_failed",
+    "amount": 63348.0,
+    "currency": "INR",
+    "merchant_id": "merch_03",
+    "customer_id": "cust_0976",
+    "customer_name": "BrightPath Edu",
+    "customer_email": "brightpath.edu976@example.com",
+    "customer_phone": "+919330282480",
+    "razorpay_ref": "order_synth_9015",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.638,
+      "customer_avg_days_late": 3.5
+    },
+    "metadata": {
+      "mandate_amount": 63348.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly",
+      "opt_out": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.3828,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "opted_out_customer"
+  },
+  {
+    "event_id": "adv_0016",
+    "event_type": "receivable_overdue",
+    "amount": 48000.0,
+    "currency": "INR",
+    "merchant_id": "merch_17",
+    "customer_id": "cust_0376",
+    "customer_name": "Swati Banerjee",
+    "customer_email": "swati.banerjee376@example.com",
+    "customer_phone": "+919875706009",
+    "razorpay_ref": "order_synth_9016",
+    "history": {
+      "prior_contacts": 2,
+      "prior_payment_success_rate": 0.823,
+      "customer_avg_days_late": 0.9
+    },
+    "metadata": {
+      "invoice_id": "INV-2026-9016",
+      "days_overdue": 7,
+      "terms": "Net 30",
+      "webhook_captured_early": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.4938,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "webhook_race"
+  },
+  {
+    "event_id": "adv_0017",
+    "event_type": "mandate_auth_failed",
+    "amount": 51534.0,
+    "currency": "INR",
+    "merchant_id": "merch_08",
+    "customer_id": "cust_0853",
+    "customer_name": "Dev Khanna",
+    "customer_email": "dev.khanna853@example.com",
+    "customer_phone": "+919820666700",
+    "razorpay_ref": "order_synth_9017",
+    "history": {
+      "prior_contacts": 3,
+      "prior_payment_success_rate": 0.7,
+      "customer_avg_days_late": 5
+    },
+    "metadata": {
+      "mandate_amount": 51534.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.5736,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "contact_cap_exceeded"
+  },
+  {
+    "event_id": "adv_0018",
+    "event_type": "payment_degraded",
+    "amount": 145000.0,
+    "currency": "INR",
+    "merchant_id": "merch_16",
+    "customer_id": "cust_1961",
+    "customer_name": "Nexus Retail",
+    "customer_email": "nexus.retail1961@example.com",
+    "customer_phone": "+919024829717",
+    "razorpay_ref": "order_synth_9018",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.852,
+      "customer_avg_days_late": 2.0
+    },
+    "metadata": {
+      "failure_bank": "INDUSIND",
+      "failure_route": "gateway_axis_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.4,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.5112,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "high_value_hitl"
+  },
+  {
+    "event_id": "adv_0019",
+    "event_type": "payment_degraded",
+    "amount": 8999.0,
+    "currency": "INR",
+    "merchant_id": "merch_03",
+    "customer_id": "cust_1677",
+    "customer_name": "Alpha Consulting",
+    "customer_email": "alpha.consulting1677@example.com",
+    "customer_phone": "+919858777150",
+    "razorpay_ref": "order_synth_9019",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.577,
+      "customer_avg_days_late": 1.6
+    },
+    "metadata": {
+      "promised_pay_date": "2026-09-02",
+      "notes": "Customer confirmed next salary date"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3462,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "payment_degraded_no_contact"
+  },
+  {
+    "event_id": "adv_0020",
+    "event_type": "promise_to_pay",
+    "amount": 1299.0,
+    "currency": "INR",
+    "merchant_id": "merch_10",
+    "customer_id": "cust_0383",
+    "customer_name": "Yash Mathur",
+    "customer_email": "yash.mathur383@example.com",
+    "customer_phone": "+919934734769",
+    "razorpay_ref": "order_synth_9020",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.877,
+      "customer_avg_days_late": 2.7
+    },
+    "metadata": {
+      "promised_pay_date": "2026-08-31",
+      "notes": "Customer confirmed next salary date",
+      "opt_out": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.5262,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "opted_out_customer"
+  },
+  {
+    "event_id": "adv_0021",
+    "event_type": "subscription_failed",
+    "amount": 250000.0,
+    "currency": "INR",
+    "merchant_id": "merch_07",
+    "customer_id": "cust_1340",
+    "customer_name": "Arjun Kumar",
+    "customer_email": "arjun.kumar1340@example.com",
+    "customer_phone": "+919115675480",
+    "razorpay_ref": "order_synth_9021",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.796,
+      "customer_avg_days_late": 4.6
+    },
+    "metadata": {
+      "webhook_captured_early": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.4776,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "webhook_race"
+  },
+  {
+    "event_id": "adv_0022",
+    "event_type": "receivable_overdue",
+    "amount": 25000.0,
+    "currency": "INR",
+    "merchant_id": "merch_02",
+    "customer_id": "cust_0884",
+    "customer_name": "Shruti Dixit",
+    "customer_email": "shruti.dixit884@example.com",
+    "customer_phone": "+919569531864",
+    "razorpay_ref": "order_synth_9022",
+    "history": {
+      "prior_contacts": 3,
+      "prior_payment_success_rate": 0.7,
+      "customer_avg_days_late": 5
+    },
+    "metadata": {
+      "invoice_id": "INV-2026-9022",
+      "days_overdue": 45,
+      "terms": "Net 30"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.1968,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "contact_cap_exceeded"
+  },
+  {
+    "event_id": "adv_0023",
+    "event_type": "mandate_auth_failed",
+    "amount": 145000.0,
+    "currency": "INR",
+    "merchant_id": "merch_02",
+    "customer_id": "cust_0212",
+    "customer_name": "Yash Mathur",
+    "customer_email": "yash.mathur212@example.com",
+    "customer_phone": "+919130177767",
+    "razorpay_ref": "order_synth_9023",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.716,
+      "customer_avg_days_late": 5.6
+    },
+    "metadata": {
+      "mandate_amount": 67593.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.4296,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "high_value_hitl"
+  },
+  {
+    "event_id": "adv_0024",
+    "event_type": "payment_degraded",
+    "amount": 26693.0,
+    "currency": "INR",
+    "merchant_id": "merch_06",
+    "customer_id": "cust_1277",
+    "customer_name": "Riya Dubey",
+    "customer_email": "riya.dubey1277@example.com",
+    "customer_phone": "+919891351746",
+    "razorpay_ref": "order_synth_9024",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.705,
+      "customer_avg_days_late": 3.1
+    },
+    "metadata": {
+      "mandate_amount": 26693.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.423,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "payment_degraded_no_contact"
+  },
+  {
+    "event_id": "adv_0025",
+    "event_type": "checkout_abandoned",
+    "amount": 2999.0,
+    "currency": "INR",
+    "merchant_id": "merch_11",
+    "customer_id": "cust_0408",
+    "customer_name": "Ishaan Malhotra",
+    "customer_email": "ishaan.malhotra408@example.com",
+    "customer_phone": "+919419900806",
+    "razorpay_ref": "order_synth_9025",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.783,
+      "customer_avg_days_late": 8.1
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 105,
+      "payment_method_attempted": "upi",
+      "opt_out": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.4698,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "opted_out_customer"
+  },
+  {
+    "event_id": "adv_0026",
+    "event_type": "checkout_abandoned",
+    "amount": 12000.0,
+    "currency": "INR",
+    "merchant_id": "merch_14",
+    "customer_id": "cust_0364",
+    "customer_name": "Pallavi Rathi",
+    "customer_email": "pallavi.rathi364@example.com",
+    "customer_phone": "+919211394879",
+    "razorpay_ref": "order_synth_9026",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.841,
+      "customer_avg_days_late": 3.5
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 46,
+      "payment_method_attempted": "card",
+      "webhook_captured_early": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.5046,
+    "optimal_action": "email",
+    "_adversarial_label": "webhook_race"
+  },
+  {
+    "event_id": "adv_0027",
+    "event_type": "payment_degraded",
+    "amount": 1499.0,
+    "currency": "INR",
+    "merchant_id": "merch_11",
+    "customer_id": "cust_1036",
+    "customer_name": "Shruti Dixit",
+    "customer_email": "shruti.dixit1036@example.com",
+    "customer_phone": "+919016703112",
+    "razorpay_ref": "order_synth_9027",
+    "history": {
+      "prior_contacts": 3,
+      "prior_payment_success_rate": 0.7,
+      "customer_avg_days_late": 5
+    },
+    "metadata": {
+      "failure_bank": "KOTAK",
+      "failure_route": "gateway_icici_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.45,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3162,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "contact_cap_exceeded"
+  },
+  {
+    "event_id": "adv_0028",
+    "event_type": "checkout_abandoned",
+    "amount": 145000.0,
+    "currency": "INR",
+    "merchant_id": "merch_09",
+    "customer_id": "cust_1101",
+    "customer_name": "Pallavi Rathi",
+    "customer_email": "pallavi.rathi1101@example.com",
+    "customer_phone": "+919614504481",
+    "razorpay_ref": "order_synth_9028",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.691,
+      "customer_avg_days_late": 6.6
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 70,
+      "payment_method_attempted": "card"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.4146,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "high_value_hitl"
+  },
+  {
+    "event_id": "adv_0029",
+    "event_type": "payment_degraded",
+    "amount": 1999.0,
+    "currency": "INR",
+    "merchant_id": "merch_06",
+    "customer_id": "cust_1231",
+    "customer_name": "Arjun Kumar",
+    "customer_email": "arjun.kumar1231@example.com",
+    "customer_phone": "+919070249553",
+    "razorpay_ref": "order_synth_9029",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.74,
+      "customer_avg_days_late": 6.1
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 17,
+      "payment_method_attempted": "upi"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.444,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "payment_degraded_no_contact"
+  },
+  {
+    "event_id": "adv_0030",
+    "event_type": "promise_to_pay",
+    "amount": 499.0,
+    "currency": "INR",
+    "merchant_id": "merch_15",
+    "customer_id": "cust_0219",
+    "customer_name": "Vivek Prasad",
+    "customer_email": "vivek.prasad219@example.com",
+    "customer_phone": "+919780725278",
+    "razorpay_ref": "order_synth_9030",
+    "history": {
+      "prior_contacts": 2,
+      "prior_payment_success_rate": 0.705,
+      "customer_avg_days_late": 1.1
+    },
+    "metadata": {
+      "promised_pay_date": "2026-08-29",
+      "notes": "Customer confirmed next salary date",
+      "opt_out": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.423,
+    "optimal_action": "voice",
+    "_adversarial_label": "opted_out_customer"
+  },
+  {
+    "event_id": "adv_0031",
+    "event_type": "subscription_failed",
+    "amount": 8999.0,
+    "currency": "INR",
+    "merchant_id": "merch_03",
+    "customer_id": "cust_0106",
+    "customer_name": "BrightPath Edu",
+    "customer_email": "brightpath.edu106@example.com",
+    "customer_phone": "+919016891857",
+    "razorpay_ref": "order_synth_9031",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.86,
+      "customer_avg_days_late": 1.4
+    },
+    "metadata": {
+      "webhook_captured_early": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.516,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "webhook_race"
+  },
+  {
+    "event_id": "adv_0032",
+    "event_type": "mandate_auth_failed",
+    "amount": 33859.0,
+    "currency": "INR",
+    "merchant_id": "merch_13",
+    "customer_id": "cust_0717",
+    "customer_name": "Rishi Shah",
+    "customer_email": "rishi.shah717@example.com",
+    "customer_phone": "+919740782918",
+    "razorpay_ref": "order_synth_9032",
+    "history": {
+      "prior_contacts": 3,
+      "prior_payment_success_rate": 0.7,
+      "customer_avg_days_late": 5
+    },
+    "metadata": {
+      "mandate_amount": 33859.0,
+      "afa_step_reached": false,
+      "recurring_period": "monthly"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "mandate_auth_failed",
+    "natural_recovery_probability": 0.444,
+    "optimal_action": "voice",
+    "_adversarial_label": "contact_cap_exceeded"
+  },
+  {
+    "event_id": "adv_0033",
+    "event_type": "payment_degraded",
+    "amount": 145000.0,
+    "currency": "INR",
+    "merchant_id": "merch_04",
+    "customer_id": "cust_1280",
+    "customer_name": "Arnav Sinha",
+    "customer_email": "arnav.sinha1280@example.com",
+    "customer_phone": "+919745105527",
+    "razorpay_ref": "order_synth_9033",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.918,
+      "customer_avg_days_late": 0.1
+    },
+    "metadata": {
+      "failure_bank": "KOTAK",
+      "failure_route": "gateway_axis_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.58,
+      "error_code": "BAD_GATEWAY_TIMEOUT"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.5508,
+    "optimal_action": "email",
+    "_adversarial_label": "high_value_hitl"
+  },
+  {
+    "event_id": "adv_0034",
+    "event_type": "payment_degraded",
+    "amount": 4999.0,
+    "currency": "INR",
+    "merchant_id": "merch_06",
+    "customer_id": "cust_0761",
+    "customer_name": "Vikram Singh",
+    "customer_email": "vikram.singh761@example.com",
+    "customer_phone": "+919587042694",
+    "razorpay_ref": "order_synth_9034",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.588,
+      "customer_avg_days_late": 3.4
+    },
+    "metadata": {
+      "promised_pay_date": "2026-08-31",
+      "notes": "Customer confirmed next salary date"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3528,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "payment_degraded_no_contact"
+  },
+  {
+    "event_id": "adv_0035",
+    "event_type": "payment_degraded",
+    "amount": 4999.0,
+    "currency": "INR",
+    "merchant_id": "merch_01",
+    "customer_id": "cust_0186",
+    "customer_name": "Nikhil Ghosh",
+    "customer_email": "nikhil.ghosh186@example.com",
+    "customer_phone": "+919830344435",
+    "razorpay_ref": "order_synth_9035",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.649,
+      "customer_avg_days_late": 0.5
+    },
+    "metadata": {
+      "failure_bank": "AXIS",
+      "failure_route": "gateway_hdfc_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.74,
+      "error_code": "BAD_GATEWAY_TIMEOUT",
+      "opt_out": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3894,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "opted_out_customer"
+  },
+  {
+    "event_id": "adv_0036",
+    "event_type": "checkout_abandoned",
+    "amount": 2999.0,
+    "currency": "INR",
+    "merchant_id": "merch_06",
+    "customer_id": "cust_0929",
+    "customer_name": "Siddharth Sen",
+    "customer_email": "siddharth.sen929@example.com",
+    "customer_phone": "+919309853650",
+    "razorpay_ref": "order_synth_9036",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.859,
+      "customer_avg_days_late": 4.4
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 23,
+      "payment_method_attempted": "netbanking",
+      "webhook_captured_early": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.5154,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "webhook_race"
+  },
+  {
+    "event_id": "adv_0037",
+    "event_type": "subscription_failed",
+    "amount": 8999.0,
+    "currency": "INR",
+    "merchant_id": "merch_03",
+    "customer_id": "cust_1025",
+    "customer_name": "Nikhil Ghosh",
+    "customer_email": "nikhil.ghosh1025@example.com",
+    "customer_phone": "+919330782740",
+    "razorpay_ref": "order_synth_9037",
+    "history": {
+      "prior_contacts": 3,
+      "prior_payment_success_rate": 0.7,
+      "customer_avg_days_late": 5
+    },
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.3714,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "contact_cap_exceeded"
+  },
+  {
+    "event_id": "adv_0038",
+    "event_type": "checkout_abandoned",
+    "amount": 145000.0,
+    "currency": "INR",
+    "merchant_id": "merch_16",
+    "customer_id": "cust_0491",
+    "customer_name": "Anika Bajaj",
+    "customer_email": "anika.bajaj491@example.com",
+    "customer_phone": "+919418146635",
+    "razorpay_ref": "order_synth_9038",
+    "history": {
+      "prior_contacts": 1,
+      "prior_payment_success_rate": 0.554,
+      "customer_avg_days_late": 4.9
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 89,
+      "payment_method_attempted": "card"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.3324,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "high_value_hitl"
+  },
+  {
+    "event_id": "adv_0039",
+    "event_type": "payment_degraded",
+    "amount": 2999.0,
+    "currency": "INR",
+    "merchant_id": "merch_13",
+    "customer_id": "cust_1482",
+    "customer_name": "DataNinja Inc",
+    "customer_email": "dataninja.inc1482@example.com",
+    "customer_phone": "+919889646422",
+    "razorpay_ref": "order_synth_9039",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.474,
+      "customer_avg_days_late": 5.0
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 28,
+      "payment_method_attempted": "upi"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.2844,
+    "optimal_action": "email",
+    "_adversarial_label": "payment_degraded_no_contact"
+  },
+  {
+    "event_id": "adv_0040",
+    "event_type": "receivable_overdue",
+    "amount": 500000.0,
+    "currency": "INR",
+    "merchant_id": "merch_05",
+    "customer_id": "cust_1366",
+    "customer_name": "Tanvi Desai",
+    "customer_email": "tanvi.desai1366@example.com",
+    "customer_phone": "+919978725687",
+    "razorpay_ref": "order_synth_9040",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.693,
+      "customer_avg_days_late": 4.4
+    },
+    "metadata": {
+      "invoice_id": "INV-2026-9040",
+      "days_overdue": 20,
+      "terms": "Net 30",
+      "opt_out": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.4158,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "opted_out_customer"
+  },
+  {
+    "event_id": "adv_0041",
+    "event_type": "subscription_failed",
+    "amount": 15999.0,
+    "currency": "INR",
+    "merchant_id": "merch_13",
+    "customer_id": "cust_0084",
+    "customer_name": "Ananya Verma",
+    "customer_email": "ananya.verma84@example.com",
+    "customer_phone": "+919103810954",
+    "razorpay_ref": "order_synth_9041",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.708,
+      "customer_avg_days_late": 3.0
+    },
+    "metadata": {
+      "webhook_captured_early": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.4248,
+    "optimal_action": "voice",
+    "_adversarial_label": "webhook_race"
+  },
+  {
+    "event_id": "adv_0042",
+    "event_type": "subscription_failed",
+    "amount": 15999.0,
+    "currency": "INR",
+    "merchant_id": "merch_18",
+    "customer_id": "cust_1675",
+    "customer_name": "Ananya Verma",
+    "customer_email": "ananya.verma1675@example.com",
+    "customer_phone": "+919269058392",
+    "razorpay_ref": "order_synth_9042",
+    "history": {
+      "prior_contacts": 3,
+      "prior_payment_success_rate": 0.7,
+      "customer_avg_days_late": 5
+    },
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "subscription_failed",
+    "natural_recovery_probability": 0.396,
+    "optimal_action": "voice",
+    "_adversarial_label": "contact_cap_exceeded"
+  },
+  {
+    "event_id": "adv_0043",
+    "event_type": "receivable_overdue",
+    "amount": 145000.0,
+    "currency": "INR",
+    "merchant_id": "merch_02",
+    "customer_id": "cust_1681",
+    "customer_name": "CoreBuild Systems",
+    "customer_email": "corebuild.systems1681@example.com",
+    "customer_phone": "+919217009099",
+    "razorpay_ref": "order_synth_9043",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.906,
+      "customer_avg_days_late": 4.0
+    },
+    "metadata": {
+      "invoice_id": "INV-2026-9043",
+      "days_overdue": 33,
+      "terms": "Net 30"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "receivable_overdue",
+    "natural_recovery_probability": 0.5436,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "high_value_hitl"
+  },
+  {
+    "event_id": "adv_0044",
+    "event_type": "payment_degraded",
+    "amount": 199.0,
+    "currency": "INR",
+    "merchant_id": "merch_20",
+    "customer_id": "cust_1102",
+    "customer_name": "Sneha Rao",
+    "customer_email": "sneha.rao1102@example.com",
+    "customer_phone": "+919819488564",
+    "razorpay_ref": "order_synth_9044",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.77,
+      "customer_avg_days_late": 4.5
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 52,
+      "payment_method_attempted": "upi"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.462,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "payment_degraded_no_contact"
+  },
+  {
+    "event_id": "adv_0045",
+    "event_type": "promise_to_pay",
+    "amount": 1999.0,
+    "currency": "INR",
+    "merchant_id": "merch_06",
+    "customer_id": "cust_1419",
+    "customer_name": "BrightPath Edu",
+    "customer_email": "brightpath.edu1419@example.com",
+    "customer_phone": "+919956232928",
+    "razorpay_ref": "order_synth_9045",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.751,
+      "customer_avg_days_late": 3.9
+    },
+    "metadata": {
+      "promised_pay_date": "2026-08-28",
+      "notes": "Customer confirmed next salary date",
+      "opt_out": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "promise_to_pay",
+    "natural_recovery_probability": 0.4506,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "opted_out_customer"
+  },
+  {
+    "event_id": "adv_0046",
+    "event_type": "payment_degraded",
+    "amount": 1299.0,
+    "currency": "INR",
+    "merchant_id": "merch_20",
+    "customer_id": "cust_0196",
+    "customer_name": "Aarav Sharma",
+    "customer_email": "aarav.sharma196@example.com",
+    "customer_phone": "+919445188049",
+    "razorpay_ref": "order_synth_9046",
+    "history": {
+      "prior_contacts": 2,
+      "prior_payment_success_rate": 0.864,
+      "customer_avg_days_late": 4.2
+    },
+    "metadata": {
+      "failure_bank": "YES",
+      "failure_route": "gateway_sbi_netbanking_v1",
+      "pct_merchant_failures_same_route": 0.65,
+      "error_code": "BAD_GATEWAY_TIMEOUT",
+      "webhook_captured_early": true
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.5184,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "webhook_race"
+  },
+  {
+    "event_id": "adv_0047",
+    "event_type": "checkout_abandoned",
+    "amount": 8999.0,
+    "currency": "INR",
+    "merchant_id": "merch_18",
+    "customer_id": "cust_0726",
+    "customer_name": "Harsh Goel",
+    "customer_email": "harsh.goel726@example.com",
+    "customer_phone": "+919876929617",
+    "razorpay_ref": "order_synth_9047",
+    "history": {
+      "prior_contacts": 3,
+      "prior_payment_success_rate": 0.7,
+      "customer_avg_days_late": 5
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 42,
+      "payment_method_attempted": "card"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.57,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "contact_cap_exceeded"
+  },
+  {
+    "event_id": "adv_0048",
+    "event_type": "checkout_abandoned",
+    "amount": 145000.0,
+    "currency": "INR",
+    "merchant_id": "merch_20",
+    "customer_id": "cust_1702",
+    "customer_name": "Pallavi Rathi",
+    "customer_email": "pallavi.rathi1702@example.com",
+    "customer_phone": "+919662605291",
+    "razorpay_ref": "order_synth_9048",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.439,
+      "customer_avg_days_late": 4.2
+    },
+    "metadata": {
+      "cart_items": [
+        "Product A",
+        "Product B"
+      ],
+      "time_since_abandon_minutes": 33,
+      "payment_method_attempted": "card"
+    },
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "checkout_abandoned",
+    "natural_recovery_probability": 0.2634,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "high_value_hitl"
+  },
+  {
+    "event_id": "adv_0049",
+    "event_type": "payment_degraded",
+    "amount": 5999.0,
+    "currency": "INR",
+    "merchant_id": "merch_13",
+    "customer_id": "cust_1150",
+    "customer_name": "Neha Agarwal",
+    "customer_email": "neha.agarwal1150@example.com",
+    "customer_phone": "+919451744840",
+    "razorpay_ref": "order_synth_9049",
+    "history": {
+      "prior_contacts": 0,
+      "prior_payment_success_rate": 0.558,
+      "customer_avg_days_late": 4.6
+    },
+    "metadata": {},
+    "payment_status": "unresolved",
+    "recovered_amount": 0.0,
+    "ground_truth_root_cause": "payment_degraded",
+    "natural_recovery_probability": 0.3348,
+    "optimal_action": "whatsapp",
+    "_adversarial_label": "payment_degraded_no_contact"
   }
 ]

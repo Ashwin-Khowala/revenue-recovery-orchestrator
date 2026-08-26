@@ -4,14 +4,17 @@ Logs all decisions, rule firings, LLM outputs, and state transitions to Supabase
 """
 
 import os
+import json
+import hashlib
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 logger = logging.getLogger("orchestrator.audit")
 
 _supabase_client = None
 _langfuse_client = None
+_last_entry_hash: str = "GENESIS"  # chain anchor
 
 
 def _get_supabase_client():
@@ -63,6 +66,8 @@ def log_audit_entry(
     """
     Creates an audit entry structure and persists to Supabase and Langfuse Cloud.
     """
+    global _last_entry_hash
+    
     entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "event_id": event_id,
@@ -70,7 +75,19 @@ def log_audit_entry(
         "action_taken": action_taken,
         "details": details,
         "reasoning": reasoning or "",
+        "prev_entry_hash": _last_entry_hash,
     }
+    
+    # SHA-256 hash chain — tamper-evident
+    chain_data = json.dumps({
+        "event_id": event_id,
+        "node_name": node_name,
+        "action_taken": action_taken,
+        "prev_hash": _last_entry_hash,
+    }, sort_keys=True)
+    entry_hash = hashlib.sha256(chain_data.encode()).hexdigest()
+    entry["entry_hash"] = entry_hash
+    _last_entry_hash = entry_hash
     
     logger.info(f"[AUDIT] [{node_name}] event={event_id} action={action_taken}")
 
@@ -104,3 +121,29 @@ def log_audit_entry(
             logger.debug(f"Could not send trace to Langfuse: {e}")
 
     return entry
+
+
+def verify_audit_chain(entries: List[Dict[str, Any]]) -> bool:
+    """
+    Verifies the SHA-256 chain integrity of an ordered list of audit entries.
+    Returns True if the chain is intact, False if any entry was tampered with.
+    """
+    prev_hash = "GENESIS"
+    for entry in entries:
+        chain_data = json.dumps({
+            "event_id": entry.get("event_id", ""),
+            "node_name": entry.get("node_name", ""),
+            "action_taken": entry.get("action_taken", ""),
+            "prev_hash": prev_hash,
+        }, sort_keys=True)
+        expected_hash = hashlib.sha256(chain_data.encode()).hexdigest()
+        stored_hash = entry.get("entry_hash", "")
+        if stored_hash and stored_hash != expected_hash:
+            logger.error(
+                f"[AUDIT CHAIN BROKEN] Entry for event={entry.get('event_id')} "
+                f"node={entry.get('node_name')} has invalid hash. "
+                f"Expected {expected_hash[:12]}... got {stored_hash[:12]}..."
+            )
+            return False
+        prev_hash = stored_hash or expected_hash
+    return True
