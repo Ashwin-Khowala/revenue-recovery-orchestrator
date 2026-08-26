@@ -1,6 +1,19 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import {
+  Sparkles,
+  Bot,
+  Mic,
+  MicOff,
+  SendHorizontal,
+  X,
+  AlertTriangle,
+  Zap,
+  User,
+  CheckCircle2,
+  Radio,
+} from 'lucide-react';
 
 export interface AIChatBotProps {
   role: 'merchant' | 'payer';
@@ -378,7 +391,7 @@ export default function AIChatBot({
         className="fixed bottom-6 right-6 z-50 bg-slate-900 hover:bg-slate-800 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-3 transition-all duration-200 hover:scale-105 group"
       >
         <div className="w-7 h-7 rounded-xl bg-[#00A3C4] flex items-center justify-center text-white text-xs font-bold shadow-xs">
-          ✨
+          <Sparkles className="w-3.5 h-3.5" />
         </div>
         <div className="text-left">
           <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
@@ -399,7 +412,7 @@ export default function AIChatBot({
       <div className="px-4 py-3 flex items-center justify-between bg-white border-b border-slate-200 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-[#00A3C4] flex items-center justify-center text-white text-sm shadow-sm font-bold">
-            ✨
+            <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
             <h3 className="text-sm font-bold leading-tight text-slate-900">
@@ -429,7 +442,17 @@ export default function AIChatBot({
                 : 'bg-cyan-50 text-[#00A3C4] hover:bg-cyan-100 border border-cyan-200'
             }`}
           >
-            <span>{mode === 'voice' ? '✕ Stop Voice' : '🎙️ Voice Agent'}</span>
+            {mode === 'voice' ? (
+              <>
+                <X className="w-3.5 h-3.5" />
+                <span>Stop Voice</span>
+              </>
+            ) : (
+              <>
+                <Mic className="w-3.5 h-3.5" />
+                <span>Voice Agent</span>
+              </>
+            )}
           </button>
 
           <button
@@ -437,7 +460,7 @@ export default function AIChatBot({
             className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-xs font-bold transition-colors"
             title="Collapse Panel (⌘J)"
           >
-            ✕
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -450,7 +473,7 @@ export default function AIChatBot({
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-center py-8 px-2 space-y-4 my-auto">
                 <div className="w-14 h-14 rounded-2xl bg-[#00A3C4] flex items-center justify-center text-white text-2xl shadow-md shadow-cyan-500/10">
-                  ✨
+                  <Sparkles className="w-7 h-7 text-white" />
                 </div>
 
                 <div className="space-y-2 max-w-[280px]">
@@ -466,8 +489,8 @@ export default function AIChatBot({
                   </p>
                 </div>
 
-                <div className="text-[11px] font-medium text-amber-700 bg-amber-50/80 border border-amber-200/80 rounded-lg p-2.5 text-left max-w-[320px] flex items-start gap-1.5 mt-2">
-                  <span>⚠️</span>
+                <div className="text-[11px] font-medium text-amber-700 bg-amber-50/80 border border-amber-200/80 rounded-lg p-2.5 text-left max-w-[320px] flex items-start gap-2 mt-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <span>
                     <strong>RBI & Zero-Spam Guardrails:</strong> Max 2 contacts/incident, 24h quiet period, and strict ₹1L HITL escalations active.
                   </span>
@@ -519,7 +542,7 @@ export default function AIChatBot({
                             key={idx}
                             className="text-[10px] font-mono px-2 py-0.5 rounded flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200"
                           >
-                            <span>⚡</span>
+                            <Zap className="w-3 h-3 text-emerald-600" />
                             <span>
                               <strong>Tool:</strong> {t.tool}
                             </span>
@@ -567,12 +590,12 @@ export default function AIChatBot({
                 <button
                   type="button"
                   onClick={toggleTextMic}
-                  className={`absolute right-2.5 top-2 transition-colors text-base ${
+                  className={`absolute right-2.5 top-2.5 transition-colors ${
                     isListening ? 'text-red-500 animate-pulse' : 'text-slate-400 hover:text-slate-600'
                   }`}
                   title="Speech-to-Text Mic"
                 >
-                  🎙️
+                  <Mic className="w-4 h-4" />
                 </button>
               </div>
 
@@ -581,7 +604,7 @@ export default function AIChatBot({
                 disabled={!input.trim() || loading}
                 className="w-9 h-9 rounded-lg bg-[#00A3C4] hover:bg-[#008ea6] text-white flex items-center justify-center text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-xs shrink-0"
               >
-                &rarr;
+                <SendHorizontal className="w-4 h-4" />
               </button>
             </form>
             
@@ -592,12 +615,12 @@ export default function AIChatBot({
         </div>
       ) : (
         /* Voice Chat Mode */
-        <div className="flex-1 flex flex-col justify-between p-4 bg-[#0F172A] text-white">
-          <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+        <div className="flex-1 flex flex-col justify-between p-4 bg-slate-900 text-white min-h-0">
+          <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
             {voiceTurns.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-center py-10 space-y-4 my-auto">
                 <div className="w-16 h-16 rounded-3xl bg-[#00A3C4] flex items-center justify-center text-white text-2xl shadow-lg shadow-cyan-500/20 animate-pulse">
-                  🎙️
+                  <Mic className="w-7 h-7 text-white" />
                 </div>
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-white">Gemini 3.1 Live Voice Engine</h4>
@@ -615,7 +638,17 @@ export default function AIChatBot({
                     }`}
                   >
                     <span className="font-bold text-[9px] block opacity-70 mb-0.5">
-                      {turn.speaker === 'agent' ? '✨ Voice Copilot' : `👤 ${customerName}`}
+                      {turn.speaker === 'agent' ? (
+                        <>
+                          <Sparkles className="w-2.5 h-2.5 inline mr-1 text-cyan-400" />
+                          Voice Copilot
+                        </>
+                      ) : (
+                        <>
+                          <User className="w-2.5 h-2.5 inline mr-1" />
+                          {customerName}
+                        </>
+                      )}
                     </span>
                     <MarkdownRenderer content={turn.text} isDark={turn.speaker !== 'user'} />
                   </div>
@@ -626,7 +659,7 @@ export default function AIChatBot({
                         key={tIdx}
                         className="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-700 ml-6 flex items-center gap-1.5 shadow-xs"
                       >
-                        <span>⚡</span>
+                        <Zap className="w-3 h-3 text-emerald-400" />
                         <span>
                           <strong>Tool Executed:</strong> {tool.tool} &mdash; {tool.message}
                         </span>
@@ -639,7 +672,7 @@ export default function AIChatBot({
           </div>
 
           {/* Voice Controls */}
-          <div className="pt-2 border-t border-slate-800 space-y-2">
+          <div className="pt-3 border-t border-slate-800 space-y-2 shrink-0">
             <button
               onClick={() => {
                 if (isListening) {
@@ -649,13 +682,23 @@ export default function AIChatBot({
                   startSpeechRecognition(handleSendVoice);
                 }
               }}
-              className={`w-full py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 ${
+              className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 ${
                 isListening
                   ? 'bg-red-600 text-white animate-pulse'
                   : 'bg-[#00A3C4] hover:bg-[#008da8] text-white'
               }`}
             >
-              <span>{isListening ? '🔴 Listening... (Tap to Send)' : '🎤 Tap to Speak Query'}</span>
+              {isListening ? (
+                <>
+                  <Radio className="w-3.5 h-3.5 animate-pulse" />
+                  <span>Listening... (Tap to Send)</span>
+                </>
+              ) : (
+                <>
+                  <Mic className="w-3.5 h-3.5" />
+                  <span>Tap to Speak Query</span>
+                </>
+              )}
             </button>
 
             {/* Quick voice chips */}

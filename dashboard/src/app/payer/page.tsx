@@ -3,6 +3,21 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import AIChatBot from '@/components/AIChatBot';
+import {
+  Sparkles,
+  Info,
+  Send,
+  CheckCircle2,
+  Check,
+  Percent,
+  Calendar,
+  Zap,
+  CreditCard,
+  Building2,
+  ShieldCheck,
+  ArrowRight,
+  X,
+} from 'lucide-react';
 
 export default function CustomerPayerPortal() {
   const [customerName] = useState('Ashwin Khowala');
@@ -27,13 +42,13 @@ export default function CustomerPayerPortal() {
       const discounted = Math.round(originalAmount * 0.95);
       setAmount(discounted);
       setDiscountApplied(true);
-      showNotification('success', '🎉 5% Settlement Concession applied! New payable total: ₹' + discounted.toLocaleString('en-IN'));
+      showNotification('success', '5% Settlement Concession applied! New payable total: ₹' + discounted.toLocaleString('en-IN'));
     }
   };
 
   const handleRegisterPtp = (date: string) => {
     setPtpDate(date);
-    showNotification('info', `🤝 Promise-to-Pay confirmed for ${date}. All automated recovery outreach has been paused.`);
+    showNotification('info', `Promise-to-Pay confirmed for ${date}. All automated recovery outreach has been paused.`);
   };
 
   const handleSimulatePayment = () => {
@@ -41,7 +56,7 @@ export default function CustomerPayerPortal() {
     setTimeout(() => {
       setIsProcessing(false);
       setPaidSuccess(true);
-      showNotification('success', '✓ Payment captured successfully. Confirmation receipt dispatched.');
+      showNotification('success', 'Payment captured successfully. Confirmation receipt dispatched.');
     }, 1200);
   };
 
@@ -60,7 +75,7 @@ export default function CustomerPayerPortal() {
                   Razorpay Verified Checkout
                 </h1>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
                   256-Bit SSL Encrypted
                 </span>
               </div>
@@ -75,7 +90,7 @@ export default function CustomerPayerPortal() {
               rel="noopener noreferrer"
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-50 text-[#00A3C4] border border-cyan-200 text-xs font-bold hover:bg-cyan-100 transition-colors"
             >
-              <span>🤖</span>
+              <Send className="w-3.5 h-3.5 text-[#0088cc]" />
               <span>Telegram Bot</span>
             </a>
 
@@ -103,10 +118,14 @@ export default function CustomerPayerPortal() {
                 : 'bg-slate-900 text-cyan-200 border-slate-700'
             }`}
           >
-            <span>{notification.type === 'success' ? '✨' : 'ℹ️'}</span>
+            {notification.type === 'success' ? (
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+            ) : (
+              <Info className="w-4 h-4 text-cyan-400" />
+            )}
             <span>{notification.message}</span>
             <button onClick={() => setNotification(null)} className="ml-2 text-slate-400 hover:text-white">
-              &times;
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -149,8 +168,15 @@ export default function CustomerPayerPortal() {
                 <h3 className="text-sm font-bold text-slate-900">Invoice Summary</h3>
                 <p className="text-xs text-slate-400 mt-0.5">Annual Plan Subscription Renewal</p>
               </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-bold ${paidSuccess ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
-                {paidSuccess ? '✓ Paid & Settled' : 'Pending Settlement'}
+              <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 ${paidSuccess ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                {paidSuccess ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Paid & Settled</span>
+                  </>
+                ) : (
+                  <span>Pending Settlement</span>
+                )}
               </span>
             </div>
 
@@ -164,7 +190,7 @@ export default function CustomerPayerPortal() {
               {discountApplied && (
                 <div className="flex items-center justify-between text-emerald-600 font-medium">
                   <span className="flex items-center gap-1.5">
-                    <span>🎁</span>
+                    <Percent className="w-3.5 h-3.5 text-emerald-600" />
                     <span>5% Instant Settlement Concession</span>
                   </span>
                   <span>-₹{(originalAmount - amount).toLocaleString('en-IN')}</span>
@@ -174,7 +200,7 @@ export default function CustomerPayerPortal() {
               {ptpDate && (
                 <div className="flex items-center justify-between text-purple-600 font-medium">
                   <span className="flex items-center gap-1.5">
-                    <span>🤝</span>
+                    <Calendar className="w-3.5 h-3.5 text-purple-600" />
                     <span>Promise-to-Pay Scheduled</span>
                   </span>
                   <span>{ptpDate} (Outreach Paused)</span>
@@ -198,24 +224,27 @@ export default function CustomerPayerPortal() {
                 <div className="text-xs font-bold text-slate-700">Select Payment Route:</div>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { id: 'upi', label: 'UPI (GPay / PhonePe)', icon: '⚡' },
-                    { id: 'card', label: 'Credit / Debit Card', icon: '💳' },
-                    { id: 'netbanking', label: 'NetBanking / Mandate', icon: '🏦' },
-                  ].map(method => (
-                    <button
-                      key={method.id}
-                      type="button"
-                      onClick={() => setSelectedMethod(method.id as any)}
-                      className={`p-3 rounded-xl border text-left transition-all ${
-                        selectedMethod === method.id
-                          ? 'border-[#00A3C4] bg-cyan-50/40 text-slate-900 ring-1 ring-[#00A3C4]'
-                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
-                      }`}
-                    >
-                      <div className="text-base mb-1">{method.icon}</div>
-                      <div className="text-xs font-bold leading-tight">{method.label}</div>
-                    </button>
-                  ))}
+                    { id: 'upi', label: 'UPI (GPay / PhonePe)', icon: Zap },
+                    { id: 'card', label: 'Credit / Debit Card', icon: CreditCard },
+                    { id: 'netbanking', label: 'NetBanking / Mandate', icon: Building2 },
+                  ].map(method => {
+                    const IconComp = method.icon;
+                    return (
+                      <button
+                        key={method.id}
+                        type="button"
+                        onClick={() => setSelectedMethod(method.id as any)}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          selectedMethod === method.id
+                            ? 'border-[#00A3C4] bg-cyan-50/40 text-slate-900 ring-1 ring-[#00A3C4]'
+                            : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                        }`}
+                      >
+                        <IconComp className="w-4 h-4 text-[#00A3C4] mb-1.5" />
+                        <div className="text-xs font-bold leading-tight">{method.label}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -229,8 +258,9 @@ export default function CustomerPayerPortal() {
                   rel="noopener noreferrer"
                   className="w-full py-3.5 rounded-xl bg-[#00A3C4] hover:bg-[#008ea6] text-white text-sm font-extrabold transition-all shadow-md flex items-center justify-center gap-2 text-center"
                 >
-                  <span>💳 Pay ₹{amount.toLocaleString('en-IN')} via Razorpay Gateway</span>
-                  <span>&rarr;</span>
+                  <CreditCard className="w-4 h-4 text-white" />
+                  <span>Pay ₹{amount.toLocaleString('en-IN')} via Razorpay Gateway</span>
+                  <ArrowRight className="w-4 h-4" />
                 </a>
 
                 <button
@@ -244,14 +274,17 @@ export default function CustomerPayerPortal() {
                       <span>Reconciling payment webhook...</span>
                     </>
                   ) : (
-                    <span>✓ Simulate Payment Capture (Webhook Reconciliation Test)</span>
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Simulate Payment Capture (Webhook Reconciliation Test)</span>
+                    </>
                   )}
                 </button>
               </div>
             ) : (
               <div className="p-6 rounded-xl bg-emerald-50 border border-emerald-200 text-center space-y-2">
                 <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 text-2xl flex items-center justify-center mx-auto">
-                  ✓
+                  <Check className="w-6 h-6 text-emerald-700" />
                 </div>
                 <h4 className="text-base font-bold text-emerald-900">Payment Successfully Captured</h4>
                 <p className="text-xs text-emerald-700 max-w-md mx-auto">
@@ -281,7 +314,7 @@ export default function CustomerPayerPortal() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between space-y-4">
               <div>
                 <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-base font-bold">
-                  🎁
+                  <Percent className="w-4 h-4 text-emerald-600" />
                 </div>
                 <h3 className="text-sm font-bold text-slate-900 mt-2.5">5% Instant Settlement Concession</h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
@@ -302,7 +335,7 @@ export default function CustomerPayerPortal() {
             <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col justify-between space-y-4">
               <div>
                 <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-base font-bold">
-                  🤝
+                  <Calendar className="w-4 h-4 text-purple-600" />
                 </div>
                 <h3 className="text-sm font-bold text-slate-900 mt-2.5">Promise to Pay Later</h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
@@ -352,10 +385,10 @@ export default function CustomerPayerPortal() {
                 if (action.tool === 'apply_concession_discount' && action.updatedAmount) {
                   setAmount(action.updatedAmount);
                   setDiscountApplied(true);
-                  showNotification('success', `🎉 5% Discount applied by AI Copilot! Updated: ₹${action.updatedAmount.toLocaleString('en-IN')}`);
+                  showNotification('success', `5% Discount applied by AI Copilot! Updated: ₹${action.updatedAmount.toLocaleString('en-IN')}`);
                 } else if (action.tool === 'register_promise_to_pay' && action.promisedDate) {
                   setPtpDate(action.promisedDate);
-                  showNotification('info', `🤝 Promise-to-Pay registered for ${action.promisedDate}. Reminders paused.`);
+                  showNotification('info', `Promise-to-Pay registered for ${action.promisedDate}. Reminders paused.`);
                 }
               }}
             />
