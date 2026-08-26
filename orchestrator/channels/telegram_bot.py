@@ -4,15 +4,17 @@ Listens to incoming messages from merchants & customers on @razorpaytestbot.
 Supports:
 - Customer / Payer Mode: Pay bills, request discounts, register promise-to-pay, get mandate help.
 - Merchant Mode (/merchant, /stats): View live at-risk metrics, approve pending HITL escalations.
+- Cross-Process Chat ID Persistence (data/active_telegram_chats.json).
 """
 
 import os
+import json
 import time
 import logging
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Set
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,14 +22,41 @@ logger = logging.getLogger("orchestrator.channels.telegram_bot")
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "8951923702:AAFP-MqWJBnHeEQdjLoczM13MV4bbPV-WSU")
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+CHATS_FILE = os.path.join(ROOT_DIR, "data", "active_telegram_chats.json")
 
 # Session with retry adapter for high network resilience
 session = requests.Session()
 retries = Retry(total=3, backoff_factor=0.5, status_forcelist=[500, 502, 503, 504])
 session.mount("https://", HTTPAdapter(max_retries=retries))
 
-# In-memory session tracking for demo
+# In-memory session tracking
 USER_ROLES: Dict[str, str] = {}  # chat_id -> 'merchant' | 'payer'
+
+
+def save_active_chat_id(chat_id: int | str, user_name: str = ""):
+    """Persists chat_id to data/active_telegram_chats.json for cross-process access."""
+    try:
+        os.makedirs(os.path.dirname(CHATS_FILE), exist_ok=True)
+        chats: Dict[str, Any] = {}
+        if os.path.exists(CHATS_FILE):
+            try:
+                with open(CHATS_FILE, "r", encoding="utf-8") as f:
+                    chats = json.load(f)
+            except Exception:
+                chats = {}
+        
+        chat_id_str = str(chat_id)
+        chats[chat_id_str] = {
+            "chat_id": chat_id_str,
+            "user_name": user_name,
+            "last_active": time.time(),
+        }
+        with open(CHATS_FILE, "w", encoding="utf-8") as f:
+            json.dump(chats, f, indent=2)
+        logger.info(f"[TG CHAT SAVED] Stored chat_id {chat_id_str} in {CHATS_FILE}")
+    except Exception as e:
+        logger.warning(f"Could not save active chat_id: {e}")
 
 
 def send_tg_message(chat_id: int | str, text: str, reply_markup: Optional[Dict[str, Any]] = None):
@@ -62,14 +91,14 @@ def generate_agent_reply(user_text: str, chat_id: str) -> tuple[str, Optional[Di
         USER_ROLES[chat_id] = "merchant"
         reply = (
             "🏢 <b>Merchant Operations Control Center:</b>\n\n"
-            "• <b>Total At-Risk Revenue:</b> ₹2,45,998\n"
-            "• <b>Measured Recovery Rate:</b> 18.0% (Initial) &bull; 88.4% (Batch)\n"
+            "• <b>Total At-Risk Revenue:</b> ₹2,45,998 across 6 accounts\n"
+            "• <b>Measured Recovery Rate:</b> 18.0% (Auto) &bull; 88.4% (Batch)\n"
             "• <b>Duplicate Contacts:</b> <code>0 (Invariant Guaranteed)</code>\n"
             "• <b>Active Incidents:</b> 6 Ingested &bull; 1 HITL Pending\n\n"
             "⚠️ <b>Pending Human Escalation (HITL):</b>\n"
             "• Customer: <b>TechMatrix Corp</b>\n"
             "• Amount: <b>₹1,45,000</b> (Exceeds ₹1L Cap)\n"
-            "• Reason: Overdue B2B Receivable &ge; ₹1,00,000 threshold"
+            "• Status: Paused awaiting your sign-off"
         )
         keyboard = {
             "inline_keyboard": [
@@ -81,7 +110,7 @@ def generate_agent_reply(user_text: str, chat_id: str) -> tuple[str, Optional[Di
         return reply, keyboard
 
     # Handle HITL Approval Callback
-    if text_lower in ("approve_hitl_techmatrix", "approve"):
+    if text_lower in ("approve_hitl_techmatrix", "approve", "approve hitl", "approve outreach"):
         reply = (
             "✅ <b>HITL Escalation Approved!</b>\n\n"
             "• Incident: <code>evt_003 (TechMatrix Corp - ₹1,45,000)</code>\n"
@@ -124,7 +153,7 @@ def generate_agent_reply(user_text: str, chat_id: str) -> tuple[str, Optional[Di
             "I help resolve at-risk payments, re-authorize RBI recurring mandates, and manage payment commitments.\n\n"
             "Here are things you can do:\n"
             "• 💳 <b>Pay Outstanding Bill</b> (₹4,999)\n"
-            "• 🎁 <b>Request Discount</b>\n"
+            "• 🎁 <b>Request Discount</b> (5% Off)\n"
             "• 📅 <b>Promise to Pay Later</b> (e.g. <i>'I will pay on Monday'</i>)\n"
             "• ❓ <b>Why did my payment fail?</b>\n\n"
             "<i>(For merchants: send /merchant for operations stats)</i>"
@@ -262,23 +291,35 @@ def poll_telegram_updates():
                     if "message" in update:
                         msg = update["message"]
                         chat_id = msg.get("chat", {}).get("id")
+                        user_name = msg.get("from", {}).get("first_name", "")
                         user_text = msg.get("text", "")
 
+                        if chat_id:
+                            save_active_chat_id(chat_id, user_name)
+
                         if chat_id and user_text:
-                            os.environ["TELEGRAM_CHAT_ID"] = str(chat_id)
                             logger.info(f"[TG RECEIVED] From {chat_id}: {user_text}")
-                            
                             reply_text, keyboard = generate_agent_reply(user_text, str(chat_id))
                             send_tg_message(chat_id, reply_text, keyboard)
 
                     # Handle inline callback buttons
                     elif "callback_query" in update:
                         cb = update["callback_query"]
+                        cb_id = cb.get("id")
                         chat_id = cb.get("message", {}).get("chat", {}).get("id")
                         cb_data = cb.get("data", "")
-                        
+                        user_name = cb.get("from", {}).get("first_name", "")
+
                         if chat_id:
+                            save_active_chat_id(chat_id, user_name)
                             logger.info(f"[TG CALLBACK] From {chat_id}: {cb_data}")
+                            
+                            # Acknowledge callback query
+                            try:
+                                session.post(f"{BASE_URL}/answerCallbackQuery", json={"callback_query_id": cb_id}, timeout=10)
+                            except Exception:
+                                pass
+
                             reply_text, keyboard = generate_agent_reply(cb_data, str(chat_id))
                             send_tg_message(chat_id, reply_text, keyboard)
 
