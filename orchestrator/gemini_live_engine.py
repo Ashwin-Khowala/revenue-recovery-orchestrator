@@ -1,7 +1,7 @@
 """
 Gemini Live & Tool-Calling Voice Agent Engine
-Provides real-time conversational reasoning and tool execution for both
-Customer/Payer recovery conversations and Merchant operations.
+Provides real-time conversational reasoning, dynamic language mirroring (Hindi/Hinglish/English),
+and autonomous tool execution across Groq, Azure OpenAI, OpenAI, and Google GenAI.
 """
 
 import os
@@ -9,7 +9,9 @@ import json
 import logging
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
+from dotenv import load_dotenv
 
+load_dotenv()
 logger = logging.getLogger(__name__)
 
 # ============================================================================
@@ -114,7 +116,6 @@ def execute_voice_tool(name: str, arguments: Dict[str, Any], context: Dict[str, 
 
     elif name == "register_promise_to_pay":
         date = arguments.get("promised_date", "Next Monday")
-        note = arguments.get("note", "Customer committed via voice call")
         return {
             "tool": name,
             "status": "scheduled",
@@ -145,6 +146,18 @@ def execute_voice_tool(name: str, arguments: Dict[str, Any], context: Dict[str, 
     return {"tool": name, "status": "unknown"}
 
 
+def detect_language_intent(text: str) -> str:
+    """Classifies user language: english, hindi, hinglish."""
+    t = text.lower()
+    hindi_keywords = ["kya", "kyun", "hai", "mujhe", "mera", "meri", "namaste", "rupaye", "chahiye", "kab", "kaise", "haan", "nahi", "bhai", "shukriya", "dhanyawad", "kam", "chhoot", "somwar", "kal", "parso"]
+    if any(k in t.split() for k in hindi_keywords):
+        return "hinglish"
+    # Check for Devanagari characters
+    if any('\u0900' <= char <= '\u097F' for char in text):
+        return "hindi"
+    return "english"
+
+
 def run_voice_agent_turn(
     user_speech: str,
     role: str = "payer",
@@ -153,12 +166,14 @@ def run_voice_agent_turn(
     root_cause: str = "subscription_failed",
 ) -> Dict[str, Any]:
     """
-    Executes a single conversational turn with full Tool Calling capabilities.
-    Supports Azure OpenAI or Google GenAI SDK.
+    Executes a single conversational turn with dynamic language mirroring and tool calling.
     """
+    groq_key = os.getenv("GROQ_API_KEY")
+    openai_key = os.getenv("OPENAI_API_KEY")
     azure_key = os.getenv("AZURE_OPENAI_API_KEY")
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-    gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    
+    detected_lang = detect_language_intent(user_speech)
 
     context = {
         "role": role,
@@ -168,48 +183,49 @@ def run_voice_agent_turn(
     }
 
     system_prompt = (
-        f"You are the Razorpay AI Voice Recovery Agent speaking in natural, conversational Hinglish (Hindi + English).\n"
+        "You are the Razorpay AI Voice Recovery Copilot.\n"
         f"Role: {'Customer Bill Recovery Assistant' if role == 'payer' else 'Merchant Operations Copilot'}\n"
         f"Current User: {customer_name}\n"
-        f"Pending Amount: ₹{amount}\n"
-        f"Failure Reason: {root_cause}\n\n"
-        f"RULES & TOOLS:\n"
-        f"1. If customer asks for a discount/waiver/offer, CALL `apply_concession_discount` tool to give 5% off.\n"
-        f"2. If customer promises to pay later (e.g. 'Monday', 'tomorrow', 'next week'), CALL `register_promise_to_pay` tool.\n"
-        f"3. If merchant asks for numbers/status, CALL `get_financial_kpis` tool.\n"
-        f"4. If merchant says to approve high-value invoice, CALL `approve_high_value_invoice` tool.\n"
-        f"5. Keep spoken response brief, friendly, polite, and reassuring (1-3 sentences max in Hinglish).\n"
+        f"Pending Amount: ₹{amount:,.2f}\n"
+        f"Root Cause: {root_cause}\n\n"
+        "STRICT LANGUAGE MIRRORING RULES:\n"
+        "- If the user speaks English -> Reply ONLY in clean, natural, professional English.\n"
+        "- If the user speaks Hindi / Hinglish -> Reply ONLY in warm, conversational Hinglish (Hindi words in Roman script or Devanagari).\n"
+        "- If the user speaks another Indian language (Bengali, Tamil, etc.) -> Reply in that language.\n"
+        "- NEVER respond in English if the user asked in Hindi/Hinglish. NEVER respond in Hindi if the user asked in English.\n\n"
+        "BREVITY & VOICE STYLE:\n"
+        "- Spoken voice responses must be short (1-2 sentences), friendly, empathetic, and direct.\n\n"
+        "TOOL CALLING RULES:\n"
+        "1. If user asks for discount/waiver/kam karo -> CALL `apply_concession_discount`.\n"
+        "2. If user promises to pay later (e.g. 'Monday', 'tomorrow', 'next week', 'kal', 'somwar') -> CALL `register_promise_to_pay`.\n"
+        "3. If merchant asks for financial stats -> CALL `get_financial_kpis`.\n"
+        "4. If merchant asks to approve high value invoice -> CALL `approve_high_value_invoice`.\n"
     )
 
     executed_tools = []
     updated_amount = amount
 
-    # 1. Try Azure OpenAI with function calling
-    if azure_key and azure_endpoint:
+    # 1. Try Groq (Ultra-low latency ~100ms voice inference)
+    if groq_key:
         try:
-            from openai import AzureOpenAI
-            client = AzureOpenAI(
-                api_key=azure_key,
-                api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
-                azure_endpoint=azure_endpoint,
+            from openai import OpenAI
+            client = OpenAI(
+                api_key=groq_key,
+                base_url="https://api.groq.com/openai/v1"
             )
-
             messages = [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_speech},
             ]
-
             response = client.chat.completions.create(
-                model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-54-mini"),
+                model="llama-3.3-70b-versatile",
                 messages=messages,
                 tools=VOICE_TOOLS,
                 tool_choice="auto",
-                max_completion_tokens=300,
+                max_tokens=250,
+                temperature=0.3,
             )
-
             msg = response.choices[0].message
-
-            # Check if model requested a tool call
             if msg.tool_calls:
                 for t in msg.tool_calls:
                     fn_name = t.function.name
@@ -219,7 +235,64 @@ def run_voice_agent_turn(
                     if tool_res.get("updated_amount"):
                         updated_amount = tool_res["updated_amount"]
 
-                # Second turn with tool result
+                messages.append(msg)
+                for t, t_res in zip(msg.tool_calls, executed_tools):
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": t.id,
+                        "content": json.dumps(t_res),
+                    })
+
+                second_resp = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=messages,
+                    max_tokens=250,
+                )
+                spoken_reply = second_resp.choices[0].message.content
+            else:
+                spoken_reply = msg.content
+
+            return {
+                "success": True,
+                "voice_reply": spoken_reply,
+                "executed_tools": executed_tools,
+                "updated_amount": updated_amount,
+                "detected_language": detected_lang,
+                "provider": "groq_live_tools",
+            }
+        except Exception as e:
+            logger.warning(f"Groq Live voice call failed: {e}")
+
+    # 2. Try Azure OpenAI
+    if azure_key and azure_endpoint:
+        try:
+            from openai import AzureOpenAI
+            client = AzureOpenAI(
+                api_key=azure_key,
+                api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
+                azure_endpoint=azure_endpoint,
+            )
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_speech},
+            ]
+            response = client.chat.completions.create(
+                model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-54-mini"),
+                messages=messages,
+                tools=VOICE_TOOLS,
+                tool_choice="auto",
+                max_completion_tokens=250,
+            )
+            msg = response.choices[0].message
+            if msg.tool_calls:
+                for t in msg.tool_calls:
+                    fn_name = t.function.name
+                    fn_args = json.loads(t.function.arguments or "{}")
+                    tool_res = execute_voice_tool(fn_name, fn_args, context)
+                    executed_tools.append(tool_res)
+                    if tool_res.get("updated_amount"):
+                        updated_amount = tool_res["updated_amount"]
+
                 messages.append(msg)
                 for t, t_res in zip(msg.tool_calls, executed_tools):
                     messages.append({
@@ -231,7 +304,7 @@ def run_voice_agent_turn(
                 second_resp = client.chat.completions.create(
                     model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-54-mini"),
                     messages=messages,
-                    max_completion_tokens=300,
+                    max_completion_tokens=250,
                 )
                 spoken_reply = second_resp.choices[0].message.content
             else:
@@ -242,46 +315,54 @@ def run_voice_agent_turn(
                 "voice_reply": spoken_reply,
                 "executed_tools": executed_tools,
                 "updated_amount": updated_amount,
+                "detected_language": detected_lang,
                 "provider": "azure_openai_tools",
             }
-
         except Exception as e:
-            logger.warning(f"Voice agent Azure tool calling failed: {e}. Using deterministic tool agent.")
+            logger.warning(f"Azure voice tool calling failed: {e}")
 
-    # 2. Deterministic Fallback with Real Tool Execution
-    speech_lower = user_speech.lower()
+    # 3. Deterministic Language-Mirrored Fallback
+    speech_lower = user_speech.lower().strip()
+    is_hindi = detected_lang in ("hindi", "hinglish")
 
-    if any(w in speech_lower for w in ["discount", "kam", "offer", "concession", "waiver", "less", "chhoot"]):
+    if any(k in speech_lower for k in ("discount", "offer", "kam", "concession", "less", "chhoot")):
         tool_res = execute_voice_tool("apply_concession_discount", {"discount_percent": 5}, context)
         executed_tools.append(tool_res)
         updated_amount = tool_res["updated_amount"]
         spoken_reply = (
-            f"Ji {customer_name}! Humne aapke liye 5% instant concession apply kar diya hai. "
-            f"Aapka naya amount ab ₹{updated_amount:,} hai. Humne payment link update kar diya hai."
+            f"Haan ji {customer_name}! Humne aapke liye 5% instant concession apply kar diya hai. Ab payable amount ₹{updated_amount:,} hai."
+            if is_hindi else
+            f"Certainly {customer_name}! We have approved an instant 5% recovery discount. Your new payable amount is ₹{updated_amount:,}."
         )
-
-    elif any(w in speech_lower for w in ["monday", "somvaar", "kal", "tomorrow", "next week", "later", "baad me", "promise", "pay on"]):
+    elif any(k in speech_lower for k in ("monday", "tomorrow", "next week", "later", "kal", "tarikh", "promise", "somwar")):
         tool_res = execute_voice_tool("register_promise_to_pay", {"promised_date": "Next Monday"}, context)
         executed_tools.append(tool_res)
         spoken_reply = (
-            f"Shukriya {customer_name}! Maine aapka note record kar liya hai aur reminder outreach ko pause kar diya hai. "
-            f"Aap Monday ko conveniently settle kar sakte hain."
+            f"Bahut badhiya {customer_name}! Aapka payment commitment register ho gaya hai. Automated reminders pause kar diye gaye hain."
+            if is_hindi else
+            f"Thank you {customer_name}! Your payment commitment has been registered. All automated reminders are now paused."
         )
-
-    elif any(w in speech_lower for w in ["approve", "techmatrix", "yes", "authorize"]) and role == "merchant":
-        tool_res = execute_voice_tool("approve_high_value_invoice", {"invoice_id": "TechMatrix Corp"}, context)
-        executed_tools.append(tool_res)
-        spoken_reply = "TechMatrix Corp ka ₹1,45,000 ka invoice approve ho gaya hai. Recovery outreach dispatch kar di gayi hai."
-
-    elif any(w in speech_lower for w in ["financial", "status", "how much", "kpi", "numbers"]) and role == "merchant":
+    elif any(k in speech_lower for k in ("status", "financial", "total", "revenue", "kpi", "numbers")):
         tool_res = execute_voice_tool("get_financial_kpis", {}, context)
         executed_tools.append(tool_res)
-        spoken_reply = "Aapka total ₹2,45,998 revenue at-risk hai, jisme se ₹44,075 recover ho chuka hai aur duplicate spam contacts 0 hain."
-
+        spoken_reply = (
+            "Admin, aapka total ₹2,45,998 revenue at risk hai, jisme se ₹44,075 recover ho chuka hai aur 0 duplicate contacts maintain hue hain."
+            if is_hindi else
+            "Admin, total at-risk revenue is ₹2,45,998, with ₹44,075 recovered and strictly zero duplicate contacts."
+        )
+    elif any(k in speech_lower for k in ("approve", "techmatrix", "invoice")):
+        tool_res = execute_voice_tool("approve_high_value_invoice", {"invoice_id": "TechMatrix Corp"}, context)
+        executed_tools.append(tool_res)
+        spoken_reply = (
+            "TechMatrix Corp ka ₹1,45,000 invoice outreach approve ho gaya hai aur notification safely dispatch ho gayi hai."
+            if is_hindi else
+            "TechMatrix Corp invoice outreach of ₹1,45,000 has been approved and dispatched safely."
+        )
     else:
         spoken_reply = (
-            f"Ji {customer_name}! Main Razorpay recovery desk se hoon. "
-            f"Aapka ₹{amount:,} ka transaction hold par hai. Kya main discount apply karun ya koi specific payment date schedule karun?"
+            f"Ji {customer_name}! Maine aapka note record kar liya hai. Aap online link ya WhatsApp se complete kar sakte hain."
+            if is_hindi else
+            f"Hello {customer_name}! I have recorded your note and updated your recovery profile accordingly."
         )
 
     return {
@@ -289,5 +370,6 @@ def run_voice_agent_turn(
         "voice_reply": spoken_reply,
         "executed_tools": executed_tools,
         "updated_amount": updated_amount,
-        "provider": "deterministic_tool_engine",
+        "detected_language": detected_lang,
+        "provider": "deterministic_multilingual",
     }

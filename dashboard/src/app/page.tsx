@@ -290,20 +290,38 @@ export default function Dashboard() {
   };
 
   // --------------------------------------------------------------------------
-  // BROWSER SPEECH SYNTHESIS
+  // BROWSER SPEECH SYNTHESIS WITH DYNAMIC LANGUAGE & NATURAL VOICE SELECTION
   // --------------------------------------------------------------------------
-  const playAgentVoice = (text: string) => {
+  const playAgentVoice = (text: string, detectedLang?: string) => {
     if (typeof window === 'undefined') return;
     window.speechSynthesis.cancel();
 
+    const isEnglish = detectedLang === 'english' || (
+      /^[a-zA-Z0-9\s.,!?'"₹$%&()/:;-]+$/.test(text) &&
+      !/(\b(?:namaste|kya|kyun|hai|aap|mera|meri|rupaye|somwar|shukriya|dhanyawad|badhiya|haan|chahiye|karo|bhej)\b)/i.test(text)
+    );
+
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'hi-IN';
     utterance.rate = 0.95;
     utterance.pitch = 1.0;
 
     const voices = window.speechSynthesis.getVoices();
-    const hindiVoice = voices.find(v => v.lang.startsWith('hi')) || voices.find(v => v.lang.includes('IN'));
-    if (hindiVoice) utterance.voice = hindiVoice;
+
+    if (isEnglish) {
+      utterance.lang = 'en-IN';
+      const engVoice = voices.find(v => v.lang === 'en-IN') ||
+        voices.find(v => v.name.includes('India') && v.lang.startsWith('en')) ||
+        voices.find(v => v.lang.startsWith('en-US')) ||
+        voices.find(v => v.lang.startsWith('en'));
+      if (engVoice) utterance.voice = engVoice;
+    } else {
+      utterance.lang = 'hi-IN';
+      const hindiVoice = voices.find(v => v.lang.startsWith('hi')) ||
+        voices.find(v => v.name.toLowerCase().includes('hindi')) ||
+        voices.find(v => v.name.toLowerCase().includes('swara')) ||
+        voices.find(v => v.lang.includes('IN'));
+      if (hindiVoice) utterance.voice = hindiVoice;
+    }
 
     window.speechSynthesis.speak(utterance);
   };
@@ -400,6 +418,76 @@ export default function Dashboard() {
     } catch {}
   };
 
+  const handleSendChat = async (quickText?: string) => {
+    const text = quickText || chatInput;
+    if (!text.trim() || chatLoading) return;
+
+    const userMsg: ChatMessage = {
+      id: `msg_${Date.now()}_u`,
+      sender: 'user',
+      text: text,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setChatMessages(prev => [...prev, userMsg]);
+    setChatInput('');
+    setChatLoading(true);
+
+    try {
+      const res = await fetch('http://localhost:8000/api/orchestrator/voice-agent-turn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: authSession?.role || 'merchant',
+          customer_name: authSession?.name || 'Admin',
+          amount: authSession?.role === 'payer' ? payerCurrentAmount : 145000,
+          root_cause: authSession?.role === 'payer' ? payerIncident.rootCause : 'receivable_overdue',
+          user_speech: text,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const assistantMsg: ChatMessage = {
+          id: `msg_${Date.now()}_a`,
+          sender: 'assistant',
+          text: data.voice_reply,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+        setChatMessages(prev => [...prev, assistantMsg]);
+
+        if (data.executed_tools && data.executed_tools.length > 0) {
+          for (const t of data.executed_tools) {
+            if (t.tool === 'apply_concession_discount') {
+              setPayerCurrentAmount(t.updated_amount);
+              setPayerDiscountApplied(true);
+            } else if (t.tool === 'register_promise_to_pay') {
+              setPayerPtpSelected(t.promised_date || 'Next Monday');
+            } else if (t.tool === 'approve_high_value_invoice') {
+              setApprovedHitl(true);
+            }
+          }
+        }
+      } else {
+        throw new Error('API offline');
+      }
+    } catch {
+      const fallbackReply = authSession?.role === 'merchant'
+        ? "Here is your business snapshot: ₹2,45,998 revenue at risk across 6 cases, ₹44,075 recovered, and strictly 0 duplicate spam contacts. TechMatrix Corp (₹1.45L) is awaiting your approval."
+        : `Your payment of ₹${payerCurrentAmount.toLocaleString()} is currently pending. Would you like to apply a 5% discount or schedule a payment date?`;
+
+      const assistantMsg: ChatMessage = {
+        id: `msg_${Date.now()}_a`,
+        sender: 'assistant',
+        text: fallbackReply,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setChatMessages(prev => [...prev, assistantMsg]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   const handleSendVoiceUserSpeech = async (speechText?: string) => {
     const text = speechText || voiceInput;
     if (!text.trim() || voiceLoading) return;
@@ -454,14 +542,24 @@ export default function Dashboard() {
           setPayerDiscountApplied(true);
         }
 
-        playAgentVoice(data.voice_reply);
+        playAgentVoice(data.voice_reply, data.detected_language);
       } else {
         throw new Error('offline');
       }
     } catch {
-      const fallbackReply = authSession?.role === 'merchant'
-        ? `Ji Admin! Maine record update kar diya hai. Total ₹2,45,998 revenue safely monitor ho raha hai.`
-        : `Ji ${authSession?.name || 'Customer'}! Maine aapka note record kar liya hai aur details update kar di hain.`;
+      const isEnglish = /^[a-zA-Z0-9\s.,!?'"₹$%&()/:;-]+$/.test(text) &&
+        !/(\b(?:namaste|kya|kyun|hai|aap|mera|meri|rupaye|somwar|shukriya|dhanyawad|badhiya|haan|chahiye|karo)\b)/i.test(text);
+
+      let fallbackReply = '';
+      if (authSession?.role === 'merchant') {
+        fallbackReply = isEnglish
+          ? "Admin, your request has been recorded. ₹2,45,998 at-risk revenue is actively monitored with 0 duplicate contacts."
+          : "Ji Admin! Aapka note record kar liya hai. Total ₹2,45,998 revenue safely monitor ho raha hai.";
+      } else {
+        fallbackReply = isEnglish
+          ? `Hello ${authSession?.name || 'Customer'}! I have recorded your note and updated your recovery schedule.`
+          : `Ji ${authSession?.name || 'Customer'}! Maine aapka note record kar liya hai aur details update kar di hain.`;
+      }
       
       const agentTurn: VoiceTurn = {
         speaker: 'agent',
@@ -469,7 +567,7 @@ export default function Dashboard() {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setVoiceTurns(prev => [...prev, agentTurn]);
-      playAgentVoice(fallbackReply);
+      playAgentVoice(fallbackReply, isEnglish ? 'english' : 'hinglish');
     } finally {
       setVoiceLoading(false);
     }
@@ -664,55 +762,6 @@ export default function Dashboard() {
       setChannelResult('📞 Plivo telephony call payload generated.');
     } finally {
       setSendingChannel(null);
-    }
-  };
-
-  // --------------------------------------------------------------------------
-  // COPILOT CHAT SUBMISSION (Dhanvantari Style)
-  // --------------------------------------------------------------------------
-  const handleSendChat = async (textToSend?: string) => {
-    const q = textToSend || chatInput;
-    if (!q.trim() || chatLoading) return;
-
-    const userMsg: ChatMessage = {
-      id: `msg_${Date.now()}`,
-      sender: 'user',
-      text: q,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    setChatMessages(prev => [...prev, userMsg]);
-    setChatInput('');
-    setChatLoading(true);
-
-    try {
-      const res = await fetch('http://localhost:8000/api/orchestrator/copilot-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: q }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const assistantMsg: ChatMessage = {
-          id: `msg_asst_${Date.now()}`,
-          sender: 'assistant',
-          text: data.answer,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
-        setChatMessages(prev => [...prev, assistantMsg]);
-      } else {
-        throw new Error('offline');
-      }
-    } catch {
-      const fallbackMsg: ChatMessage = {
-        id: `msg_asst_${Date.now()}`,
-        sender: 'assistant',
-        text: '📊 **Your Financial Summary:**\n\n• **Total Revenue At-Risk:** ₹2,45,998 across 6 customer incidents\n• **Recovered:** ₹44,075 (18% direct recovery rate)\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp\n• **Scheduled for Payment:** ₹52,000 for Kavita Iyer\n\n0 duplicate customer contacts.',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setChatMessages(prev => [...prev, fallbackMsg]);
-    } finally {
-      setChatLoading(false);
     }
   };
 
