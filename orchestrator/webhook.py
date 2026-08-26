@@ -4,12 +4,13 @@ Handles incoming Razorpay payment webhooks, triggers recovery graph, and exposes
 """
 
 import os
+import json
 import hmac
 import hashlib
 import logging
 import time
 from typing import Dict, Any, Optional, List
-from fastapi import FastAPI, Header, HTTPException, Request, BackgroundTasks
+from fastapi import FastAPI, Header, HTTPException, Request, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -656,5 +657,53 @@ async def plivo_answer_xml_endpoint(customer_name: str = "Customer", amount: flo
         f'</Response>'
     )
     return Response(content=xml_content, media_type="application/xml")
+
+
+# ============================================================================
+# BIDIRECTIONAL GEMINI LIVE WEBSOCKET ENDPOINT
+# ============================================================================
+@app.websocket("/ws/gemini-live")
+async def gemini_live_websocket(websocket: WebSocket):
+    """
+    Real-time Bidirectional WebSocket Endpoint for Gemini Live Voice Sessions.
+    Accepts spoken text or audio chunks, executes tools autonomously,
+    and returns synthesized live voice responses.
+    """
+    await websocket.accept()
+    logger.info("[GEMINI LIVE WS] Client connected to live voice stream.")
+    
+    try:
+        from orchestrator.gemini_live_engine import run_voice_agent_turn
+        
+        while True:
+            data = await websocket.receive_text()
+            payload = json.loads(data)
+            
+            user_speech = payload.get("user_speech", "")
+            role = payload.get("role", "payer")
+            customer_name = payload.get("customer_name", "Customer")
+            amount = payload.get("amount", 4999.0)
+            root_cause = payload.get("root_cause", "subscription_failed")
+            
+            # Execute turn with dynamic language mirroring and tool execution
+            result = run_voice_agent_turn(
+                user_speech=user_speech,
+                role=role,
+                customer_name=customer_name,
+                amount=amount,
+                root_cause=root_cause,
+            )
+            
+            await websocket.send_text(json.dumps(result))
+            
+    except WebSocketDisconnect:
+        logger.info("[GEMINI LIVE WS] Client disconnected cleanly.")
+    except Exception as e:
+        logger.error(f"[GEMINI LIVE WS] Error in live stream: {e}")
+        try:
+            await websocket.close()
+        except:
+            pass
+
 
 

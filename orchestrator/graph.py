@@ -67,21 +67,9 @@ def build_recovery_graph(checkpointer=None):
     builder.add_edge("execute_action", "outcome_tracker")
     builder.add_edge("outcome_tracker", END)
 
-    # 5. Compile with Checkpointer (PostgresSaver if DB_URI set, else MemorySaver)
+    # 5. Compile with Checkpointer (MemorySaver by default for fast in-memory replay safety)
     if checkpointer is None:
-        db_uri = os.getenv("SUPABASE_DB_URI")
-        if db_uri:
-            try:
-                from langgraph.checkpoint.postgres import PostgresSaver
-                # Setup Postgres checkpointer
-                checkpointer = PostgresSaver.from_conn_string(db_uri)
-                checkpointer.setup()
-                logger.info("Compiled LangGraph with Supabase PostgresSaver checkpointer.")
-            except Exception as e:
-                logger.warning(f"Could not connect Postgres checkpointer ({e}). Using in-memory checkpointer.")
-                checkpointer = MemorySaver()
-        else:
-            checkpointer = MemorySaver()
+        checkpointer = MemorySaver()
 
     compiled_graph = builder.compile(checkpointer=checkpointer)
     return compiled_graph
