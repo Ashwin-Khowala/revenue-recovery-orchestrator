@@ -71,6 +71,7 @@ export default function AIChatBot({
   // Voice Chat State
   const [callActive, setCallActive] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceTurns, setVoiceTurns] = useState<VoiceTurn[]>([]);
   const [voiceLoading, setVoiceLoading] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -80,7 +81,7 @@ export default function AIChatBot({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, voiceTurns]);
 
-  // Speech Synthesis setup
+  // High-Quality Voice Synthesizer
   const playVoice = (text: string, detectedLang?: string) => {
     if (typeof window === 'undefined') return;
     window.speechSynthesis.cancel();
@@ -88,32 +89,38 @@ export default function AIChatBot({
     const isEnglish =
       detectedLang === 'english' ||
       (/^[a-zA-Z0-9\s.,!?'"₹$%&()/:;-]+$/.test(text) &&
-        !/(\b(?:namaste|kya|kyun|hai|aap|mera|meri|rupaye|somwar|shukriya|dhanyawad|badhiya|haan|chahiye|karo|bhej)\b)/i.test(
+        !/(\b(?:namaste|kya|kyun|hai|aap|mera|meri|rupaye|somwar|shukriya|dhanyawad|badhiya|haan|chahiye|karo|bhej|gaya)\b)/i.test(
           text
         ));
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.95;
+    utterance.rate = 1.0;
     utterance.pitch = 1.0;
 
     const voices = window.speechSynthesis.getVoices();
     if (isEnglish) {
-      utterance.lang = 'en-IN';
+      utterance.lang = 'en-US';
       const engVoice =
-        voices.find(v => v.lang === 'en-IN') ||
-        voices.find(v => v.name.includes('India') && v.lang.startsWith('en')) ||
-        voices.find(v => v.lang.startsWith('en-US')) ||
+        voices.find(v => v.name.toLowerCase().includes('natural') && v.lang.startsWith('en')) ||
+        voices.find(v => v.name.includes('Google UK English Female')) ||
+        voices.find(v => v.name.includes('Google US English')) ||
+        voices.find(v => v.lang === 'en-US') ||
+        voices.find(v => v.lang === 'en-GB') ||
         voices.find(v => v.lang.startsWith('en'));
       if (engVoice) utterance.voice = engVoice;
     } else {
       utterance.lang = 'hi-IN';
       const hindiVoice =
-        voices.find(v => v.lang.startsWith('hi')) ||
-        voices.find(v => v.name.toLowerCase().includes('hindi')) ||
         voices.find(v => v.name.toLowerCase().includes('swara')) ||
+        voices.find(v => v.name.toLowerCase().includes('hindi')) ||
+        voices.find(v => v.lang.startsWith('hi')) ||
         voices.find(v => v.lang.includes('IN'));
       if (hindiVoice) utterance.voice = hindiVoice;
     }
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
 
     window.speechSynthesis.speak(utterance);
   };
@@ -130,25 +137,25 @@ export default function AIChatBot({
     }
   }, []);
 
-  // Speech Recognition Toggle (Mic)
-  const toggleMic = () => {
+  // Speech-to-Text Microphone Engine
+  const startSpeechRecognition = (onResultCallback: (text: string) => void) => {
     if (typeof window === 'undefined') return;
 
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('Speech recognition is not supported in this browser. Please use Chrome.');
+      alert('Speech recognition is not supported in this browser. Please use Google Chrome or Microsoft Edge.');
       return;
     }
 
-    if (isListening) {
-      if (recognitionRef.current) recognitionRef.current.stop();
-      setIsListening(false);
-      return;
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'hi-IN';
+    recognition.lang = 'en-US'; // Supports English & Hinglish
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -158,12 +165,8 @@ export default function AIChatBot({
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
-      if (transcript) {
-        if (mode === 'voice') {
-          handleSendVoice(transcript);
-        } else {
-          setInput(transcript);
-        }
+      if (transcript && transcript.trim()) {
+        onResultCallback(transcript.trim());
       }
     };
 
@@ -173,7 +176,19 @@ export default function AIChatBot({
     } catch {}
   };
 
-  // Send Text Query
+  // Toggle Mic for Text Input Box
+  const toggleTextMic = () => {
+    if (isListening) {
+      if (recognitionRef.current) recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      startSpeechRecognition(transcript => {
+        setInput(prev => (prev ? `${prev} ${transcript}` : transcript));
+      });
+    }
+  };
+
+  // Send Text Message
   const handleSendText = async (quickText?: string) => {
     const textToSend = quickText || input;
     if (!textToSend.trim() || loading) return;
@@ -213,7 +228,6 @@ export default function AIChatBot({
         };
         setMessages(prev => [...prev, asstMsg]);
 
-        // Process tool callbacks
         if (data.executed_tools && data.executed_tools.length > 0 && onToolAction) {
           for (const t of data.executed_tools) {
             if (t.tool === 'apply_concession_discount') {
@@ -229,10 +243,15 @@ export default function AIChatBot({
         throw new Error('API offline');
       }
     } catch {
+      const isEnglish = /^[a-zA-Z0-9\s.,!?'"₹$%&()/:;-]+$/.test(textToSend);
       const fallbackReply =
         role === 'merchant'
-          ? '📊 **Your Financial Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 customer incidents\n• **Recovered:** ₹44,075 with 0 duplicate spam contacts\n• **Awaiting Authorization:** ₹1,45,000 for TechMatrix Corp\n\nAll deterministic compliance guardrails are active.'
-          : `Your payment of ₹${amount.toLocaleString()} is currently pending retry. Would you like to apply a 5% concession discount or schedule a payment date?`;
+          ? isEnglish
+            ? '📊 **Business Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 customer accounts\n• **Recovered:** ₹44,075 with 0 duplicate spam contacts\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp'
+            : '📊 **Financial Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 accounts\n• **Recovered:** ₹44,075 (0 duplicate spam contacts)\n• **Pending Approval:** ₹1,45,000 TechMatrix Corp'
+          : isEnglish
+          ? `Your payment of ₹${amount.toLocaleString()} is currently pending. You can apply a 5% concession discount or schedule a payment date.`
+          : `Aapka ₹${amount.toLocaleString()} ka payment pending hai. Aap 5% discount le sakte hain ya date schedule kar sakte hain.`;
 
       setMessages(prev => [
         ...prev,
@@ -248,28 +267,21 @@ export default function AIChatBot({
     }
   };
 
-  // Start Voice Chat
+  // Start Live Voice Chat (NO HARDCODED SPOKEN INTRO)
   const startVoiceChat = () => {
     setCallActive(true);
     setMode('voice');
-    const isMerchant = role === 'merchant';
-    const intro = isMerchant
-      ? `Namaste ${customerName}! Main aapka Merchant Voice Copilot hoon. Aap financial metrics pooch sakte hain ya TechMatrix invoice approve kar sakte hain.`
-      : `Namaste ${customerName}! Aapka ₹${amount.toLocaleString()} ka payment pending hai. Kya aap 5% discount lena chahenge ya date schedule karein?`;
-
-    setVoiceTurns([
-      {
-        speaker: 'agent',
-        text: intro,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      },
-    ]);
-    playVoice(intro, 'hinglish');
+    setVoiceTurns([]);
+    // Automatically trigger mic listening so user can speak immediately
+    setTimeout(() => {
+      startSpeechRecognition(handleSendVoice);
+    }, 200);
   };
 
   const endVoiceChat = () => {
     setCallActive(false);
     setIsListening(false);
+    setIsSpeaking(false);
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
@@ -278,7 +290,7 @@ export default function AIChatBot({
     if (typeof window !== 'undefined') window.speechSynthesis.cancel();
   };
 
-  // Send Voice User Speech
+  // Process Live Voice Speech
   const handleSendVoice = async (speechText: string) => {
     if (!speechText.trim() || voiceLoading) return;
 
@@ -325,24 +337,21 @@ export default function AIChatBot({
           }
         }
 
+        // Play the AI's natural spoken response in the matching language
         playVoice(data.voice_reply, data.detected_language);
       } else {
         throw new Error('offline');
       }
     } catch {
-      const isEnglish =
-        /^[a-zA-Z0-9\s.,!?'"₹$%&()/:;-]+$/.test(speechText) &&
-        !/(\b(?:namaste|kya|kyun|hai|aap|mera|meri|rupaye|somwar|shukriya|dhanyawad|badhiya|haan|chahiye|karo)\b)/i.test(
-          speechText
-        );
-
-      const fallback = isEnglish
-        ? role === 'merchant'
-          ? 'Admin, your financial request has been recorded. ₹2,45,998 revenue at risk is actively monitored.'
-          : `Hello ${customerName}! I have updated your recovery schedule.`
-        : role === 'merchant'
-        ? 'Ji Admin! Aapka note record kar liya hai. Total ₹2,45,998 revenue safely monitor ho raha hai.'
-        : `Ji ${customerName}! Maine aapka note record kar liya hai.`;
+      const isEnglish = /^[a-zA-Z0-9\s.,!?'"₹$%&()/:;-]+$/.test(speechText);
+      const fallback =
+        role === 'merchant'
+          ? isEnglish
+            ? 'Total at-risk revenue is ₹2,45,998 with ₹44,075 recovered and zero duplicate contacts.'
+            : 'Total ₹2,45,998 at-risk revenue hai, ₹44,075 recover ho chuka hai aur strictly 0 duplicate spam contacts hain.'
+          : isEnglish
+          ? `Your payment of ₹${amount.toLocaleString()} is currently pending. Would you like a 5% discount?`
+          : `Aapka ₹${amount.toLocaleString()} ka payment pending hai. Kya aap 5% discount lena chahenge?`;
 
       setVoiceTurns(prev => [
         ...prev,
@@ -358,7 +367,7 @@ export default function AIChatBot({
     }
   };
 
-  // When collapsed: Render floating trigger pill matching Dhanvantari
+  // Collapsed Floating Pill
   if (!isOpen) {
     return (
       <button
@@ -372,7 +381,7 @@ export default function AIChatBot({
     );
   }
 
-  // Dhanvantari Quick Prompts
+  // Quick Prompts
   const quickPrompts =
     role === 'merchant'
       ? [
@@ -390,7 +399,7 @@ export default function AIChatBot({
 
   return (
     <aside className="w-full lg:w-[400px] shrink-0 bg-white border border-slate-200/90 rounded-2xl shadow-xl flex flex-col h-[740px] sticky top-20 overflow-hidden transition-all duration-300">
-      {/* 1. Dhanvantari Header (Exact layout from screenshot) */}
+      {/* 1. Header (Exact Dhanvantari UI) */}
       <div className="bg-white px-4 py-3.5 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-full bg-[#00A3C4] flex items-center justify-center text-white text-base shadow-xs">
@@ -407,7 +416,7 @@ export default function AIChatBot({
           </div>
         </div>
 
-        {/* Top-Right Action: Voice Chat Toggle Button + Close */}
+        {/* Top-Right Voice Chat Button + Close */}
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => {
@@ -437,12 +446,11 @@ export default function AIChatBot({
         </div>
       </div>
 
-      {/* 2. BODY: Mode View */}
+      {/* 2. BODY */}
       {mode === 'chat' ? (
         <div className="flex-1 flex flex-col justify-between overflow-hidden p-4 bg-slate-50/40">
           {/* Messages Stream */}
           <div className="flex-1 overflow-y-auto space-y-3.5 pr-1">
-            {/* If no messages yet, show EXACT Dhanvantari Center Hero matching screenshot */}
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-center py-10 px-3 space-y-3.5 my-auto">
                 <div className="w-14 h-14 rounded-2xl bg-[#00A3C4] flex items-center justify-center text-white text-2xl shadow-md">
@@ -462,7 +470,6 @@ export default function AIChatBot({
                   </p>
                 </div>
 
-                {/* Disclaimer Warning */}
                 <div className="text-[10px] text-amber-700 bg-amber-50/90 border border-amber-200/80 px-3 py-2 rounded-xl text-left flex items-start gap-1.5 max-w-[320px]">
                   <span>⚠️</span>
                   <span>
@@ -543,7 +550,7 @@ export default function AIChatBot({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* 3. Bottom Input Dock (Exact Dhanvantari UI from screenshot) */}
+          {/* 3. Bottom Input Dock (Speech-to-Text Mic + Cyan Send Button) */}
           <div className="pt-3 border-t border-slate-200/80 space-y-1.5">
             <form
               onSubmit={e => {
@@ -560,21 +567,21 @@ export default function AIChatBot({
                 className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-[#00A3C4] bg-white shadow-2xs placeholder:text-slate-400"
               />
 
-              {/* Speech-to-text mic icon */}
+              {/* Dedicated Speech-to-Text Mic button */}
               <button
                 type="button"
-                onClick={toggleMic}
+                onClick={toggleTextMic}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm transition-all shadow-xs ${
                   isListening
                     ? 'bg-red-600 text-white animate-pulse'
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                 }`}
-                title="Voice Input (Speech-to-Text)"
+                title={isListening ? 'Listening (Speak into microphone)...' : 'Speech-to-Text Voice Typing'}
               >
                 🎙️
               </button>
 
-              {/* Cyan Send button matching screenshot */}
+              {/* Send Button */}
               <button
                 type="submit"
                 disabled={loading || !input.trim()}
@@ -591,14 +598,19 @@ export default function AIChatBot({
           </div>
         </div>
       ) : (
-        /* Voice Chat Mode */
+        /* LIVE VOICE CHAT MODE */
         <div className="flex-1 flex flex-col justify-between overflow-hidden p-4 bg-slate-900 text-white">
+          {/* Header Status Card */}
           <div className="bg-slate-800 p-3.5 rounded-xl border border-slate-700 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-3 h-3 rounded-full bg-emerald-400 animate-ping" />
+              <div className={`w-3 h-3 rounded-full ${isSpeaking ? 'bg-cyan-400 animate-pulse' : isListening ? 'bg-red-500 animate-ping' : 'bg-emerald-400'}`} />
               <div>
-                <div className="text-xs font-bold">🎙️ Voice Chat Session Active</div>
-                <div className="text-[10px] text-slate-400">Speak naturally in Hindi, Hinglish, or English</div>
+                <div className="text-xs font-bold">
+                  {isSpeaking ? '🔊 Copilot is Speaking...' : isListening ? '🎙️ Listening to you...' : '🎙️ Live Voice Interaction Active'}
+                </div>
+                <div className="text-[10px] text-slate-400">
+                  Speak naturally in English or Hindi &bull; AI mirrors your language
+                </div>
               </div>
             </div>
             <button
@@ -609,51 +621,76 @@ export default function AIChatBot({
             </button>
           </div>
 
-          {/* Voice turns */}
+          {/* Voice Turns Stream */}
           <div className="flex-1 overflow-y-auto space-y-2.5 py-3 pr-1">
-            {voiceTurns.map((turn, idx) => (
-              <div key={idx} className="space-y-1">
-                <div
-                  className={`p-3 rounded-xl text-xs leading-relaxed ${
-                    turn.speaker === 'user'
-                      ? 'bg-[#00A3C4] text-white ml-6 shadow-xs'
-                      : 'bg-slate-800 text-slate-100 mr-6 border border-slate-700'
-                  }`}
-                >
-                  <span className="font-bold text-[9px] block opacity-70 mb-0.5">
-                    {turn.speaker === 'agent' ? '✨ Voice Copilot' : `👤 ${customerName}`}
-                  </span>
-                  {turn.text}
+            {voiceTurns.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center py-12 px-4 space-y-3 my-auto">
+                {/* Audio Wave Visualizer */}
+                <div className="flex items-center justify-center gap-1.5 h-10">
+                  <div className="w-1.5 bg-[#00A3C4] rounded-full animate-bounce [animation-delay:-0.3s] h-8" />
+                  <div className="w-1.5 bg-[#54D6D6] rounded-full animate-bounce [animation-delay:-0.15s] h-10" />
+                  <div className="w-1.5 bg-emerald-400 rounded-full animate-bounce h-6" />
+                  <div className="w-1.5 bg-[#54D6D6] rounded-full animate-bounce [animation-delay:-0.15s] h-10" />
+                  <div className="w-1.5 bg-[#00A3C4] rounded-full animate-bounce [animation-delay:-0.3s] h-8" />
                 </div>
 
-                {turn.toolsExecuted &&
-                  turn.toolsExecuted.map((tool, tIdx) => (
-                    <div
-                      key={tIdx}
-                      className="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-700 ml-6 flex items-center gap-1.5 shadow-xs"
-                    >
-                      <span>⚡</span>
-                      <span>
-                        <strong>Tool Executed:</strong> {tool.tool} &mdash; {tool.message}
-                      </span>
-                    </div>
-                  ))}
+                <div className="text-xs font-bold text-slate-200">Listening to your voice...</div>
+                <div className="text-[11px] text-slate-400 max-w-[260px] leading-relaxed">
+                  Speak now in English or Hindi (e.g. &ldquo;What is our financial status?&rdquo; or &ldquo;Can I get a discount?&rdquo;).
+                </div>
               </div>
-            ))}
+            ) : (
+              voiceTurns.map((turn, idx) => (
+                <div key={idx} className="space-y-1">
+                  <div
+                    className={`p-3 rounded-xl text-xs leading-relaxed ${
+                      turn.speaker === 'user'
+                        ? 'bg-[#00A3C4] text-white ml-6 shadow-xs'
+                        : 'bg-slate-800 text-slate-100 mr-6 border border-slate-700'
+                    }`}
+                  >
+                    <span className="font-bold text-[9px] block opacity-70 mb-0.5">
+                      {turn.speaker === 'agent' ? '✨ Live Voice Copilot' : `👤 ${customerName}`}
+                    </span>
+                    {turn.text}
+                  </div>
+
+                  {turn.toolsExecuted &&
+                    turn.toolsExecuted.map((tool, tIdx) => (
+                      <div
+                        key={tIdx}
+                        className="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-700 ml-6 flex items-center gap-1.5 shadow-xs"
+                      >
+                        <span>⚡</span>
+                        <span>
+                          <strong>Tool Executed:</strong> {tool.tool} &mdash; {tool.message}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              ))
+            )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Voice Mic Controls */}
+          {/* Voice Controls */}
           <div className="pt-2 border-t border-slate-800 space-y-2">
             <button
-              onClick={toggleMic}
+              onClick={() => {
+                if (isListening) {
+                  if (recognitionRef.current) recognitionRef.current.stop();
+                  setIsListening(false);
+                } else {
+                  startSpeechRecognition(handleSendVoice);
+                }
+              }}
               className={`w-full py-3 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 ${
                 isListening
                   ? 'bg-red-600 text-white animate-pulse'
                   : 'bg-[#00A3C4] hover:bg-[#008da8] text-white'
               }`}
             >
-              <span>{isListening ? '🎙️ Listening to your voice...' : '🎤 Tap to Speak (Hinglish / English)'}</span>
+              <span>{isListening ? '🔴 Listening... (Tap to Send)' : '🎤 Tap to Speak Query'}</span>
             </button>
 
             {/* Quick voice chips */}
