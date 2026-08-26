@@ -269,26 +269,22 @@ export default function MerchantDashboard() {
             </div>
 
             <nav className="space-y-1 text-xs font-medium">
-              <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-cyan-50 text-[#00A3C4] font-bold">
+              <Link href="/merchant" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-cyan-50 text-[#00A3C4] font-bold">
                 <span>🏠</span>
-                <span>Home / Overview</span>
-              </button>
-              <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
-                <span>✨</span>
-                <span>AI Models</span>
-              </button>
-              <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
-                <span>🔍</span>
-                <span>Search Invoices</span>
-              </button>
-              <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                <span>Operations Console</span>
+              </Link>
+              <Link href="/merchant/optimizer" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                <span>🎛️</span>
+                <span>Portfolio Optimizer</span>
+              </Link>
+              <Link href="/merchant/customers/merch_01" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
                 <span>👥</span>
-                <span>Customers</span>
-              </button>
-              <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
-                <span>⚙️</span>
-                <span>Settings</span>
-              </button>
+                <span>Customer Intelligence</span>
+              </Link>
+              <Link href="/payer" className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                <span>💳</span>
+                <span>Payer Portal</span>
+              </Link>
             </nav>
 
             <div className="pt-3 border-t border-slate-100">
