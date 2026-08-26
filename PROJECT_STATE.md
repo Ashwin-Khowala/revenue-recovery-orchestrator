@@ -114,25 +114,11 @@ The `verify_audit_chain()` utility mathematically validates audit integrity.
 | **Audit Hash Chain** | ✅ Complete | SHA-256 chaining implemented in `orchestrator/audit.py` with tamper verification function. |
 | **Backend REST APIs** | ✅ Complete | `GET /api/customers/:id` (AI behavioral overview, risk signals, episodes), `GET /api/merchants/:id/customers` (paginated risk list), `GET /api/merchants/:id/at-risk-summary`, `POST /api/customers/:id/link-telegram`. |
 | **Merchant Dashboard** | ✅ Complete | Built in Next.js 14 (`/merchant`, `/merchant/customers/[merchantId]`, `/merchant/customers/[merchantId]/[customerId]`) featuring AI risk overviews, channel bars, and episode timelines. |
+| **Gemini Live Voice System** | ✅ Complete | Google GenAI (`gemini-3.1-flash-live-preview` / `gemini-2.5-flash`) & Azure OpenAI with dynamic multilingual mirroring (English, Hindi, Hinglish), data access tools (`get_customer_intelligence`, `get_merchant_financial_overview`, `get_at_risk_incidents`, `apply_concession_discount`, `register_promise_to_pay`, `approve_high_value_invoice`), collapsible right panel, and speech-to-text mic buttons on both merchant and payer pages. |
 
 ---
 
 ## 5. Next Steps & Target Roadmap
-
-### 🎯 Phase 5: Voice Chat & Gemini Live System
-1. **Gemini Live WebSocket Overhaul (`orchestrator/webhook.py`)**:
-   - Replace brittle voice handlers with a robust bidirectional Gemini Live API WebSocket connection conforming to Google's official Live API specs.
-2. **Real Function-Calling & Data Tools**:
-   - Equip the Live Voice Agent with structured tools to query live customer memory:
-     - `get_customer_payment_history(customer_id)`
-     - `get_outstanding_invoice(invoice_id)`
-     - `get_merchant_daily_metrics(merchant_id)`
-     - `schedule_promise_to_pay(customer_id, date, amount)`
-3. **Multilingual & Tone Adaptation**:
-   - Real-time language matching (English, Hindi, Hinglish) matching customer profile preferences.
-4. **Role-Separated Voice Portals**:
-   - **Merchant Voice Assistant**: Real-time voice query tool for merchants ("What is my total at-risk revenue today? Why did customer X fail?").
-   - **Payer Voice Interaction**: Seamless voice payment assistance & promise-to-pay negotiation with speech-to-text mic options.
 
 ### 🎯 Phase 6: Portfolio Optimizer & Real-Time Analytics
 - Build interactive portfolio-level visualization in the Next.js dashboard displaying at-risk distribution, root-cause pie breakdowns, and real-time recovered revenue counters.
@@ -140,3 +126,4 @@ The `verify_audit_chain()` utility mathematically validates audit integrity.
 ### 🎯 Phase 7: Evaluation Framework & Multi-Model Benchmark
 - Benchmark `gpt-4o-mini` vs `gpt-4o` vs `Rule-based` vs `Naive Blast` across the 550 seeded test cases.
 - Integrate DeepEval / G-Eval for factual consistency and reasoning quality.
+- Formalize `evals/EVAL_PREREGISTRATION.md` benchmark verification report.
