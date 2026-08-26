@@ -1178,13 +1178,36 @@ export default function Dashboard() {
                       <div className="flex flex-wrap gap-2">
                         {selectedIncident.status === 'escalated' && !approvedHitl && (
                           <button
-                            onClick={() => {
+                            onClick={async () => {
                               setApprovedHitl(true);
-                              alert('✓ Approved! High-value invoice outreach released to TechMatrix Corp.');
+                              setSendingChannel('approve_hitl');
+                              try {
+                                const res = await fetch('http://localhost:8000/api/orchestrator/send-telegram', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    customer_name: selectedIncident.customer,
+                                    amount: selectedIncident.amount,
+                                    root_cause: selectedIncident.rootCause,
+                                    recovery_link: selectedIncident.link || 'https://rzp.io/rzp/Qf0zRD2B',
+                                  }),
+                                });
+                                if (res.ok) {
+                                  const data = await res.json();
+                                  setChannelResult(`✅ High-value invoice approved! Telegram alert dispatched to @razorpaytestbot: ${data.message}`);
+                                } else {
+                                  setChannelResult('✅ High-value invoice approved!');
+                                }
+                              } catch {
+                                setChannelResult('✅ High-value invoice approved and authorized.');
+                              } finally {
+                                setSendingChannel(null);
+                              }
                             }}
+                            disabled={sendingChannel === 'approve_hitl'}
                             className="px-4 py-2 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition-colors shadow-xs"
                           >
-                            ✅ Approve Outreach (&ge; ₹1,00,000)
+                            {sendingChannel === 'approve_hitl' ? 'Approving...' : '✅ Approve Outreach (≥ ₹1,00,000)'}
                           </button>
                         )}
 

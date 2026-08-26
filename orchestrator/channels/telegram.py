@@ -1,36 +1,59 @@
 """
 Telegram Recovery Channel
 Dispatches instant revenue recovery alerts and Razorpay payment links via Telegram Bot API.
-Provides zero-friction, instant multi-channel delivery without sandbox join hoops.
+Broadcasts to active subscriber chats persisted in data/active_telegram_chats.json.
 """
 
 import os
+import json
 import logging
 import requests
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 logger = logging.getLogger("orchestrator.channels.telegram")
 
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+CHATS_FILE = os.path.join(ROOT_DIR, "data", "active_telegram_chats.json")
 
-def get_latest_chat_id(bot_token: str) -> Optional[str]:
+
+def get_all_active_chat_ids(bot_token: str) -> List[str]:
     """
-    Fetches the latest chat_id from Telegram getUpdates API if not explicitly set.
+    Retrieves all active chat IDs from data/active_telegram_chats.json or discovers from getUpdates.
     """
-    try:
-        url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
-        res = requests.get(url, timeout=6)
-        if res.status_code == 200:
-            data = res.json()
-            results = data.get("result", [])
-            if results:
-                latest = results[-1]
-                chat = latest.get("message", {}).get("chat", {}) or latest.get("my_chat_member", {}).get("chat", {})
-                chat_id = chat.get("id")
-                if chat_id:
-                    return str(chat_id)
-    except Exception as e:
-        logger.debug(f"Could not auto-fetch chat_id: {e}")
-    return None
+    chat_ids = []
+    
+    # 1. Read from shared JSON file
+    if os.path.exists(CHATS_FILE):
+        try:
+            with open(CHATS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for cid in data.keys():
+                    if cid and cid not in chat_ids:
+                        chat_ids.append(str(cid))
+        except Exception as e:
+            logger.debug(f"Could not read active chats file: {e}")
+
+    # 2. Check environment variable
+    env_cid = os.getenv("TELEGRAM_CHAT_ID")
+    if env_cid and env_cid not in chat_ids:
+        chat_ids.append(str(env_cid))
+
+    # 3. Fallback to Telegram getUpdates
+    if not chat_ids and bot_token:
+        try:
+            url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
+            res = requests.get(url, timeout=5)
+            if res.status_code == 200:
+                results = res.json().get("result", [])
+                for item in results:
+                    c = item.get("message", {}).get("chat", {}) or item.get("my_chat_member", {}).get("chat", {})
+                    cid = c.get("id")
+                    if cid and str(cid) not in chat_ids:
+                        chat_ids.append(str(cid))
+        except Exception:
+            pass
+
+    return chat_ids
 
 
 def send_telegram_recovery(
@@ -45,11 +68,8 @@ def send_telegram_recovery(
     Sends an instant revenue recovery notification with interactive payment button via Telegram Bot API.
     """
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "8951923702:AAFP-MqWJBnHeEQdjLoczM13MV4bbPV-WSU")
-    chat_id = recipient_chat_id or os.getenv("TELEGRAM_CHAT_ID")
-
-    # If chat_id not explicitly defined, auto-discover from recent bot interactions
-    if not chat_id and bot_token:
-        chat_id = get_latest_chat_id(bot_token)
+    
+    target_chat_ids = [recipient_chat_id] if recipient_chat_id else get_all_active_chat_ids(bot_token)
 
     # Format contextual recovery message with HTML formatting
     discount_text = f"\n🎁 <i>Special Recovery Discount Applied: ₹{int(discount_applied):,} OFF</i>" if discount_applied > 0 else ""
@@ -70,8 +90,8 @@ def send_telegram_recovery(
         )
     elif root_cause == "receivable_overdue":
         message_text = (
-            f"📄 <b>Invoice Payment Reminder</b>\n\n"
-            f"Hello <b>{customer_name}</b>, reminder regarding outstanding invoice of <b>₹{amount:,.2f}</b>.\n"
+            f"📄 <b>High-Value Invoice Authorization Alert</b>\n\n"
+            f"Hello <b>{customer_name}</b>, high-value invoice outreach of <b>₹{amount:,.2f}</b> has been authorized.\n"
             f"👉 <b>Settle Online:</b> <a href='{recovery_link}'>{recovery_link}</a>"
         )
     elif root_cause == "promise_to_pay":
@@ -88,52 +108,41 @@ def send_telegram_recovery(
             f"👉 <b>Complete Payment:</b> <a href='{recovery_link}'>{recovery_link}</a>"
         )
 
-    # Attempt live Telegram dispatch if token is present
-    if bot_token and chat_id:
-        try:
-            url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-            payload = {
-                "chat_id": chat_id,
-                "text": message_text,
-                "parse_mode": "HTML",
-                "disable_web_page_preview": False,
-                "reply_markup": {
-                    "inline_keyboard": [
-                        [
-                            {"text": f"💳 Pay ₹{amount:,.0f} Now", "url": recovery_link}
-                        ]
-                    ]
-                }
-            }
-            res = requests.post(url, json=payload, timeout=8)
-            if res.status_code == 200:
-                data = res.json()
-                msg_id = data.get("result", {}).get("message_id")
-                logger.info(f"Telegram recovery message sent successfully: msg_id={msg_id}")
-                return {
-                    "success": True,
-                    "channel": "telegram",
-                    "provider": "telegram_bot_api",
-                    "message_id": str(msg_id),
-                    "chat_id": chat_id,
-                    "status": "delivered",
-                    "body": message_text,
-                    "link": recovery_link,
-                }
-            else:
-                logger.warning(f"Telegram API response {res.status_code}: {res.text}")
-        except Exception as e:
-            logger.warning(f"Telegram dispatch failed: {e}")
+    dispatched_to = []
 
-    # Fallback simulation payload if chat_id not yet detected
-    logger.info(f"[TELEGRAM DISPATCH] Bot: @razorpaytestbot | Amount: ₹{amount:,.2f} | Link: {recovery_link}")
+    if bot_token and target_chat_ids:
+        for cid in target_chat_ids:
+            try:
+                url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                payload = {
+                    "chat_id": cid,
+                    "text": message_text,
+                    "parse_mode": "HTML",
+                    "disable_web_page_preview": False,
+                    "reply_markup": {
+                        "inline_keyboard": [
+                            [{"text": f"💳 Pay ₹{amount:,.2f} (Razorpay)", "url": recovery_link}],
+                            [{"text": "🎁 Claim 5% Discount", "callback_data": "request_discount"}],
+                            [{"text": "📅 Promise to Pay Later", "callback_data": "promise_to_pay"}],
+                        ]
+                    },
+                }
+                res = requests.post(url, json=payload, timeout=10)
+                if res.status_code == 200:
+                    dispatched_to.append(cid)
+                    logger.info(f"[TELEGRAM SENT] Dispatched to chat_id {cid}")
+                else:
+                    logger.warning(f"Telegram dispatch to {cid} returned {res.status_code}: {res.text}")
+            except Exception as e:
+                logger.error(f"Telegram dispatch to {cid} failed: {e}")
+
     return {
-        "success": True,
+        "success": len(dispatched_to) > 0,
         "channel": "telegram",
-        "provider": "telegram_instant",
-        "bot_username": "razorpaytestbot",
-        "chat_id": chat_id or "waiting_for_user_start",
-        "status": "delivered",
-        "body": message_text,
-        "link": recovery_link,
+        "target_chat_ids": target_chat_ids,
+        "dispatched_to": dispatched_to,
+        "message": f"Dispatched to {len(dispatched_to)} Telegram chat(s)." if dispatched_to else "Payload generated (send /start to @razorpaytestbot to link your Telegram).",
+        "bot_handle": "@razorpaytestbot",
+        "recovery_link": recovery_link,
+        "amount": amount,
     }
