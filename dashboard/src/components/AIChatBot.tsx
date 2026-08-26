@@ -11,6 +11,9 @@ export interface AIChatBotProps {
   merchantId?: string;
   onToolAction?: (action: { tool: string; updatedAmount?: number; promisedDate?: string; approved?: boolean }) => void;
   defaultOpen?: boolean;
+  isOpen?: boolean;
+  onToggleOpen?: () => void;
+  resizableWidth?: number;
 }
 
 interface ChatMessage {
@@ -39,8 +42,13 @@ export default function AIChatBot({
   merchantId = 'merch_01',
   onToolAction,
   defaultOpen = true,
+  isOpen: controlledIsOpen,
+  onToggleOpen,
+  resizableWidth,
 }: AIChatBotProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [internalIsOpen, setInternalIsOpen] = useState(defaultOpen);
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  const toggleOpen = onToggleOpen || (() => setInternalIsOpen(prev => !prev));
   const [mode, setMode] = useState<'chat' | 'voice'>('chat');
 
   // Text Chat State
@@ -347,20 +355,6 @@ export default function AIChatBot({
     }
   };
 
-  // Collapsed Floating Pill (Bottom Right)
-  if (!isOpen) {
-    return (
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-[#00A3C4] to-[#00829B] text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2.5 hover:opacity-95 transition-all font-semibold text-xs border border-white/20 hover:scale-105"
-      >
-        <span className="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-ping" />
-        <span>✨ {role === 'merchant' ? 'AI Recovery Assistant' : 'AI Payment Assistant'}</span>
-        <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-mono">Open</span>
-      </button>
-    );
-  }
-
   // Quick Prompts
   const quickPrompts =
     role === 'merchant'
@@ -377,8 +371,33 @@ export default function AIChatBot({
           'How does re-auth work?',
         ];
 
+  if (!isOpen) {
+    return (
+      <button
+        onClick={toggleOpen}
+        className="fixed bottom-6 right-6 z-50 bg-slate-900 hover:bg-slate-800 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-3 transition-all duration-200 hover:scale-105 group"
+      >
+        <div className="w-7 h-7 rounded-xl bg-[#00A3C4] flex items-center justify-center text-white text-xs font-bold shadow-xs">
+          ✨
+        </div>
+        <div className="text-left">
+          <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
+            <span>AI Copilot & Voice</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          </div>
+          <div className="text-[10px] text-slate-400">Click to expand pane (⌘J)</div>
+        </div>
+      </button>
+    );
+  }
+
   return (
-    <aside className="w-full lg:w-[400px] shrink-0 bg-white border border-slate-200/90 rounded-2xl shadow-xl flex flex-col h-[740px] sticky top-20 overflow-hidden transition-all duration-300">
+    <aside
+      style={resizableWidth ? { width: `${resizableWidth}px` } : undefined}
+      className={`shrink-0 bg-white border border-slate-200/90 rounded-2xl shadow-xl flex flex-col h-[740px] sticky top-20 overflow-hidden transition-all duration-150 ${
+        resizableWidth ? '' : 'w-full lg:w-[400px]'
+      }`}
+    >
       {/* 1. Header with Mode Switcher & Collapse */}
       <div className="bg-white px-4 py-3 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -417,7 +436,7 @@ export default function AIChatBot({
           </button>
 
           <button
-            onClick={() => setIsOpen(false)}
+            onClick={toggleOpen}
             className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-xs font-bold transition-colors"
             title="Collapse Panel"
           >
