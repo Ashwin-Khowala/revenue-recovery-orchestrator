@@ -66,6 +66,7 @@ def main():
             "0.0.0.0",
             "--port",
             "8000",
+            "--reload",
         ]
         p_backend = subprocess.Popen(backend_cmd, cwd=ROOT_DIR)
         processes.append(("FastAPI Backend", p_backend))
