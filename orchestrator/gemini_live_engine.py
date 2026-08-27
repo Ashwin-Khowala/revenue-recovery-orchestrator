@@ -116,7 +116,7 @@ class GeminiLiveSession:
         self._api_key = (
             os.getenv("GEMINI_API_KEY") or
             os.getenv("GOOGLE_API_KEY") or
-            "AIzaSyDYfiLQy-hArB7jwU4zWCEY8FyL5AgNqss"
+            ""
         )
         self._model = os.getenv("GEMINI_LIVE_MODEL", "gemini-3.1-flash-live-preview")
 

@@ -67,7 +67,7 @@ def send_telegram_recovery(
     """
     Sends an instant revenue recovery notification with interactive payment button via Telegram Bot API.
     """
-    bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "8951923702:AAFP-MqWJBnHeEQdjLoczM13MV4bbPV-WSU")
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
     
     target_chat_ids = [recipient_chat_id] if recipient_chat_id else get_all_active_chat_ids(bot_token)
 
