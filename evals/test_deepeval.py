@@ -1,86 +1,64 @@
 """
-DeepEval Test Suite for Revenue Recovery Orchestrator
+DeepEval Test Suite — Revenue Recovery Orchestrator
+====================================================
+Evaluates the LLM-powered classifier + policy engine using DeepEval
+LLM-as-judge metrics. Results are pushed to Confident AI after each run.
 
-Evaluates the LLM-powered nodes (root-cause classifier + policy candidate
-generator) using DeepEval's LLM-as-a-judge metrics:
+HOW TO RUN
+----------
+  deepeval test run evals/test_deepeval.py              # Runs + uploads to Confident AI
+  deepeval test run evals/test_deepeval.py -v           # Verbose output
+  pytest evals/test_deepeval.py -v                      # Local-only (no cloud upload)
 
-1. G-Eval (Classification Correctness)   — Does the classifier pick the right
-   root cause category?
-2. G-Eval (Intervention Appropriateness)  — Are the generated recovery actions
-   sensible for the diagnosed cause?
-3. G-Eval (Do-Nothing Awareness)          — Does the orchestrator correctly
-   prefer "do nothing" when the customer is a natural payer?
-4. Hallucination Metric                   — Does the LLM fabricate facts not
-   present in the event context?
-5. ToolCorrectness Metric                 — Does the executor select the right
-   channel (WhatsApp vs Email vs reroute)?
-
-Run with:  pytest evals/test_deepeval.py -v
-           -- OR --
-           deepeval test run evals/test_deepeval.py
+METRICS
+-------
+  1. G-Eval (Classification Correctness)  — right root-cause category?
+  2. G-Eval (Intervention Appropriateness)— sensible recovery action?
+  3. G-Eval (Do-Nothing Awareness)        — protects natural payers?
+  4. Hallucination Metric                 — no fabricated facts?
+  5. Channel Correctness (deterministic)  — right outreach channel?
+  6. Guardrail Enforcement (deterministic)— ESCALATE on high-value events?
 """
 
+from __future__ import annotations
+
 import json
-import sys
 import os
+import sys
 import pytest
 
+# ── Project root setup (handled by conftest.py, repeated here for safety) ───
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), override=False)
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env.local"), override=True)
 
 from deepeval import assert_test
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import GEval, HallucinationMetric, ToolCorrectnessMetric
-from deepeval.test_case import SingleTurnParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
+from deepeval.metrics import GEval, HallucinationMetric
 
 from evals.deepeval_model import AzureDeepEvalModel
 from orchestrator.graph import build_recovery_graph
+from orchestrator.deepeval_tracer import traced_run_event  # DeepEval tracing
 from langgraph.checkpoint.memory import MemorySaver
 
-# ── Shared Fixtures ──────────────────────────────────────────────────────────
+# ── Shared judge + graph (built once per session) ────────────────────────────
 
-judge = AzureDeepEvalModel(temperature=0.0)
-
-graph = build_recovery_graph(checkpointer=MemorySaver())
+_judge = AzureDeepEvalModel(temperature=0.0)
+_graph = build_recovery_graph(checkpointer=MemorySaver())
 
 
 def _run_event(event: dict, thread_id: str) -> dict:
-    """Run a single event through the full orchestrator graph."""
-    state = {
-        "event_id": event["event_id"],
-        "event_type": event["event_type"],
-        "amount": event["amount"],
-        "currency": event.get("currency", "INR"),
-        "merchant_id": event.get("merchant_id", "merch_01"),
-        "customer_id": event.get("customer_id", "cust_01"),
-        "customer_name": event.get("customer_name", "Customer"),
-        "customer_email": event.get("customer_email", "test@example.com"),
-        "customer_phone": event.get("customer_phone", "+919876543210"),
-        "razorpay_ref": event.get("razorpay_ref"),
-        "history": event.get("history", {}),
-        "metadata": event.get("metadata", {}),
-        "contact_count": 0,
-        "payment_status": "unresolved",
-        "recovered_amount": 0.0,
-        "audit_trail": [],
-    }
-    config = {"configurable": {"thread_id": thread_id}}
-    try:
-        return graph.invoke(state, config=config)
-    except Exception:
-        snapshot = graph.get_state(config)
-        if snapshot and snapshot.values:
-            return dict(snapshot.values)
-        raise
+    """Run event through the orchestrator with full DeepEval tracing."""
+    return traced_run_event(_graph, event, thread_id)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TEST EVENTS (Representative samples from each root-cause category)
+# TEST EVENTS — one per root-cause category + edge cases
 # ═══════════════════════════════════════════════════════════════════════════════
 
-EVENTS = {
+EVENTS: dict[str, dict] = {
     "payment_degraded": {
         "event_id": "de_evt_001",
         "event_type": "payment_degraded",
@@ -147,11 +125,7 @@ EVENTS = {
         "customer_email": "ap@rajeshindustries.com",
         "customer_phone": "+919876500000",
         "history": {"prior_contacts": 0, "prior_payment_success_rate": 0.65, "customer_avg_days_late": 12},
-        "metadata": {
-            "invoice_number": "INV-2026-0587",
-            "net_terms_days": 30,
-            "days_overdue": 15,
-        },
+        "metadata": {"invoice_number": "INV-2026-0587", "net_terms_days": 30, "days_overdue": 15},
         "ground_truth_root_cause": "receivable_overdue",
         "expected_channel": "whatsapp",
     },
@@ -165,11 +139,7 @@ EVENTS = {
         "customer_email": "finance@reliablecorp.com",
         "customer_phone": "+919876501234",
         "history": {"prior_contacts": 0, "prior_payment_success_rate": 0.97, "customer_avg_days_late": 1},
-        "metadata": {
-            "invoice_number": "INV-2026-0601",
-            "net_terms_days": 30,
-            "days_overdue": 2,
-        },
+        "metadata": {"invoice_number": "INV-2026-0601", "net_terms_days": 30, "days_overdue": 2},
         "ground_truth_root_cause": "receivable_overdue",
         "expected_action": "do_nothing",
     },
@@ -183,11 +153,7 @@ EVENTS = {
         "customer_email": "kavita@example.com",
         "customer_phone": "+919876543299",
         "history": {"prior_contacts": 0, "prior_payment_success_rate": 0.91, "customer_avg_days_late": 0},
-        "metadata": {
-            "afa_step_reached": False,
-            "mandate_type": "e-mandate",
-            "bank": "SBI",
-        },
+        "metadata": {"afa_step_reached": False, "mandate_type": "e-mandate", "bank": "SBI"},
         "ground_truth_root_cause": "mandate_auth_failed",
         "expected_channel": "whatsapp",
     },
@@ -195,7 +161,7 @@ EVENTS = {
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# METRIC DEFINITIONS
+# METRIC DEFINITIONS — defined once, reused across parametrized tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
 classification_correctness = GEval(
@@ -211,57 +177,57 @@ classification_correctness = GEval(
         SingleTurnParams.ACTUAL_OUTPUT,
         SingleTurnParams.EXPECTED_OUTPUT,
     ],
-    model=judge,
+    model=_judge,
     threshold=0.7,
 )
 
 intervention_appropriateness = GEval(
     name="Intervention Appropriateness",
     criteria=(
-        "Evaluate whether the chosen recovery intervention is appropriate for "
-        "the diagnosed root cause and incident context:\n"
-        "1. payment_degraded: MUST use silent_route_reroute; NEVER contact the customer.\n"
-        "2. mandate_auth_failed: MUST send RBI Additional Factor Authentication (AFA) consent link.\n"
-        "3. checkout_abandoned: Send quick payment link / cart reminder within recovery window.\n"
-        "4. subscription_failed: Send card update or retry payment notification.\n"
-        "5. receivable_overdue: Send B2B invoice reminder / payment link via WhatsApp or Email if overdue, or prefer do_nothing if customer is an on-time natural payer.\n"
-        "6. Financial guardrails: Any action must have a positive net expected value (EV > 0)."
+        "Evaluate whether the chosen recovery intervention is appropriate:\n"
+        "1. payment_degraded: MUST use silent reroute; NEVER contact customer.\n"
+        "2. mandate_auth_failed: MUST send RBI AFA consent link.\n"
+        "3. checkout_abandoned: Send quick payment link within recovery window.\n"
+        "4. subscription_failed: Send card update or retry payment link.\n"
+        "5. receivable_overdue: Send B2B invoice reminder if poor history, "
+        "or prefer do_nothing if customer is a reliable natural payer (95%+ on-time).\n"
+        "6. Any action must have net positive expected value (EV > 0)."
     ),
     evaluation_params=[
         SingleTurnParams.INPUT,
         SingleTurnParams.ACTUAL_OUTPUT,
     ],
-    model=judge,
+    model=_judge,
     threshold=0.7,
 )
 
 do_nothing_awareness = GEval(
     name="Do-Nothing Awareness",
     criteria=(
-        "The orchestrator MUST correctly identify that a customer with a 95%+ "
-        "on-time payment history who is only 1-2 days late should receive the "
-        "'do_nothing' action as the highest-EV intervention. Contacting this "
-        "customer would be a false intervention that causes friction and brand "
-        "damage. The actual_output must show 'do_nothing' was selected."
+        "The orchestrator MUST correctly identify that a customer with 95%+ on-time "
+        "payment history who is only 1-2 days late should receive 'do_nothing' as the "
+        "highest-EV intervention. Contacting this customer causes brand damage. "
+        "The actual_output must show 'do_nothing' was selected."
     ),
     evaluation_params=[
         SingleTurnParams.INPUT,
         SingleTurnParams.ACTUAL_OUTPUT,
         SingleTurnParams.EXPECTED_OUTPUT,
     ],
-    model=judge,
+    model=_judge,
     threshold=0.7,
 )
 
 hallucination_metric = HallucinationMetric(
     threshold=0.5,
-    model=judge,
+    model=_judge,
 )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TEST CASES
+# TEST CLASSES — named to match deepeval test run conventions
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestClassificationCorrectness:
     """G-Eval: Does the classifier identify the right root cause?"""
@@ -273,11 +239,12 @@ class TestClassificationCorrectness:
         "receivable_overdue",
         "mandate_auth_failed",
     ])
-    def test_root_cause_classification(self, category):
+    def test_root_cause_classification(self, category: str) -> None:
         event = EVENTS[category]
         result = _run_event(event, f"deepeval_classify_{category}")
 
         test_case = LLMTestCase(
+            name=f"root_cause_classification_{category}",
             input=json.dumps({
                 "event_type": event["event_type"],
                 "amount": event["amount"],
@@ -304,12 +271,13 @@ class TestInterventionAppropriateness:
         "receivable_overdue",
         "mandate_auth_failed",
     ])
-    def test_intervention_quality(self, category):
+    def test_intervention_quality(self, category: str) -> None:
         event = EVENTS[category]
         result = _run_event(event, f"deepeval_intervention_{category}")
 
         chosen = result.get("chosen_action", {})
         test_case = LLMTestCase(
+            name=f"intervention_quality_{category}",
             input=json.dumps({
                 "root_cause": result.get("root_cause"),
                 "event_type": event["event_type"],
@@ -317,34 +285,35 @@ class TestInterventionAppropriateness:
                 "customer_history": event.get("history", {}),
             }),
             actual_output=json.dumps({
-                "action_type": chosen.get("action_type"),
-                "channel": result.get("channel_used"),
-                "expected_value": result.get("expected_value"),
+                "action_type":      chosen.get("action_type"),
+                "channel":          result.get("channel_used"),
+                "expected_value":   result.get("expected_value"),
                 "guardrail_result": result.get("guardrail_result"),
-                "description": chosen.get("description", ""),
+                "description":      chosen.get("description", ""),
             }),
         )
         assert_test(test_case, [intervention_appropriateness])
 
 
 class TestDoNothingAwareness:
-    """G-Eval: Does the orchestrator prefer do_nothing for natural payers?"""
+    """G-Eval: Does the orchestrator protect natural payers?"""
 
-    def test_natural_payer_gets_do_nothing(self):
+    def test_natural_payer_gets_do_nothing(self) -> None:
         event = EVENTS["natural_payer_do_nothing"]
         result = _run_event(event, "deepeval_do_nothing")
 
         chosen = result.get("chosen_action", {})
         test_case = LLMTestCase(
+            name="natural_payer_do_nothing",
             input=json.dumps({
-                "event_type": event["event_type"],
-                "amount": event["amount"],
+                "event_type":       event["event_type"],
+                "amount":           event["amount"],
                 "customer_history": event["history"],
-                "days_overdue": event["metadata"]["days_overdue"],
+                "days_overdue":     event["metadata"]["days_overdue"],
             }),
             actual_output=json.dumps({
-                "action_type": chosen.get("action_type"),
-                "channel": result.get("channel_used"),
+                "action_type":    chosen.get("action_type"),
+                "channel":        result.get("channel_used"),
                 "expected_value": result.get("expected_value"),
             }),
             expected_output="do_nothing",
@@ -359,15 +328,15 @@ class TestHallucination:
         "checkout_abandoned",
         "subscription_failed",
     ])
-    def test_no_hallucination(self, category):
+    def test_no_hallucination(self, category: str) -> None:
         event = EVENTS[category]
         result = _run_event(event, f"deepeval_hallucination_{category}")
 
         event_context = json.dumps({
             "event_type": event["event_type"],
-            "amount": event["amount"],
-            "metadata": event.get("metadata", {}),
-            "history": event.get("history", {}),
+            "amount":     event["amount"],
+            "metadata":   event.get("metadata", {}),
+            "history":    event.get("history", {}),
         })
 
         reasoning = result.get("classification_reasoning", "")
@@ -380,6 +349,7 @@ class TestHallucination:
         )
 
         test_case = LLMTestCase(
+            name=f"hallucination_{category}",
             input=event_context,
             actual_output=actual,
             context=[event_context],
@@ -388,14 +358,14 @@ class TestHallucination:
 
 
 class TestChannelSelection:
-    """Deterministic check: correct channel routed for each cause."""
+    """Deterministic: correct outreach channel for each root cause."""
 
     @pytest.mark.parametrize("category,expected_channel", [
-        ("payment_degraded", "reroute"),
+        ("payment_degraded",   "reroute"),
         ("checkout_abandoned", "whatsapp"),
-        ("mandate_auth_failed", "whatsapp"),
+        ("mandate_auth_failed","whatsapp"),
     ])
-    def test_channel_correctness(self, category, expected_channel):
+    def test_channel_correctness(self, category: str, expected_channel: str) -> None:
         event = EVENTS[category]
         result = _run_event(event, f"deepeval_channel_{category}")
         actual_channel = result.get("channel_used", "none")
@@ -406,10 +376,10 @@ class TestChannelSelection:
 
 
 class TestGuardrailEnforcement:
-    """Verify guardrail invariants across all event types."""
+    """Verify financial guardrail invariants."""
 
-    def test_high_amount_escalation(self):
-        """Amount >= ₹1,00,000 MUST trigger ESCALATE guardrail."""
+    def test_high_amount_escalation(self) -> None:
+        """Amount >= Rs 1,00,000 MUST trigger ESCALATE guardrail."""
         event = {
             "event_id": "de_evt_escalate",
             "event_type": "receivable_overdue",
@@ -424,11 +394,11 @@ class TestGuardrailEnforcement:
         }
         result = _run_event(event, "deepeval_escalation")
         assert result.get("guardrail_result") == "ESCALATE", (
-            f"Expected ESCALATE for ₹{event['amount']:,.0f}, got {result.get('guardrail_result')}"
+            f"Expected ESCALATE for Rs {event['amount']:,.0f}, got {result.get('guardrail_result')}"
         )
 
-    def test_max_contact_enforcement(self):
-        """Prior contacts = 2 MUST block further outreach."""
+    def test_max_contact_enforcement(self) -> None:
+        """prior_contacts = 2 MUST block further outreach."""
         event = {
             "event_id": "de_evt_maxcontact",
             "event_type": "subscription_failed",
