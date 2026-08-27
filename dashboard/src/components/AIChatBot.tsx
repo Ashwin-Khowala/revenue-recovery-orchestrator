@@ -125,17 +125,23 @@ export default function AIChatBot({
       for (let i = 0; i < len; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
-      const int16Array = new Int16Array(bytes.buffer);
+
+      // Safe 16-bit little-endian PCM sample extraction
+      const numSamples = Math.floor(bytes.length / 2);
+      if (numSamples === 0) return false;
+
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioCtx) return false;
 
       const audioCtx = new AudioCtx({ sampleRate });
       currentAudioCtxRef.current = audioCtx;
 
-      const buffer = audioCtx.createBuffer(1, int16Array.length, sampleRate);
+      const buffer = audioCtx.createBuffer(1, numSamples, sampleRate);
       const channelData = buffer.getChannelData(0);
-      for (let i = 0; i < int16Array.length; i++) {
-        channelData[i] = int16Array[i] / 32768.0;
+      const dataView = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
+      for (let i = 0; i < numSamples; i++) {
+        channelData[i] = dataView.getInt16(i * 2, true) / 32768.0;
       }
 
       const source = audioCtx.createBufferSource();
@@ -156,7 +162,7 @@ export default function AIChatBot({
       source.start();
       return true;
     } catch (e) {
-      console.warn('Native PCM playback fallback to speech synthesis:', e);
+      console.warn('Native PCM playback error, fallback to speech synthesis:', e);
       return false;
     }
   };

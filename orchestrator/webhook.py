@@ -781,7 +781,6 @@ async def gemini_live_websocket(websocket: WebSocket):
                     root_cause=root_cause,
                     customer_id=customer_id,
                     merchant_id=merchant_id,
-                    detected_lang=detect_language(user_speech),
                     history=history,
                 )
                 # Manually append to history so fallback turns aren't lost on next reconnect
