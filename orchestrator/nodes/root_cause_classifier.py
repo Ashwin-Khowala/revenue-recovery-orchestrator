@@ -119,7 +119,17 @@ Respond ONLY with a valid JSON object formatted as:
   ]
 }}
 """
-            response = llm.invoke(prompt)
+            try:
+                response = llm.invoke(prompt)
+            except Exception as azure_err:
+                logger.warning(f"Azure OpenAI failed for event {event_id}: {azure_err}. Attempting Gemini fallback.")
+                from orchestrator.llm import get_gemini_chat_llm
+                gemini_llm = get_gemini_chat_llm(temperature=0.0)
+                if gemini_llm is not None:
+                    response = gemini_llm.invoke(prompt)
+                else:
+                    raise azure_err
+
             content = response.content.strip()
             # Clean markdown codeblocks if present
             if content.startswith("```json"):
@@ -132,7 +142,7 @@ Respond ONLY with a valid JSON object formatted as:
             
             root_cause = parsed.get("root_cause", event_type or "subscription_failed")
             confidence = float(parsed.get("confidence", 0.85))
-            reasoning = parsed.get("reasoning", "Azure OpenAI reasoning classification")
+            reasoning = parsed.get("reasoning", "LLM reasoning classification")
             candidate_actions = parsed.get("candidate_actions", [])
 
             # Always ensure 'do_nothing' exists as a candidate for evaluation
@@ -148,7 +158,7 @@ Respond ONLY with a valid JSON object formatted as:
             audit_entry = log_audit_entry(
                 event_id=event_id,
                 node_name="classify_root_cause",
-                action_taken=f"Classified as {root_cause} (Azure OpenAI)",
+                action_taken=f"Classified as {root_cause} (LLM)",
                 details={"root_cause": root_cause, "confidence": confidence, "candidate_actions": candidate_actions},
                 reasoning=reasoning,
             )

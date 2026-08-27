@@ -1,36 +1,56 @@
 """
-DeepEval Model Wrapper for Azure OpenAI
-Wraps our existing Azure OpenAI LLM so DeepEval can use it as
-the judge model for all LLM-as-judge metrics.
+DeepEval Model Wrapper for Revenue Recovery Orchestrator
+Wraps Gemini 3.6 Flash / Azure OpenAI so DeepEval can use it as
+the judge model for all LLM-as-judge metrics (G-Eval, Hallucination, etc.).
 """
 
+import os
+import asyncio
 from typing import Optional, List, Union
 from deepeval.models.base_model import DeepEvalBaseLLM
-from orchestrator.llm import get_azure_chat_llm
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-class AzureDeepEvalModel(DeepEvalBaseLLM):
+class GeminiDeepEvalModel(DeepEvalBaseLLM):
     """
-    Bridge between our Azure OpenAI deployment and DeepEval's judge interface.
-    This reuses the same environment-configured LLM from orchestrator.llm so we
-    don't duplicate credential handling.
+    Judge model powered by Google GenAI (Gemini 3.6 Flash / Gemini 2.5 Flash Lite).
+    High throughput, reliable, and compliant with DeepEval's sync/async judge interface.
     """
 
-    def __init__(self, temperature: float = 0.0, *args, **kwargs):
+    def __init__(self, model_name: str = "gemini-3.6-flash", temperature: float = 0.0, *args, **kwargs):
+        self.model_name = model_name
         self.temperature = temperature
         super().__init__(*args, **kwargs)
 
     def load_model(self):
-        return get_azure_chat_llm(temperature=getattr(self, "temperature", 0.0))
+        from google import genai
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY is required for GeminiDeepEvalModel")
+        return genai.Client(api_key=api_key)
 
     def generate(self, prompt: str, *args, **kwargs) -> str:
-        res = self.model.invoke(prompt)
-        return res.content
+        resp = self.model.models.generate_content(
+            model=self.model_name,
+            contents=prompt,
+        )
+        return resp.text or ""
 
     async def a_generate(self, prompt: str, *args, **kwargs) -> str:
-        res = await self.model.ainvoke(prompt)
-        return res.content
+        # genai.Client.aio for async calls
+        from google import genai
+        client_async = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        resp = await client_async.aio.models.generate_content(
+            model=self.model_name,
+            contents=prompt,
+        )
+        return resp.text or ""
 
     def get_model_name(self, *args, **kwargs) -> str:
-        deployment = getattr(self.model, "deployment_name", "gpt-54-mini")
-        return f"azure-openai/{deployment}"
+        return f"google/{self.model_name}"
+
+
+# Alias AzureDeepEvalModel to GeminiDeepEvalModel or Hybrid
+AzureDeepEvalModel = GeminiDeepEvalModel

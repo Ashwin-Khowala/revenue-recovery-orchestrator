@@ -28,15 +28,39 @@ os.environ["PYTHONUTF8"]       = "1"
 
 # Suspenders: patch Rich's Console class directly before deepeval imports it
 try:
+    # ① Clean up the leftover class-level property that was set by a previous
+    #   conftest iteration. It prevents Console.__init__ from doing:
+    #   self.legacy_windows: bool = ...  (AttributeError: no setter)
     import rich.console as _rc
-    # Force-disable the legacy Windows path on ALL Console instances
-    _orig_init = _rc.Console.__init__
-    def _patched_init(self, *args, **kwargs):
-        kwargs.setdefault("legacy_windows", False)
-        _orig_init(self, *args, **kwargs)
-    _rc.Console.__init__ = _patched_init
-    # Also patch force_terminal so Rich never enters the Win32 API path
-    _rc.Console.legacy_windows = property(lambda self: False)
+    if isinstance(_rc.Console.__dict__.get("legacy_windows"), property):
+        try:
+            delattr(_rc.Console, "legacy_windows")
+        except Exception:
+            pass
+
+    # ② Target the exact crash point: rich._windows_renderer.legacy_windows_render
+    #   On Windows legacy consoles, Rich calls this to write emoji → CP1252 fails.
+    #   Replace with a version that catches UnicodeEncodeError gracefully.
+    import rich._windows_renderer as _wr
+    import rich.console as _rcc  # re-import so the reference is fresh
+
+    def _safe_legacy_render(buffer, term):
+        """Unicode-safe replacement for the legacy Win32 console renderer."""
+        for text, style, control in buffer:
+            if not control:
+                try:
+                    if style:
+                        term.write_styled(text, style)
+                    else:
+                        term.write_text(text)
+                except (UnicodeEncodeError, UnicodeDecodeError):
+                    safe = text.encode("ascii", errors="replace").decode("ascii")
+                    try:
+                        term.write_text(safe)
+                    except Exception:
+                        pass
+
+    _wr.legacy_windows_render = _safe_legacy_render
 except Exception:
     pass  # never fail in conftest
 
