@@ -5,14 +5,49 @@ Loaded automatically by pytest / deepeval test run before any test file.
 
 Sets up:
   - .env + .env.local loading (picks up CONFIDENT_API_KEY from `deepeval login`)
-  - Shared judge model (Azure OpenAI, temperature=0.0)
+  - Rich console patch: disables legacy Windows renderer so emoji (🎯✅⚠️)
+    don't crash CP1252 terminals with UnicodeEncodeError
   - Python 3.14 crash workaround: suppresses deepeval's async trace-flush
     thread that tries to write to stdout after interpreter shutdown
   - CI-friendly: no browser auto-open, no verbose trace spam
 """
 
-import os
-import sys
+# ═══════════════════════════════════════════════════════════════════════════
+# MUST BE FIRST: patch Rich BEFORE deepeval imports it.
+# deepeval uses Rich's progress bars with emoji (🎯 Evaluating test case...).
+# On Windows CP1252 terminals these crash with UnicodeEncodeError inside
+# Rich's legacy_windows_render → WriteConsoleW path.
+# Patching Console.legacy_windows = False forces Rich to use the modern
+# text-mode renderer which supports full Unicode.
+# ═══════════════════════════════════════════════════════════════════════════
+import sys, os
+
+# Belt: set env vars so subprocess / child processes also get UTF-8
+os.environ["PYTHONIOENCODING"] = "utf-8"
+os.environ["PYTHONUTF8"]       = "1"
+
+# Suspenders: patch Rich's Console class directly before deepeval imports it
+try:
+    import rich.console as _rc
+    # Force-disable the legacy Windows path on ALL Console instances
+    _orig_init = _rc.Console.__init__
+    def _patched_init(self, *args, **kwargs):
+        kwargs.setdefault("legacy_windows", False)
+        _orig_init(self, *args, **kwargs)
+    _rc.Console.__init__ = _patched_init
+    # Also patch force_terminal so Rich never enters the Win32 API path
+    _rc.Console.legacy_windows = property(lambda self: False)
+except Exception:
+    pass  # never fail in conftest
+
+# Also reconfigure the current process stdout/stderr streams
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 import atexit
 import threading
 import warnings
@@ -38,6 +73,23 @@ load_dotenv(os.path.join(PROJECT_ROOT, ".env.local"), override=True)
 os.environ.setdefault("CONFIDENT_BROWSER_OPEN", "NO")
 # Suppress the verbose per-trace "[Confident AI Trace Log]" spam
 os.environ.setdefault("CONFIDENT_TRACE_VERBOSE", "0")
+
+# ── Windows / Git Bash terminal encoding fix ─────────────────────────────────
+# deepeval uses Rich with emoji (⚠️ ✅ 🎯) which crashes Windows CP1252
+# terminals with UnicodeEncodeError. Force UTF-8 stdout/stderr and tell
+# Rich to use plain text so it never hits the legacy Windows console path.
+os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+os.environ.setdefault("PYTHONUTF8", "1")
+os.environ.setdefault("NO_COLOR", "1")  # makes Rich skip emoji/color entirely
+
+# Apply immediately to current process streams
+import io
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 
 # ── Python 3.14 fatal crash workaround ───────────────────────────────────────
