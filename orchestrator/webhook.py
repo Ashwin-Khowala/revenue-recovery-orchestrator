@@ -665,23 +665,61 @@ async def plivo_answer_xml_endpoint(customer_name: str = "Customer", amount: flo
 
 
 # ============================================================================
-# BIDIRECTIONAL GEMINI LIVE WEBSOCKET ENDPOINT — PERSISTENT SESSION
+# BIDIRECTIONAL GEMINI LIVE WEBSOCKET ENDPOINT — PERSISTENT + RECONNECTING
 # ============================================================================
 @app.websocket("/ws/gemini-live")
 async def gemini_live_websocket(websocket: WebSocket):
     """
-    Persistent Gemini Live WebSocket endpoint.
-    Opens ONE Gemini Live session for the entire client connection lifecycle.
-    Streams user turns in and agent replies out without reconnecting per turn.
-    Falls back to Gemini 2.5 Flash / Azure on session errors.
+    Persistent Gemini Live WebSocket with automatic reconnection and history.
+
+    Session lifecycle:
+      1. Client connects → WebSocket accepted.
+      2. First user message → GeminiLiveSession.connect() called once (lazy init).
+      3. Each turn → GeminiLiveSession.send_turn() reuses the same open session.
+      4. If the Gemini session drops (10-min limit, network blip, model error):
+           a. GeminiLiveSession.reconnect() is called — preserves conversation history.
+           b. The current user turn is retried once on the fresh session.
+           c. If reconnect also fails, the turn falls back to Gemini 2.5 Flash / Azure.
+      5. Client disconnects → session closed cleanly, history discarded.
+
+    History:
+      - Up to 20 turns stored in GeminiLiveSession._history.
+      - On reconnect, the last 12 turns are injected into the new session's system
+        instruction so the model picks up the conversation without re-introduction.
     """
     await websocket.accept()
     logger.info("[GEMINI LIVE WS] Client connected.")
 
-    from orchestrator.gemini_live_engine import GeminiLiveSession, _run_sync_fallback_turn, detect_language
+    from orchestrator.gemini_live_engine import (
+        GeminiLiveSession,
+        _run_sync_fallback_turn,
+        detect_language,
+    )
 
     live_session: GeminiLiveSession | None = None
-    session_params: dict | None = None
+
+    async def _ensure_session(
+        role, customer_name, amount, root_cause, customer_id, merchant_id
+    ) -> GeminiLiveSession | None:
+        """Return an active session, creating or reconnecting as needed."""
+        nonlocal live_session
+        if live_session is None:
+            live_session = GeminiLiveSession(
+                role=role,
+                customer_name=customer_name,
+                amount=amount,
+                root_cause=root_cause,
+                customer_id=customer_id,
+                merchant_id=merchant_id,
+            )
+        if not live_session.is_active:
+            try:
+                await asyncio.wait_for(live_session.connect(), timeout=10.0)
+                logger.info("[GEMINI LIVE WS] Session (re)connected.")
+            except Exception as e:
+                logger.warning(f"[GEMINI LIVE WS] Connect failed: {e}")
+                return None
+        return live_session
 
     try:
         while True:
@@ -689,52 +727,52 @@ async def gemini_live_websocket(websocket: WebSocket):
             payload = json.loads(data)
 
             user_speech = payload.get("user_speech", "") or payload.get("text", "")
-            role = payload.get("role", "payer")
+            role         = payload.get("role", "payer")
             customer_name = payload.get("customer_name", "Customer")
-            amount = float(payload.get("amount", 4999.0))
-            root_cause = payload.get("root_cause", "subscription_failed")
-            customer_id = payload.get("customer_id", "cust_0001")
-            merchant_id = payload.get("merchant_id", "merch_01")
+            amount       = float(payload.get("amount", 4999.0))
+            root_cause   = payload.get("root_cause", "subscription_failed")
+            customer_id  = payload.get("customer_id", "cust_0001")
+            merchant_id  = payload.get("merchant_id", "merch_01")
 
             if not user_speech.strip():
                 continue
 
-            # Lazy-initialize the persistent Gemini Live session on first message
-            if live_session is None:
-                session_params = dict(
-                    role=role,
-                    customer_name=customer_name,
-                    amount=amount,
-                    root_cause=root_cause,
-                    customer_id=customer_id,
-                    merchant_id=merchant_id,
-                )
-                live_session = GeminiLiveSession(**session_params)
-                try:
-                    await asyncio.wait_for(live_session.connect(), timeout=10.0)
-                    logger.info("[GEMINI LIVE WS] Persistent session established.")
-                except Exception as e:
-                    logger.warning(f"[GEMINI LIVE WS] Session connect failed: {e}. Using fallback for this turn.")
-                    live_session = None
-
-            # Execute the turn
             result = None
-            if live_session is not None:
+
+            # -- Attempt 1: send on current/new session --
+            session = await _ensure_session(
+                role, customer_name, amount, root_cause, customer_id, merchant_id
+            )
+            if session is not None:
                 try:
                     result = await asyncio.wait_for(
-                        live_session.send_turn(user_speech), timeout=20.0
+                        session.send_turn(user_speech), timeout=22.0
                     )
-                except asyncio.TimeoutError:
-                    logger.warning("[GEMINI LIVE WS] Turn timed out. Reconnecting session.")
-                    await live_session.close()
-                    live_session = None
-                except Exception as e:
-                    logger.warning(f"[GEMINI LIVE WS] Turn error: {e}. Reconnecting.")
-                    await live_session.close()
-                    live_session = None
+                except (asyncio.TimeoutError, Exception) as e:
+                    logger.warning(
+                        f"[GEMINI LIVE WS] Turn failed ({type(e).__name__}: {e}). "
+                        "Reconnecting with history..."
+                    )
+                    # Reconnect preserving conversation history
+                    try:
+                        await asyncio.wait_for(session.reconnect(), timeout=12.0)
+                        # -- Attempt 2: retry on freshly reconnected session --
+                        result = await asyncio.wait_for(
+                            session.send_turn(user_speech), timeout=22.0
+                        )
+                        logger.info("[GEMINI LIVE WS] Turn succeeded after reconnect.")
+                    except Exception as e2:
+                        logger.warning(
+                            f"[GEMINI LIVE WS] Reconnect+retry failed ({e2}). "
+                            "Falling back to Gemini 2.5 Flash / Azure."
+                        )
+                        # Mark session dead so next message triggers fresh init
+                        await session.close()
+                        result = None
 
-            # Fallback if session failed
+            # -- Final fallback: Gemini 2.5 Flash / Azure / Deterministic --
             if result is None:
+                history = live_session.get_history() if live_session else []
                 result = _run_sync_fallback_turn(
                     user_speech=user_speech,
                     role=role,
@@ -744,7 +782,12 @@ async def gemini_live_websocket(websocket: WebSocket):
                     customer_id=customer_id,
                     merchant_id=merchant_id,
                     detected_lang=detect_language(user_speech),
+                    history=history,
                 )
+                # Manually append to history so fallback turns aren't lost on next reconnect
+                if live_session is not None:
+                    live_session._append_history("user", user_speech)
+                    live_session._append_history("agent", result.get("voice_reply", ""))
 
             await websocket.send_text(json.dumps(result))
 
@@ -755,6 +798,7 @@ async def gemini_live_websocket(websocket: WebSocket):
     finally:
         if live_session is not None:
             await live_session.close()
+
 
 # =============================================================================
 # CUSTOMER & MERCHANT PROFILE API ENDPOINTS

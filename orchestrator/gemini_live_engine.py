@@ -2,23 +2,22 @@
 Gemini Live & Tool-Calling Voice Agent Engine
 Powered by Google GenAI (gemini-3.1-flash-live-preview).
 
-Architecture — Persistent Session Model:
-- A single Gemini Live WebSocket session is kept open for the full conversation.
-- Text is sent via send_realtime_input(text=...) per the skill spec.
-- The receive() loop runs concurrently and streams responses back.
-- Tool calls are handled synchronously and tool responses are sent back inline.
-- On session expiry (~10 min), the session is transparently reconnected.
-
-Per the Gemini Live API skill:
-  - Use send_realtime_input for ALL real-time input (text + audio).
-  - Only AUDIO or TEXT response_modalities per session, not both.
-  - We use TEXT modality so we get transcripts without raw PCM overhead.
-  - Function calling is synchronous only.
+Architecture — Persistent Session with History-Aware Reconnection:
+  • GeminiLiveSession keeps client.aio.live.connect() open for the full WebSocket
+    conversation — one session per client, not one per turn.
+  • AUDIO response modality (required for gemini-3.1-flash-live-preview — it is a
+    native audio model and does NOT support TEXT modality).
+  • output_audio_transcription gives us text alongside audio so we return both.
+  • _history stores up to 20 turns; on reconnect the last N turns are injected
+    into the system instruction so the model picks up exactly where it left off.
+  • Auto-reconnect: if the Gemini session drops (10-min hard limit, network blip),
+    reconnect() rebuilds the session with history and retries the current turn.
 """
 
 import os
 import json
 import asyncio
+import base64
 import logging
 from typing import Dict, Any, List, Optional
 
@@ -49,7 +48,7 @@ def detect_language(text: str) -> str:
         "kya", "kyun", "hai", "mujhe", "mera", "meri", "namaste", "rupaye", "chahiye",
         "kab", "kaise", "haan", "nahi", "bhai", "shukriya", "dhanyawad", "kam", "chhoot",
         "somwar", "kal", "parso", "de dunga", "bhejo", "thoda", "badhiya", "karo", "kitna",
-        "paisa", "rakho", "roko", "bhej", "raha", "hoga", "batao", "sun", "sunao"
+        "paisa", "rakho", "roko", "bhej", "raha", "hoga", "batao", "sun", "sunao",
     ]
     if any(w in t.split() for w in hindi_words):
         return "hinglish"
@@ -58,38 +57,69 @@ def detect_language(text: str) -> str:
     return "english"
 
 
-def build_system_instruction(role: str, customer_name: str, amount: float, root_cause: str) -> str:
-    return (
+def build_system_instruction(
+    role: str,
+    customer_name: str,
+    amount: float,
+    root_cause: str,
+    history: Optional[List[Dict[str, str]]] = None,
+) -> str:
+    """Build the system instruction, optionally including recent history for reconnects."""
+    base = (
         f"You are the Razorpay AI Voice Recovery Assistant.\n"
         f"Role: {'Customer Recovery Concierge' if role == 'payer' else 'Merchant Operations Copilot'}\n"
         f"Current User: {customer_name}\n"
         f"Pending Amount: ₹{amount:,.2f}\n"
         f"Root Cause: {root_cause}\n\n"
         "STRICT BEHAVIOR & LANGUAGE INSTRUCTIONS:\n"
-        "1. DYNAMIC LANGUAGE MIRRORING: You MUST detect and match the user's language.\n"
-        "   - If the user speaks English -> Reply ONLY in fluent, professional English.\n"
-        "   - If the user speaks Hindi or Hinglish -> Reply ONLY in warm, conversational Hinglish (Hindi written in Latin/Roman script).\n"
-        "   - NEVER reply in English to a Hindi/Hinglish message. NEVER reply in Hindi script to an English message.\n"
-        "2. SPOKEN BREVITY: Spoken responses must be 1 to 2 short sentences. Polite, empathetic, and clear.\n"
+        "1. DYNAMIC LANGUAGE MIRRORING: Detect and match the user's language exactly.\n"
+        "   - English user → reply ONLY in fluent, professional English.\n"
+        "   - Hindi/Hinglish user → reply ONLY in warm Hinglish (Latin script).\n"
+        "   - Never switch languages mid-conversation.\n"
+        "2. SPOKEN BREVITY: 1-2 short spoken sentences only. Polite, empathetic, clear.\n"
         "3. TOOL CALLING (MANDATORY):\n"
-        "   - When customer asks for a discount/waiver/kam karo -> Call `apply_concession_discount`.\n"
-        "   - When customer commits to pay later (e.g. 'Monday', 'tomorrow', 'next week', 'kal', 'somwar') -> Call `register_promise_to_pay`.\n"
-        "   - When merchant asks for revenue/stats/financials -> Call `get_merchant_financial_overview`.\n"
-        "   - When merchant asks about pending incidents/failures -> Call `get_at_risk_incidents`.\n"
-        "   - When merchant asks about a customer history -> Call `get_customer_intelligence`.\n"
-        "   - When merchant authorizes/approves high value invoice -> Call `approve_high_value_invoice`.\n"
+        "   - Discount/waiver/kam karo → call `apply_concession_discount`.\n"
+        "   - Pay later commitment → call `register_promise_to_pay`.\n"
+        "   - Revenue/financial stats → call `get_merchant_financial_overview`.\n"
+        "   - Pending incidents → call `get_at_risk_incidents`.\n"
+        "   - Customer history → call `get_customer_intelligence`.\n"
+        "   - Approve high-value invoice → call `approve_high_value_invoice`.\n"
     )
+
+    # Inject recent history into system instruction on reconnect
+    if history:
+        recent = history[-12:]  # Last 12 turns (6 exchanges)
+        lines = []
+        for turn in recent:
+            speaker = "User" if turn["speaker"] == "user" else "You (AI)"
+            lines.append(f"{speaker}: {turn['text']}")
+        history_block = "\n".join(lines)
+        base += (
+            "\n\nCONVERSATION HISTORY (reconnection context — continue naturally):\n"
+            f"{history_block}\n"
+            "Continue the conversation exactly where it left off. Do not re-introduce yourself."
+        )
+
+    return base
 
 
 # ============================================================================
-# 2. PERSISTENT GEMINI LIVE SESSION
+# 2. PERSISTENT GEMINI LIVE SESSION WITH HISTORY & AUTO-RECONNECT
 # ============================================================================
 
 class GeminiLiveSession:
     """
-    Holds a persistent Gemini Live session open for the entire WebSocket conversation.
-    Reconnects transparently if the session expires (~10 min limit).
+    Holds ONE persistent Gemini Live session for the full conversation.
+
+    Key behaviours:
+    - connect()    : open session, seed history into system instruction
+    - send_turn()  : send text → collect audio + transcript → update history
+    - reconnect()  : close + reopen with history preserved → transparent recovery
+    - close()      : gracefully shut down the Gemini session
     """
+
+    MAX_HISTORY = 20          # turns kept in memory
+    RECONNECT_DELAY_S = 1.0   # seconds to wait before reconnect attempt
 
     def __init__(
         self,
@@ -107,48 +137,82 @@ class GeminiLiveSession:
         self.customer_id = customer_id
         self.merchant_id = merchant_id
 
+        # Persistent conversation history — survives reconnects
+        self._history: List[Dict[str, str]] = []
+
         self._session = None
         self._session_ctx = None
         self._client = None
-        self._lock = asyncio.Lock()
         self._active = False
 
-        gemini_key = (
+        self._api_key = (
             os.getenv("GEMINI_API_KEY") or
             os.getenv("GOOGLE_API_KEY") or
-            "AIzaSyDYfiLQy-hArB7jwU4zWCEY8FyL5AgNqss"
+            ""
         )
-        self._api_key = gemini_key
         self._model = os.getenv("GEMINI_LIVE_MODEL", "gemini-3.1-flash-live-preview")
 
-    async def _build_config(self):
+    # ------------------------------------------------------------------
+    # History helpers
+    # ------------------------------------------------------------------
+
+    def _append_history(self, speaker: str, text: str) -> None:
+        self._history.append({"speaker": speaker, "text": text})
+        if len(self._history) > self.MAX_HISTORY:
+            self._history = self._history[-self.MAX_HISTORY:]
+
+    def get_history(self) -> List[Dict[str, str]]:
+        return list(self._history)
+
+    # ------------------------------------------------------------------
+    # Session lifecycle
+    # ------------------------------------------------------------------
+
+    async def _make_config(self):
         from google.genai import types
+
         system_inst = build_system_instruction(
-            self.role, self.customer_name, self.amount, self.root_cause
+            self.role,
+            self.customer_name,
+            self.amount,
+            self.root_cause,
+            history=self._history if self._history else None,
         )
+
+        # gemini-3.1-flash-live-preview is a native audio model:
+        # ONLY supports AUDIO modality — TEXT modality raises APIError 1007.
+        # We request output_audio_transcription to get text alongside the PCM.
         return types.LiveConnectConfig(
-            # TEXT modality: clean text responses, no raw PCM decoding overhead
-            response_modalities=[types.Modality.TEXT],
+            response_modalities=[types.Modality.AUDIO],
             system_instruction=types.Content(
                 parts=[types.Part(text=system_inst)]
             ),
             tools=get_gemini_tools(self.role),
+            output_audio_transcription=types.AudioTranscriptionConfig(),
+            input_audio_transcription=types.AudioTranscriptionConfig(),
         )
 
-    async def connect(self):
-        """Open the persistent Gemini Live session."""
+    async def connect(self) -> None:
+        """Open the Gemini Live session. Safe to call after close() for reconnects."""
+        if not self._api_key:
+            raise RuntimeError("No Gemini API key configured")
+
         from google import genai
+
         self._client = genai.Client(api_key=self._api_key)
-        config = await self._build_config()
+        config = await self._make_config()
         self._session_ctx = self._client.aio.live.connect(
             model=self._model, config=config
         )
         self._session = await self._session_ctx.__aenter__()
         self._active = True
-        logger.info(f"[GEMINI LIVE] Persistent session opened for {self.customer_name} ({self.role})")
+        reconnect_note = " (reconnect with history)" if self._history else ""
+        logger.info(
+            f"[GEMINI LIVE] Session opened for {self.customer_name} ({self.role}){reconnect_note}"
+        )
 
-    async def close(self):
-        """Close the Gemini Live session cleanly."""
+    async def close(self) -> None:
+        """Close session cleanly without clearing conversation history."""
         self._active = False
         if self._session_ctx:
             try:
@@ -157,16 +221,34 @@ class GeminiLiveSession:
                 pass
         self._session = None
         self._session_ctx = None
-        logger.info("[GEMINI LIVE] Session closed.")
+        logger.info("[GEMINI LIVE] Session closed (history preserved).")
+
+    async def reconnect(self) -> None:
+        """Close and reopen the session, injecting history into system instruction."""
+        logger.info(
+            f"[GEMINI LIVE] Reconnecting with {len(self._history)} history turns..."
+        )
+        await self.close()
+        await asyncio.sleep(self.RECONNECT_DELAY_S)
+        await self.connect()
+
+    @property
+    def is_active(self) -> bool:
+        return self._active and self._session is not None
+
+    # ------------------------------------------------------------------
+    # Turn execution
+    # ------------------------------------------------------------------
 
     async def send_turn(self, user_speech: str) -> Dict[str, Any]:
         """
-        Send a user message and collect the full response for this turn.
-        Handles tool calls synchronously within the same session.
-        Returns a dict with voice_reply, executed_tools, updated_amount.
+        Send one user turn and collect the full model response.
+        Updates history and handles tool calls synchronously.
+        Returns: {voice_reply, audio_base64, audio_sample_rate, executed_tools,
+                  updated_amount, detected_language, provider}
         """
-        if not self._active or self._session is None:
-            raise RuntimeError("Session not connected")
+        if not self.is_active:
+            raise RuntimeError("Session not connected — call connect() first")
 
         from google.genai import types
 
@@ -174,20 +256,25 @@ class GeminiLiveSession:
         executed_tools: List[Dict[str, Any]] = []
         updated_amount = self.amount
 
-        # Send via send_realtime_input (correct API per skill spec)
+        # Record user turn in history
+        self._append_history("user", user_speech)
+
+        # Send via send_realtime_input (correct API for real-time text/audio)
         await self._session.send_realtime_input(text=user_speech)
 
-        # Collect response for this turn
+        # Collect model response for this turn
+        accumulated_audio = bytearray()
         transcript_parts: List[str] = []
 
         async for response in self._session.receive():
-            # --- Tool Calling (synchronous) ---
+
+            # --- Synchronous Tool Calling ---
             if response.tool_call:
                 function_responses = []
                 for call in response.tool_call.function_calls:
                     fn_name = call.name
                     fn_args = dict(call.args or {})
-                    logger.info(f"[GEMINI LIVE] Tool call: {fn_name}({fn_args})")
+                    logger.info(f"[GEMINI LIVE] Tool: {fn_name}({fn_args})")
 
                     tool_res = execute_tool(
                         fn_name,
@@ -201,7 +288,9 @@ class GeminiLiveSession:
                     executed_tools.append(tool_res)
 
                     if fn_name == "apply_concession_discount":
-                        updated_amount = tool_res.get("updated_amount", round(self.amount * 0.95))
+                        updated_amount = tool_res.get(
+                            "updated_amount", round(self.amount * 0.95)
+                        )
 
                     function_responses.append(
                         types.FunctionResponse(
@@ -211,42 +300,47 @@ class GeminiLiveSession:
                         )
                     )
 
-                # Send tool response back to Gemini (synchronous function calling)
+                # Return tool results (synchronous only per Gemini Live spec)
                 try:
                     await self._session.send_tool_response(
                         function_responses=function_responses
                     )
-                except Exception as e:
-                    logger.warning(f"[GEMINI LIVE] send_tool_response error: {e}")
+                except Exception:
                     try:
-                        tool_resp = types.LiveClientToolResponse(
-                            function_responses=function_responses
+                        await self._session.send(
+                            input=types.LiveClientToolResponse(
+                                function_responses=function_responses
+                            )
                         )
-                        await self._session.send(input=tool_resp)
                     except Exception as e2:
-                        logger.warning(f"[GEMINI LIVE] Fallback tool send error: {e2}")
+                        logger.warning(f"[GEMINI LIVE] Tool response send failed: {e2}")
 
-            # --- Server Content (Text + Transcription) ---
+            # --- Audio + Transcription ---
             content = response.server_content
             if content:
-                # TEXT modality response parts
                 if content.model_turn:
                     for part in content.model_turn.parts:
+                        # Accumulate raw PCM audio (24kHz, 16-bit, mono)
+                        if part.inline_data and part.inline_data.data:
+                            accumulated_audio.extend(part.inline_data.data)
+                        # Also capture any text parts
                         if part.text:
                             transcript_parts.append(part.text)
 
-                # Output transcription (for AUDIO modality — safe to also check)
+                # Audio transcription (preferred text source)
                 if content.output_transcription and content.output_transcription.text:
-                    if content.output_transcription.text not in transcript_parts:
-                        transcript_parts.append(content.output_transcription.text)
+                    t = content.output_transcription.text
+                    if t not in transcript_parts:
+                        transcript_parts.append(t)
 
-                # Turn complete signal — this turn is done
+                # Turn complete — done collecting
                 if content.turn_complete:
                     break
 
-        voice_reply = "".join(transcript_parts).strip()
+        # Build voice reply text
+        voice_reply = " ".join(transcript_parts).strip()
 
-        # Deterministic keyword fallback if LLM didn't call tool
+        # Deterministic keyword tool fallback (if model skipped tool calling)
         speech_lower = user_speech.lower()
         if not executed_tools:
             if any(k in speech_lower for k in ("discount", "offer", "kam", "concession", "less", "chhoot")):
@@ -278,17 +372,35 @@ class GeminiLiveSession:
                 )
                 executed_tools.append(tool_res)
 
+        # Final voice reply fallback
         if not voice_reply:
             is_hindi = detected_lang in ("hindi", "hinglish")
             voice_reply = (
-                f"Ji {self.customer_name}! Maine aapki baat sun li hai."
+                f"Ji {self.customer_name}, maine aapki baat sun li hai."
                 if is_hindi
                 else f"Understood, {self.customer_name}. I have noted your request."
             )
 
+        # Update amount if tool changed it
+        for t in executed_tools:
+            if t.get("tool") == "apply_concession_discount":
+                updated_amount = t.get("updated_amount", updated_amount)
+
+        # Record agent turn in history
+        self._append_history("agent", voice_reply)
+
+        # Encode audio
+        audio_b64 = (
+            base64.b64encode(bytes(accumulated_audio)).decode("utf-8")
+            if accumulated_audio
+            else None
+        )
+
         return {
             "success": True,
             "voice_reply": voice_reply,
+            "audio_base64": audio_b64,
+            "audio_sample_rate": 24000,
             "executed_tools": executed_tools,
             "updated_amount": updated_amount,
             "detected_language": detected_lang,
@@ -297,7 +409,7 @@ class GeminiLiveSession:
 
 
 # ============================================================================
-# 3. SYNCHRONOUS FALLBACK PIPELINE (used when Gemini Live is unavailable)
+# 3. SYNCHRONOUS FALLBACK PIPELINE
 # ============================================================================
 
 def _run_sync_fallback_turn(
@@ -309,13 +421,16 @@ def _run_sync_fallback_turn(
     customer_id: str,
     merchant_id: str,
     detected_lang: str,
+    history: Optional[List[Dict[str, str]]] = None,
 ) -> Dict[str, Any]:
+    """Gemini 2.5 Flash → Azure OpenAI → Deterministic fallback chain."""
+
     gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     azure_key = os.getenv("AZURE_OPENAI_API_KEY")
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
     executed_tools: List[Dict[str, Any]] = []
     updated_amount = amount
-    system_inst = build_system_instruction(role, customer_name, amount, root_cause)
+    system_inst = build_system_instruction(role, customer_name, amount, root_cause, history)
 
     # A. Gemini 2.5 Flash Chat
     if gemini_key:
@@ -358,22 +473,30 @@ def _run_sync_fallback_turn(
                 "provider": "gemini_2.5_flash",
             }
         except Exception as e:
-            logger.warning(f"Gemini chat fallback error: {e}")
+            logger.warning(f"Gemini 2.5 Flash fallback error: {e}")
 
     # B. Azure OpenAI
     if azure_key and azure_endpoint:
         try:
             from openai import AzureOpenAI
             from orchestrator.tools import get_openai_tools
+
             client = AzureOpenAI(
                 api_key=azure_key,
                 api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
                 azure_endpoint=azure_endpoint,
             )
-            messages = [
-                {"role": "system", "content": system_inst},
-                {"role": "user", "content": user_speech},
-            ]
+
+            # Build messages with history for Azure
+            messages = [{"role": "system", "content": system_inst}]
+            if history:
+                for turn in history[-8:]:
+                    messages.append({
+                        "role": "user" if turn["speaker"] == "user" else "assistant",
+                        "content": turn["text"],
+                    })
+            messages.append({"role": "user", "content": user_speech})
+
             resp = client.chat.completions.create(
                 model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini"),
                 messages=messages,
@@ -383,10 +506,9 @@ def _run_sync_fallback_turn(
             )
             msg = resp.choices[0].message
             if msg.tool_calls:
-                import json as _json
                 for t in msg.tool_calls:
                     fn = t.function.name
-                    args = _json.loads(t.function.arguments or "{}")
+                    args = json.loads(t.function.arguments or "{}")
                     tool_res = execute_tool(fn, args, context={"customer_id": customer_id, "merchant_id": merchant_id, "amount": amount})
                     executed_tools.append(tool_res)
                     if fn == "apply_concession_discount":
@@ -427,31 +549,31 @@ def _run_sync_fallback_turn(
         tool_res = register_promise_to_pay("Next Monday")
         executed_tools.append(tool_res)
         spoken_reply = (
-            f"Bahut badhiya {customer_name}! Aapka payment commitment register ho gaya hai aur reminders pause ho gaye hain."
+            f"Bahut badhiya {customer_name}! Aapka payment commitment register ho gaya hai."
             if is_hindi else
-            f"Thank you {customer_name}! Your payment commitment has been registered. All automated reminders are now paused."
+            f"Thank you {customer_name}! Your payment commitment has been registered."
         )
     elif any(k in speech_lower for k in ("financial", "status", "revenue", "numbers", "kpi", "kitna")):
         tool_res = get_merchant_financial_overview(merchant_id)
         executed_tools.append(tool_res)
         spoken_reply = (
-            "Admin, total ₹2,45,998 at-risk revenue hai, ₹44,075 recover ho chuka hai aur strictly 0 duplicate spam messages hain."
+            "Total ₹2,45,998 at-risk revenue hai, ₹44,075 recover ho chuka hai."
             if is_hindi else
-            "Admin, total at-risk revenue is ₹2,45,998, with ₹44,075 recovered and strictly zero duplicate contacts."
+            "Total at-risk revenue is ₹2,45,998, with ₹44,075 recovered and zero duplicate contacts."
         )
     elif any(k in speech_lower for k in ("approve", "techmatrix", "invoice")):
         tool_res = approve_high_value_invoice("TechMatrix Corp")
         executed_tools.append(tool_res)
         spoken_reply = (
-            "TechMatrix Corp ka ₹1,45,000 invoice outreach approve ho gaya hai aur notification safely dispatch ho gayi hai."
+            "TechMatrix Corp ka ₹1,45,000 invoice approve ho gaya hai."
             if is_hindi else
-            "TechMatrix Corp invoice outreach of ₹1,45,000 has been approved and dispatched safely."
+            "TechMatrix Corp invoice of ₹1,45,000 has been approved and dispatched."
         )
     else:
         spoken_reply = (
-            f"Ji {customer_name}! Maine aapka note record kar liya hai aur schedule update kar diya hai."
+            f"Ji {customer_name}! Maine aapka note record kar liya hai."
             if is_hindi else
-            f"Hello {customer_name}! I have recorded your note and updated your schedule."
+            f"Hello {customer_name}! I have recorded your note."
         )
 
     return {
@@ -465,7 +587,7 @@ def _run_sync_fallback_turn(
 
 
 # ============================================================================
-# 4. SINGLE-TURN ASYNC ENTRY POINT (used by HTTP fallback endpoint)
+# 4. SINGLE-TURN ASYNC ENTRY POINT (HTTP endpoint fallback)
 # ============================================================================
 
 async def run_gemini_live_turn(
@@ -478,19 +600,10 @@ async def run_gemini_live_turn(
     merchant_id: str = "merch_01",
     audio_bytes: Optional[bytes] = None,
 ) -> Dict[str, Any]:
-    """
-    Single-turn async entry point for the HTTP voice-agent-turn endpoint.
-    Opens a fresh Gemini Live session, sends one turn, closes it.
-    For persistent sessions (WebSocket), use GeminiLiveSession directly.
-    """
-    gemini_key = (
-        os.getenv("GEMINI_API_KEY") or
-        os.getenv("GOOGLE_API_KEY") or
-        "AIzaSyDYfiLQy-hArB7jwU4zWCEY8FyL5AgNqss"
-    )
+    """Single-turn entry point for the HTTP voice-agent-turn endpoint."""
     detected_lang = detect_language(user_speech)
 
-    if gemini_key:
+    if os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"):
         try:
             session = GeminiLiveSession(
                 role=role,
@@ -530,9 +643,7 @@ def run_voice_agent_turn(
     customer_id: str = "cust_0001",
     merchant_id: str = "merch_01",
 ) -> Dict[str, Any]:
-    """
-    Synchronous entry point that runs the async Gemini Live turn in an event loop.
-    """
+    """Synchronous wrapper for the async Gemini Live turn."""
     try:
         try:
             loop = asyncio.get_running_loop()
@@ -542,7 +653,7 @@ def run_voice_agent_turn(
         if loop and loop.is_running():
             import concurrent.futures
             with concurrent.futures.ThreadPoolExecutor() as pool:
-                result = pool.submit(
+                return pool.submit(
                     asyncio.run,
                     run_gemini_live_turn(
                         user_speech=user_speech,
@@ -554,7 +665,6 @@ def run_voice_agent_turn(
                         merchant_id=merchant_id,
                     ),
                 ).result()
-                return result
         else:
             return asyncio.run(
                 run_gemini_live_turn(
@@ -568,7 +678,7 @@ def run_voice_agent_turn(
                 )
             )
     except Exception as e:
-        logger.warning(f"Error executing async Gemini Live loop: {e}. Running fallback.")
+        logger.warning(f"Async Gemini Live loop error: {e}. Running sync fallback.")
         return _run_sync_fallback_turn(
             user_speech=user_speech,
             role=role,
