@@ -63,3 +63,4 @@ Thumbs.db
 # Langfuse / Checkpoint local temp
 .langfuse/
 checkpoints/
+.deepeval/
