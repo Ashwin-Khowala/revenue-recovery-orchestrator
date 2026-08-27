@@ -32,6 +32,13 @@ from orchestrator.tools import (
 logger = logging.getLogger("orchestrator.gemini_live")
 
 
+def detect_language(text: str) -> str:
+    """Simple helper for detected language tag."""
+    if any('\u0900' <= char <= '\u097F' for char in text):
+        return "hindi"
+    return "english"
+
+
 # ============================================================================
 # 1. SYSTEM PROMPT BUILDER
 # ============================================================================

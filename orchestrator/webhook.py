@@ -693,7 +693,6 @@ async def gemini_live_websocket(websocket: WebSocket):
     from orchestrator.gemini_live_engine import (
         GeminiLiveSession,
         _run_sync_fallback_turn,
-        detect_language,
     )
 
     live_session: GeminiLiveSession | None = None
