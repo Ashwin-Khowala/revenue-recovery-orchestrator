@@ -82,10 +82,89 @@ export default function AIChatBot({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, voiceTurns]);
 
-  // High-Quality Voice Synthesizer
+  // Persistent WebSocket & Live Voice Session Refs
+  const wsRef = useRef<WebSocket | null>(null);
+  const isVoiceActiveRef = useRef<boolean>(false);
+  const currentAudioSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const currentAudioCtxRef = useRef<AudioContext | null>(null);
+  const [wsConnected, setWsConnected] = useState(false);
+  const lastTranscriptRef = useRef<string>('');
+  const lastTranscriptTimeRef = useRef<number>(0);
+  const liveWsPendingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Stop any active audio playback
+  const stopAudioPlayback = () => {
+    setIsSpeaking(false);
+    if (currentAudioSourceRef.current) {
+      try {
+        currentAudioSourceRef.current.stop();
+        currentAudioSourceRef.current.disconnect();
+      } catch {}
+      currentAudioSourceRef.current = null;
+    }
+    if (currentAudioCtxRef.current) {
+      try {
+        currentAudioCtxRef.current.close();
+      } catch {}
+      currentAudioCtxRef.current = null;
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  };
+
+  // Play native 24kHz raw PCM audio returned directly from Gemini 3.1 Flash Live
+  const playNativeLiveAudio = (base64Audio: string, sampleRate = 24000) => {
+    try {
+      if (typeof window === 'undefined') return false;
+      stopAudioPlayback();
+
+      const binaryString = window.atob(base64Audio);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const int16Array = new Int16Array(bytes.buffer);
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return false;
+
+      const audioCtx = new AudioCtx({ sampleRate });
+      currentAudioCtxRef.current = audioCtx;
+
+      const buffer = audioCtx.createBuffer(1, int16Array.length, sampleRate);
+      const channelData = buffer.getChannelData(0);
+      for (let i = 0; i < int16Array.length; i++) {
+        channelData[i] = int16Array[i] / 32768.0;
+      }
+
+      const source = audioCtx.createBufferSource();
+      currentAudioSourceRef.current = source;
+      source.buffer = buffer;
+      source.connect(audioCtx.destination);
+      setIsSpeaking(true);
+
+      source.onended = () => {
+        setIsSpeaking(false);
+        currentAudioSourceRef.current = null;
+        try {
+          audioCtx.close();
+        } catch {}
+        currentAudioCtxRef.current = null;
+      };
+
+      source.start();
+      return true;
+    } catch (e) {
+      console.warn('Native PCM playback fallback to speech synthesis:', e);
+      return false;
+    }
+  };
+
+  // High-Quality Voice Synthesizer Fallback
   const playVoice = (text: string, detectedLang?: string) => {
     if (typeof window === 'undefined') return;
-    window.speechSynthesis.cancel();
+    stopAudioPlayback();
 
     const isEnglish =
       detectedLang === 'english' ||
@@ -126,20 +205,90 @@ export default function AIChatBot({
     window.speechSynthesis.speak(utterance);
   };
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.getVoices();
-      const handler = () => window.speechSynthesis.getVoices();
-      window.speechSynthesis.addEventListener('voiceschanged', handler);
-      return () => {
-        window.speechSynthesis.removeEventListener('voiceschanged', handler);
-        window.speechSynthesis.cancel();
-      };
+  // Initialize Persistent WebSocket for Live Voice Session
+  const initLiveWebSocket = () => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      return;
     }
-  }, []);
 
-  // Speech-to-Text Microphone Engine
-  const startSpeechRecognition = (onResultCallback: (text: string) => void) => {
+    try {
+      const wsUrl = 'ws://localhost:8000/ws/gemini-live';
+      const ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        setWsConnected(true);
+        console.log('[GEMINI LIVE WS] Connected to live voice stream');
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          const agentTurn: VoiceTurn = {
+            speaker: 'agent',
+            text: data.voice_reply,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            toolsExecuted: data.executed_tools,
+          };
+          setVoiceTurns(prev => [...prev, agentTurn]);
+
+          if (liveWsPendingTimeoutRef.current) {
+            clearTimeout(liveWsPendingTimeoutRef.current);
+            liveWsPendingTimeoutRef.current = null;
+          }
+
+          if (data.executed_tools && data.executed_tools.length > 0 && onToolAction) {
+            for (const t of data.executed_tools) {
+              if (t.tool === 'apply_concession_discount') {
+                onToolAction({ tool: t.tool, updatedAmount: t.updated_amount });
+              } else if (t.tool === 'register_promise_to_pay') {
+                onToolAction({ tool: t.tool, promisedDate: t.promised_date || 'Next Monday' });
+              } else if (t.tool === 'approve_high_value_invoice') {
+                onToolAction({ tool: t.tool, approved: true });
+              }
+            }
+          }
+
+          if (data.audio_base64) {
+            const played = playNativeLiveAudio(data.audio_base64, data.audio_sample_rate || 24000);
+            if (!played) {
+              playVoice(data.voice_reply, data.detected_language);
+            }
+          } else {
+            playVoice(data.voice_reply, data.detected_language);
+          }
+        } catch (err) {
+          console.error('[GEMINI LIVE WS] Parse error:', err);
+        } finally {
+          setVoiceLoading(false);
+        }
+      };
+
+      ws.onclose = () => {
+        setWsConnected(false);
+        if (liveWsPendingTimeoutRef.current) {
+          clearTimeout(liveWsPendingTimeoutRef.current);
+          liveWsPendingTimeoutRef.current = null;
+        }
+        if (isVoiceActiveRef.current) {
+          // Reconnect automatically if session is still active
+          setTimeout(() => {
+            if (isVoiceActiveRef.current) initLiveWebSocket();
+          }, 1500);
+        }
+      };
+
+      ws.onerror = () => {
+        setWsConnected(false);
+      };
+
+      wsRef.current = ws;
+    } catch (e) {
+      console.warn('[GEMINI LIVE WS] Init error:', e);
+    }
+  };
+
+  // Continuous Speech Recognition Engine for Live Voice
+  const startContinuousSpeech = () => {
     if (typeof window === 'undefined') return;
 
     const SpeechRecognition =
@@ -157,6 +306,72 @@ export default function AIChatBot({
 
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onend = () => {
+      // Auto-restart continuously while user is in voice session
+      if (isVoiceActiveRef.current) {
+        try {
+          recognition.start();
+        } catch {}
+      } else {
+        setIsListening(false);
+      }
+    };
+
+    recognition.onerror = () => {
+      if (isVoiceActiveRef.current) {
+        setTimeout(() => {
+          if (isVoiceActiveRef.current) {
+            try {
+              recognition.start();
+            } catch {}
+          }
+        }, 500);
+      } else {
+        setIsListening(false);
+      }
+    };
+
+    recognition.onresult = (event: any) => {
+      const results = event.results;
+      const lastResult = results[results.length - 1];
+      if (lastResult && lastResult.isFinal) {
+        const transcript = lastResult[0].transcript.trim();
+        const now = Date.now();
+        // Debounce exact duplicate within 2.5 seconds
+        if (
+          transcript &&
+          (transcript !== lastTranscriptRef.current || now - lastTranscriptTimeRef.current > 2500)
+        ) {
+          lastTranscriptRef.current = transcript;
+          lastTranscriptTimeRef.current = now;
+          handleSendVoiceStream(transcript);
+        }
+      }
+    };
+
+    recognitionRef.current = recognition;
+    try {
+      recognition.start();
+    } catch {}
+  };
+
+  // Single-turn mic for Text Box
+  const startSingleSpeech = (onResultCallback: (text: string) => void) => {
+    if (typeof window === 'undefined') return;
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -171,25 +386,23 @@ export default function AIChatBot({
       }
     };
 
-    recognitionRef.current = recognition;
     try {
       recognition.start();
     } catch {}
   };
 
-  // Toggle Mic for Text Input Box
   const toggleTextMic = () => {
     if (isListening) {
       if (recognitionRef.current) recognitionRef.current.stop();
       setIsListening(false);
     } else {
-      startSpeechRecognition(transcript => {
+      startSingleSpeech(transcript => {
         setInput(prev => (prev ? `${prev} ${transcript}` : transcript));
       });
     }
   };
 
-  // Send Text Message
+  // Handle Text Message Send
   const handleSendText = async (quickText?: string) => {
     const textToSend = quickText || input;
     if (!textToSend.trim() || loading) return;
@@ -270,29 +483,55 @@ export default function AIChatBot({
     }
   };
 
-  // Start Voice Chat
+  // Start Persistent Live Voice Chat Session
   const startVoiceChat = () => {
     setMode('voice');
-    setVoiceTurns([]);
+    isVoiceActiveRef.current = true;
+    initLiveWebSocket();
     setTimeout(() => {
-      startSpeechRecognition(handleSendVoice);
-    }, 200);
+      startContinuousSpeech();
+    }, 150);
   };
 
+  // Stop Live Voice Session Cleanly
   const endVoiceChat = () => {
+    isVoiceActiveRef.current = false;
     setIsListening(false);
-    setIsSpeaking(false);
+    stopAudioPlayback();
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
       } catch {}
     }
-    if (typeof window !== 'undefined') window.speechSynthesis.cancel();
+    if (wsRef.current) {
+      try {
+        wsRef.current.close();
+      } catch {}
+      wsRef.current = null;
+    }
+    setWsConnected(false);
   };
 
-  // Process Live Voice Speech
-  const handleSendVoice = async (speechText: string) => {
-    if (!speechText.trim() || voiceLoading) return;
+  // Clean up on component unmount
+  useEffect(() => {
+    return () => {
+      isVoiceActiveRef.current = false;
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch {}
+      }
+      if (wsRef.current) {
+        try { wsRef.current.close(); } catch {}
+      }
+      stopAudioPlayback();
+    };
+  }, []);
+
+  // Process Real-time Continuous Voice Utterance
+  const handleSendVoiceStream = async (speechText: string) => {
+    if (!speechText.trim()) return;
+
+    // VAD: If user spoke, interrupt any currently playing audio
+    stopAudioPlayback();
 
     const userTurn: VoiceTurn = {
       speaker: 'user',
@@ -302,20 +541,40 @@ export default function AIChatBot({
     setVoiceTurns(prev => [...prev, userTurn]);
     setVoiceLoading(true);
 
+    const payload = {
+      user_speech: speechText,
+      role: role,
+      customer_name: customerName,
+      amount: amount,
+      root_cause: rootCause,
+      customer_id: customerId,
+      merchant_id: merchantId,
+    };
+
+    // 1. Send via WebSocket if connected
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      // Safety timeout in case WS hangs
+      if (liveWsPendingTimeoutRef.current) clearTimeout(liveWsPendingTimeoutRef.current);
+      liveWsPendingTimeoutRef.current = setTimeout(() => {
+        setVoiceLoading(false);
+      }, 5000);
+
+      wsRef.current.send(JSON.stringify(payload));
+      return;
+    }
+
+    // 2. HTTP Fallback if WebSocket is connecting
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
+
       const res = await fetch('http://localhost:8000/api/orchestrator/voice-agent-turn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          role: role,
-          customer_name: customerName,
-          amount: amount,
-          root_cause: rootCause,
-          customer_id: customerId,
-          merchant_id: merchantId,
-          user_speech: speechText,
-        }),
+        body: JSON.stringify(payload),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (res.ok) {
         const data = await res.json();
@@ -339,7 +598,14 @@ export default function AIChatBot({
           }
         }
 
-        playVoice(data.voice_reply, data.detected_language);
+        if (data.audio_base64) {
+          const played = playNativeLiveAudio(data.audio_base64, data.audio_sample_rate || 24000);
+          if (!played) {
+            playVoice(data.voice_reply, data.detected_language);
+          }
+        } else {
+          playVoice(data.voice_reply, data.detected_language);
+        }
       } else {
         throw new Error('offline');
       }
@@ -614,100 +880,183 @@ export default function AIChatBot({
           </div>
         </div>
       ) : (
-        /* Voice Chat Mode */
-        <div className="flex-1 flex flex-col justify-between p-4 bg-slate-900 text-white min-h-0">
-          <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+        /* Voice Chat Mode (Clean Light Theme) */
+        <div className="flex-1 flex flex-col justify-between p-4 bg-slate-50/50 min-h-0">
+          <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 custom-scrollbar">
             {voiceTurns.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-center py-10 space-y-4 my-auto">
-                <div className="w-16 h-16 rounded-3xl bg-[#00A3C4] flex items-center justify-center text-white text-2xl shadow-lg shadow-cyan-500/20 animate-pulse">
-                  <Mic className="w-7 h-7 text-white" />
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-2xl bg-[#00A3C4] flex items-center justify-center text-white text-2xl shadow-lg shadow-cyan-500/20">
+                    <Mic className="w-8 h-8 text-white" />
+                  </div>
+                  {isListening && (
+                    <span className="absolute -inset-1 rounded-2xl bg-cyan-400/30 animate-ping -z-10" />
+                  )}
                 </div>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-white">Gemini 3.1 Live Voice Engine</h4>
-                  <p className="text-[11px] text-slate-400 max-w-[280px]">
-                    Speak in English, Hindi, or Hinglish. Real-time language mirroring & automatic function calling active.
+                
+                <div className="space-y-1.5 max-w-[280px]">
+                  <h4 className="text-sm font-bold text-slate-800">
+                    Gemini 3.1 Live Voice Engine
+                  </h4>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Speak naturally in English, Hindi, or Hinglish. Real-time language mirroring and automatic tool execution active.
                   </p>
+                </div>
+
+                {/* Voice Status Pill */}
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-50 border border-cyan-200 text-[#00A3C4] text-[11px] font-medium">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Mic Always Active • Speak Anytime</span>
                 </div>
               </div>
             ) : (
               voiceTurns.map((turn, idx) => (
-                <div key={idx} className="space-y-1">
+                <div
+                  key={idx}
+                  className={`flex flex-col ${turn.speaker === 'user' ? 'items-end' : 'items-start'}`}
+                >
                   <div
-                    className={`p-3 rounded-xl text-xs ${
-                      turn.speaker === 'user' ? 'bg-[#00A3C4] text-white ml-6' : 'bg-slate-800 text-slate-100 mr-6 border border-slate-700'
+                    className={`max-w-[88%] p-3.5 rounded-xl text-xs leading-relaxed shadow-xs ${
+                      turn.speaker === 'user'
+                        ? 'bg-[#00A3C4] text-white rounded-br-none'
+                        : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none'
                     }`}
                   >
-                    <span className="font-bold text-[9px] block opacity-70 mb-0.5">
-                      {turn.speaker === 'agent' ? (
-                        <>
-                          <Sparkles className="w-2.5 h-2.5 inline mr-1 text-cyan-400" />
-                          Voice Copilot
-                        </>
-                      ) : (
-                        <>
-                          <User className="w-2.5 h-2.5 inline mr-1" />
-                          {customerName}
-                        </>
-                      )}
-                    </span>
-                    <MarkdownRenderer content={turn.text} isDark={turn.speaker !== 'user'} />
-                  </div>
+                    <div className="font-bold text-[10px] flex items-center justify-between opacity-70 mb-1">
+                      <span>{turn.speaker === 'user' ? 'You' : 'Voice Copilot'}</span>
+                      <span>{turn.time}</span>
+                    </div>
 
-                  {turn.toolsExecuted &&
-                    turn.toolsExecuted.map((tool, tIdx) => (
-                      <div
-                        key={tIdx}
-                        className="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-700 ml-6 flex items-center gap-1.5 shadow-xs"
-                      >
-                        <Zap className="w-3 h-3 text-emerald-400" />
-                        <span>
-                          <strong>Tool Executed:</strong> {tool.tool} &mdash; {tool.message}
-                        </span>
+                    <MarkdownRenderer content={turn.text} isDark={false} />
+
+                    {/* Executed Tools in Turn */}
+                    {turn.toolsExecuted && turn.toolsExecuted.length > 0 && (
+                      <div className="mt-2.5 pt-2.5 border-t border-slate-200 space-y-1">
+                        {turn.toolsExecuted.map((tool, tIdx) => (
+                          <div
+                            key={tIdx}
+                            className="text-[10px] font-mono px-2 py-0.5 rounded flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200"
+                          >
+                            <Zap className="w-3 h-3 text-emerald-600 shrink-0" />
+                            <span>
+                              <strong>Tool:</strong> {tool.tool} &mdash; {tool.message || 'Executed'}
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
+                  </div>
                 </div>
               ))
             )}
+
+            {voiceLoading && (
+              <div className="flex justify-start">
+                <div className="p-3 rounded-xl text-xs shadow-xs flex items-center gap-2 bg-white border border-slate-200 text-slate-600">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00A3C4] animate-ping" />
+                  <span>AI reasoning & synthesizing voice...</span>
+                </div>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Voice Controls */}
-          <div className="pt-3 border-t border-slate-800 space-y-2 shrink-0">
+          {/* Persistent Live Voice Controls (Light Theme) */}
+          <div className="pt-3 border-t border-slate-200 space-y-2 shrink-0 bg-white -mx-4 -mb-4 p-4">
+            <div className="flex items-center justify-between px-1 text-[11px]">
+              <div className="flex items-center gap-2 font-medium text-slate-700">
+                {/* Dynamic Waveform Visualizer */}
+                <div className="flex items-end gap-0.5 h-3.5">
+                  <span
+                    className={`w-1 rounded-full bg-[#00A3C4] transition-all duration-150 ${
+                      isSpeaking
+                        ? 'h-3.5 animate-bounce'
+                        : isListening
+                        ? 'h-2 animate-pulse'
+                        : 'h-1 bg-slate-300'
+                    }`}
+                  />
+                  <span
+                    className={`w-1 rounded-full bg-[#00A3C4] transition-all duration-150 delay-75 ${
+                      isSpeaking
+                        ? 'h-4 animate-bounce'
+                        : isListening
+                        ? 'h-3 animate-pulse'
+                        : 'h-1 bg-slate-300'
+                    }`}
+                  />
+                  <span
+                    className={`w-1 rounded-full bg-[#00A3C4] transition-all duration-150 delay-150 ${
+                      isSpeaking
+                        ? 'h-2.5 animate-bounce'
+                        : isListening
+                        ? 'h-1.5 animate-pulse'
+                        : 'h-1 bg-slate-300'
+                    }`}
+                  />
+                  <span
+                    className={`w-1 rounded-full bg-[#00A3C4] transition-all duration-150 delay-100 ${
+                      isSpeaking
+                        ? 'h-3 animate-bounce'
+                        : isListening
+                        ? 'h-2 animate-pulse'
+                        : 'h-1 bg-slate-300'
+                    }`}
+                  />
+                </div>
+
+                <span className="text-xs">
+                  {isSpeaking
+                    ? 'Gemini Live Speaking...'
+                    : voiceLoading
+                    ? 'Processing...'
+                    : isListening
+                    ? 'Mic Active • Speak Anytime'
+                    : 'Voice Engine Ready'}
+                </span>
+              </div>
+
+              <span className="text-[10px] text-[#00A3C4] font-mono px-2 py-0.5 rounded-md bg-cyan-50 border border-cyan-200">
+                {wsConnected ? 'WS Live' : 'HTTP Duplex'}
+              </span>
+            </div>
+
             <button
               onClick={() => {
                 if (isListening) {
-                  if (recognitionRef.current) recognitionRef.current.stop();
-                  setIsListening(false);
+                  endVoiceChat();
+                  setMode('chat');
                 } else {
-                  startSpeechRecognition(handleSendVoice);
+                  startVoiceChat();
                 }
               }}
-              className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 ${
+              className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 ${
                 isListening
-                  ? 'bg-red-600 text-white animate-pulse'
-                  : 'bg-[#00A3C4] hover:bg-[#008da8] text-white'
+                  ? 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'
+                  : 'bg-[#00A3C4] hover:bg-[#008ea6] text-white'
               }`}
             >
               {isListening ? (
                 <>
-                  <Radio className="w-3.5 h-3.5 animate-pulse" />
-                  <span>Listening... (Tap to Send)</span>
+                  <X className="w-3.5 h-3.5 text-red-500" />
+                  <span>Stop Live Voice Session</span>
                 </>
               ) : (
                 <>
                   <Mic className="w-3.5 h-3.5" />
-                  <span>Tap to Speak Query</span>
+                  <span>Resume Live Voice</span>
                 </>
               )}
             </button>
 
             {/* Quick voice chips */}
-            <div className="flex flex-wrap gap-1 text-[10px]">
+            <div className="flex flex-wrap gap-1.5 text-[11px]">
               {quickPrompts.slice(0, 3).map((chip, idx) => (
                 <button
                   key={idx}
-                  onClick={() => handleSendVoice(chip)}
-                  className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                  onClick={() => handleSendVoiceStream(chip)}
+                  className="px-2.5 py-1 rounded-md bg-slate-50 hover:bg-cyan-50 hover:text-[#00A3C4] text-slate-700 border border-slate-200 transition-colors shadow-xs"
                 >
                   {chip}
                 </button>

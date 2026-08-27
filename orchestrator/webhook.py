@@ -5,6 +5,7 @@ Handles incoming Razorpay payment webhooks, triggers recovery graph, and exposes
 
 import os
 import json
+import asyncio
 import hmac
 import hashlib
 import logging
@@ -607,8 +608,8 @@ async def voice_agent_turn_endpoint(req: VoiceAgentTurnRequest):
     - Payer: apply_concession_discount (5%), register_promise_to_pay, get_invoice
     - Merchant: approve_high_value_invoice (₹1.45L), get_merchant_financial_overview, get_at_risk_incidents, get_customer_intelligence
     """
-    from orchestrator.gemini_live_engine import run_voice_agent_turn
-    result = run_voice_agent_turn(
+    from orchestrator.gemini_live_engine import run_gemini_live_turn
+    result = await run_gemini_live_turn(
         user_speech=req.user_speech,
         role=req.role or "payer",
         customer_name=req.customer_name or "Ashwin Khowala",
@@ -664,54 +665,96 @@ async def plivo_answer_xml_endpoint(customer_name: str = "Customer", amount: flo
 
 
 # ============================================================================
-# BIDIRECTIONAL GEMINI LIVE WEBSOCKET ENDPOINT
+# BIDIRECTIONAL GEMINI LIVE WEBSOCKET ENDPOINT — PERSISTENT SESSION
 # ============================================================================
 @app.websocket("/ws/gemini-live")
 async def gemini_live_websocket(websocket: WebSocket):
     """
-    Real-time Bidirectional WebSocket Endpoint for Gemini Live Voice Sessions.
-    Accepts spoken text or audio chunks, executes tools autonomously,
-    and returns synthesized live voice responses.
+    Persistent Gemini Live WebSocket endpoint.
+    Opens ONE Gemini Live session for the entire client connection lifecycle.
+    Streams user turns in and agent replies out without reconnecting per turn.
+    Falls back to Gemini 2.5 Flash / Azure on session errors.
     """
     await websocket.accept()
-    logger.info("[GEMINI LIVE WS] Client connected to live voice stream.")
-    
+    logger.info("[GEMINI LIVE WS] Client connected.")
+
+    from orchestrator.gemini_live_engine import GeminiLiveSession, _run_sync_fallback_turn, detect_language
+
+    live_session: GeminiLiveSession | None = None
+    session_params: dict | None = None
+
     try:
-        from orchestrator.gemini_live_engine import run_voice_agent_turn
-        
         while True:
             data = await websocket.receive_text()
             payload = json.loads(data)
-            
+
             user_speech = payload.get("user_speech", "") or payload.get("text", "")
             role = payload.get("role", "payer")
             customer_name = payload.get("customer_name", "Customer")
-            amount = payload.get("amount", 4999.0)
+            amount = float(payload.get("amount", 4999.0))
             root_cause = payload.get("root_cause", "subscription_failed")
             customer_id = payload.get("customer_id", "cust_0001")
             merchant_id = payload.get("merchant_id", "merch_01")
-            
-            # Execute turn with dynamic language mirroring and tool execution
-            result = run_voice_agent_turn(
-                user_speech=user_speech,
-                role=role,
-                customer_name=customer_name,
-                amount=amount,
-                root_cause=root_cause,
-                customer_id=customer_id,
-                merchant_id=merchant_id,
-            )
-            
+
+            if not user_speech.strip():
+                continue
+
+            # Lazy-initialize the persistent Gemini Live session on first message
+            if live_session is None:
+                session_params = dict(
+                    role=role,
+                    customer_name=customer_name,
+                    amount=amount,
+                    root_cause=root_cause,
+                    customer_id=customer_id,
+                    merchant_id=merchant_id,
+                )
+                live_session = GeminiLiveSession(**session_params)
+                try:
+                    await asyncio.wait_for(live_session.connect(), timeout=10.0)
+                    logger.info("[GEMINI LIVE WS] Persistent session established.")
+                except Exception as e:
+                    logger.warning(f"[GEMINI LIVE WS] Session connect failed: {e}. Using fallback for this turn.")
+                    live_session = None
+
+            # Execute the turn
+            result = None
+            if live_session is not None:
+                try:
+                    result = await asyncio.wait_for(
+                        live_session.send_turn(user_speech), timeout=20.0
+                    )
+                except asyncio.TimeoutError:
+                    logger.warning("[GEMINI LIVE WS] Turn timed out. Reconnecting session.")
+                    await live_session.close()
+                    live_session = None
+                except Exception as e:
+                    logger.warning(f"[GEMINI LIVE WS] Turn error: {e}. Reconnecting.")
+                    await live_session.close()
+                    live_session = None
+
+            # Fallback if session failed
+            if result is None:
+                result = _run_sync_fallback_turn(
+                    user_speech=user_speech,
+                    role=role,
+                    customer_name=customer_name,
+                    amount=amount,
+                    root_cause=root_cause,
+                    customer_id=customer_id,
+                    merchant_id=merchant_id,
+                    detected_lang=detect_language(user_speech),
+                )
+
             await websocket.send_text(json.dumps(result))
-            
+
     except WebSocketDisconnect:
         logger.info("[GEMINI LIVE WS] Client disconnected cleanly.")
     except Exception as e:
-        logger.error(f"[GEMINI LIVE WS] Error in live stream: {e}")
-        try:
-            await websocket.close()
-        except:
-            pass
+        logger.error(f"[GEMINI LIVE WS] Fatal error: {e}")
+    finally:
+        if live_session is not None:
+            await live_session.close()
 
 # =============================================================================
 # CUSTOMER & MERCHANT PROFILE API ENDPOINTS
