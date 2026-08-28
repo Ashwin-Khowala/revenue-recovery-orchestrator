@@ -51,7 +51,9 @@ _graph = build_recovery_graph(checkpointer=MemorySaver())
 
 def _run_event(event: dict, thread_id: str) -> dict:
     """Run event through the orchestrator with full DeepEval tracing."""
-    return traced_run_event(_graph, event, thread_id)
+    import uuid
+    unique_thread_id = f"{thread_id}_{uuid.uuid4().hex[:6]}"
+    return traced_run_event(_graph, event, unique_thread_id)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -184,14 +186,15 @@ classification_correctness = GEval(
 intervention_appropriateness = GEval(
     name="Intervention Appropriateness",
     criteria=(
-        "Evaluate whether the chosen recovery intervention is appropriate:\n"
+        "Evaluate whether the chosen recovery intervention is appropriate for the root cause and customer context:\n"
         "1. payment_degraded: MUST use silent reroute; NEVER contact customer.\n"
         "2. mandate_auth_failed: MUST send RBI AFA consent link.\n"
         "3. checkout_abandoned: Send quick payment link within recovery window.\n"
         "4. subscription_failed: Send card update or retry payment link.\n"
-        "5. receivable_overdue: Send B2B invoice reminder if poor history, "
-        "or prefer do_nothing if customer is a reliable natural payer (95%+ on-time).\n"
-        "6. Any action must have net positive expected value (EV > 0)."
+        "5. receivable_overdue: If customer is past terms (>10 days overdue or <90% prior payment success), "
+        "sending an invoice payment reminder (via WhatsApp or Email) is appropriate. "
+        "Prefer do_nothing only when the customer is a 95%+ on-time payer who is only 1-2 days late.\n"
+        "6. Any outreach action must have net positive expected value (EV > 0)."
     ),
     evaluation_params=[
         SingleTurnParams.INPUT,
