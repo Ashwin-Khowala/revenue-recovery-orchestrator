@@ -114,7 +114,10 @@ def log_audit_entry(
     lf = _get_langfuse_client()
     if lf:
         try:
+            # Deterministic 32-char hex trace ID groups all nodes for the same event into 1 unified Trace
+            trace_id_hex = hashlib.md5(event_id.encode()).hexdigest()
             lf.create_event(
+                trace_context={"trace_id": trace_id_hex},
                 name=f"node_{node_name}",
                 input={
                     "event_id": event_id,
