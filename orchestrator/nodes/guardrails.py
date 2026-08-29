@@ -33,17 +33,24 @@ def check_guardrails(state: RecoveryState) -> Dict[str, Any]:
     total_prior_contacts = contact_count + prior_contacts
 
     # --------------------------------------------------------------------------
-    # Guardrail 1: Customer Opt-out / Do-Not-Disturb Check
+    # Guardrail 1: Customer Opt-out / Omnichannel Consent Registry Check
     # --------------------------------------------------------------------------
-    if metadata.get("opt_out") is True or metadata.get("dnd") is True:
+    from orchestrator.governance import OmnichannelConsentRegistry, CrossTrackThrottler
+    customer_id = state.get("customer_id", "cust_0001")
+    phone = metadata.get("phone") or state.get("customer_phone")
+    email = metadata.get("email") or state.get("customer_email")
+
+    is_opted, opt_reason = OmnichannelConsentRegistry.is_opted_out(customer_id, phone=phone, email=email)
+
+    if metadata.get("opt_out") is True or metadata.get("dnd") is True or is_opted:
         rule = "RULE_OPT_OUT_ENFORCED"
         result = "BLOCK"
-        reason = "Customer explicitly opted out of recovery communications. All outreach blocked."
+        reason = opt_reason or "Customer explicitly opted out of recovery communications. All outreach blocked across all channels."
         audit_entry = log_audit_entry(
             event_id=event_id,
             node_name="check_guardrails",
             action_taken=f"Guardrail {result} ({rule})",
-            details={"rule": rule, "result": result},
+            details={"rule": rule, "result": result, "reason": reason},
             reasoning=reason,
         )
         return {

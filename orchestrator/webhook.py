@@ -1458,3 +1458,74 @@ def api_trigger_mandate_afa(req: MandateAFARequest):
         customer_phone=req.customer_phone or "+919876543210",
     )
 
+
+# =============================================================================
+# PROMISE-TO-PAY (PTP) INTELLIGENCE & CASH-FLOW FORECAST ENDPOINTS
+# =============================================================================
+
+class PtpSimulateScoreRequest(BaseModel):
+    customer_wording: str = "haan bhai paisa bhejunga but abhi thoda tight hai"
+    amount: float = 24500.0
+    customer_name: str = "Aarav Sharma"
+    customer_reliability_score: float = 0.90
+
+
+class PtpRenegotiateRequest(BaseModel):
+    ptp_id: str = "ptp_evt_001_1725000000"
+    event_id: str = "evt_001"
+    new_wording: str = "can we push to next Friday?"
+    new_promised_date: Optional[str] = "2026-09-08"
+    customer_name: str = "Aarav Sharma"
+
+
+class PtpDiagnoseBreakRequest(BaseModel):
+    ptp_id: str = "ptp_evt_001_1725000000"
+    event_id: str = "evt_001"
+    customer_response_or_silence: str = "sorry completely forgot will pay now"
+    amount: float = 4999.0
+
+
+@app.get("/api/orchestrator/ptp/forecast")
+def api_get_ptp_forecast(merchant_id: str = "merch_01"):
+    """Fetches rolling 7d, 14d, 30d cash-flow forecast weighted by PTP reliability and confidence."""
+    from orchestrator.ptp_intelligence import calculate_ptp_cashflow_forecast
+    return calculate_ptp_cashflow_forecast(merchant_id=merchant_id)
+
+
+@app.post("/api/orchestrator/ptp/simulate-linguistic-score")
+def api_simulate_ptp_score(req: PtpSimulateScoreRequest):
+    """Evaluates commitment strength, linguistic hedging, and implementation intentions at capture time."""
+    from orchestrator.ptp_intelligence import score_promise_linguistic_confidence
+    return score_promise_linguistic_confidence(
+        customer_wording=req.customer_wording,
+        amount=req.amount,
+        customer_name=req.customer_name,
+        customer_reliability_score=req.customer_reliability_score,
+    )
+
+
+@app.post("/api/orchestrator/ptp/renegotiate")
+def api_renegotiate_ptp(req: PtpRenegotiateRequest):
+    """Renegotiates PTP commitment, saves to immutable revision history, and resets watch clock."""
+    from orchestrator.ptp_intelligence import renegotiate_ptp_commitment
+    return renegotiate_ptp_commitment(
+        ptp_id=req.ptp_id,
+        event_id=req.event_id,
+        new_wording=req.new_wording,
+        new_promised_date=req.new_promised_date,
+        customer_name=req.customer_name,
+    )
+
+
+@app.post("/api/orchestrator/ptp/diagnose-break")
+def api_diagnose_broken_ptp(req: PtpDiagnoseBreakRequest):
+    """Diagnoses root cause of broken promise (forgot vs liquidity crunch vs dispute vs unresponsive)."""
+    from orchestrator.ptp_intelligence import diagnose_broken_promise
+    return diagnose_broken_promise(
+        ptp_id=req.ptp_id,
+        event_id=req.event_id,
+        customer_response_or_silence=req.customer_response_or_silence,
+        amount=req.amount,
+    )
+
+

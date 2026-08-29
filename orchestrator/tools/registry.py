@@ -29,6 +29,8 @@ from orchestrator.tools.merchant_tools import (
     simulate_mandate_rail_decision,
     trigger_mandate_renewal_flow,
     dispatch_afa_pre_debit_notification,
+    get_ptp_cashflow_forecast_tool,
+    simulate_ptp_linguistic_score_tool,
 )
 
 logger = logging.getLogger("orchestrator.tools.registry")
@@ -54,6 +56,8 @@ ALL_TOOLS_MAP: Dict[str, Callable[..., Any]] = {
     "simulate_mandate_rail_decision": simulate_mandate_rail_decision,
     "trigger_mandate_renewal_flow": trigger_mandate_renewal_flow,
     "dispatch_afa_pre_debit_notification": dispatch_afa_pre_debit_notification,
+    "get_ptp_cashflow_forecast": get_ptp_cashflow_forecast_tool,
+    "simulate_ptp_linguistic_score": simulate_ptp_linguistic_score_tool,
 }
 
 PAYER_TOOL_NAMES = [
@@ -80,6 +84,8 @@ MERCHANT_TOOL_NAMES = [
     "simulate_mandate_rail_decision",
     "trigger_mandate_renewal_flow",
     "dispatch_afa_pre_debit_notification",
+    "get_ptp_cashflow_forecast",
+    "simulate_ptp_linguistic_score",
     "apply_concession_discount",
     "register_promise_to_pay",
 ]
@@ -367,6 +373,35 @@ OPENAI_TOOL_SCHEMAS: List[Dict[str, Any]] = [
                     "customer_phone": {"type": "string", "description": "Customer Phone Number"},
                 },
                 "required": ["mandate_id", "amount", "customer_name"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_ptp_cashflow_forecast",
+            "description": "Fetches rolling 7-day, 14-day, and 30-day forward cash-flow liquidity forecast derived from active Promise-to-Pay commitments.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "merchant_id": {"type": "string", "description": "Merchant ID", "default": "merch_01"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "simulate_ptp_linguistic_score",
+            "description": "Simulates real-time linguistic confidence scoring on a customer promise at capture time.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_wording": {"type": "string", "description": "Exact spoken or written promise statement"},
+                    "amount": {"type": "number", "description": "Outstanding amount"},
+                    "customer_name": {"type": "string", "description": "Customer Name"},
+                },
+                "required": ["customer_wording"],
             },
         },
     },

@@ -766,3 +766,65 @@ def dispatch_afa_pre_debit_notification(
         "message": f"[AFA NOTIFICATION DISPATCHED] Pre-debit OTP authorization link sent to {customer_name} (₹{amount:,.2f}).",
     }
 
+
+def get_ptp_cashflow_forecast_tool(merchant_id: str = "merch_01") -> Dict[str, Any]:
+    """
+    Fetches rolling 7-day, 14-day, and 30-day forward cash-flow liquidity forecast
+    derived from active Promise-to-Pay commitments weighted by customer reliability and linguistic confidence.
+    
+    Args:
+        merchant_id: Unique merchant identifier
+    """
+    from orchestrator.ptp_intelligence import calculate_ptp_cashflow_forecast
+    forecast = calculate_ptp_cashflow_forecast(merchant_id=merchant_id)
+    return {
+        "tool": "get_ptp_cashflow_forecast",
+        "forecast": forecast,
+        "message": (
+            f"[LIQUIDITY FORECAST] Active PTP Commitments: {forecast['total_active_ptp_commitments']} "
+            f"(Face Value: ₹{forecast['total_ptp_face_value_inr']:,.2f}) | "
+            f"Expected 7-Day Inflow: ₹{forecast['forecast_7_days']['expected_cash_inr']:,.2f} ({forecast['forecast_7_days']['realization_rate_pct']}%) | "
+            f"Expected 14-Day Inflow: ₹{forecast['forecast_14_days']['expected_cash_inr']:,.2f} | "
+            f"Expected 30-Day Inflow: ₹{forecast['forecast_30_days']['expected_cash_inr']:,.2f}."
+        ),
+    }
+
+
+def simulate_ptp_linguistic_score_tool(
+    customer_wording: str,
+    amount: float = 24500.0,
+    customer_name: str = "Aarav Sharma",
+    customer_reliability_score: float = 0.90,
+) -> Dict[str, Any]:
+    """
+    Simulates real-time linguistic confidence scoring on a customer promise at capture time,
+    detecting hedging vs conviction and implementation intention completeness.
+    
+    Args:
+        customer_wording: Exact spoken/written text from the payer
+        amount: Outstanding amount
+        customer_name: Payer customer name
+        customer_reliability_score: Historical reliability prior (0.0 to 1.0)
+    """
+    from orchestrator.ptp_intelligence import score_promise_linguistic_confidence
+    analysis = score_promise_linguistic_confidence(
+        customer_wording=customer_wording,
+        amount=amount,
+        customer_name=customer_name,
+        customer_reliability_score=customer_reliability_score,
+    )
+    return {
+        "tool": "simulate_ptp_linguistic_score",
+        "customer_wording": customer_wording,
+        "amount": amount,
+        "analysis": analysis,
+        "message": (
+            f"[LINGUISTIC PTP ANALYSIS] Strength: {analysis.get('commitment_strength', '').upper()} | "
+            f"Linguistic Confidence: {analysis.get('linguistic_confidence', 0):.0%} | "
+            f"Hedged: {analysis.get('is_hedged')} | "
+            f"Implementation Intentions: {analysis.get('implementation_intentions_complete')} | "
+            f"Extracted Date: {analysis.get('extracted_date')}."
+        ),
+    }
+
+
