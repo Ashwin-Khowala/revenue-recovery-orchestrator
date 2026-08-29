@@ -114,6 +114,26 @@ def check_guardrails(state: RecoveryState) -> Dict[str, Any]:
         }
 
     # --------------------------------------------------------------------------
+    # Guardrail 4.5: Enterprise White-Glove Escalation
+    # --------------------------------------------------------------------------
+    if state.get("requires_hitl_escalation") is True or state.get("subscription_archetype") == "enterprise_white_glove":
+        rule = "RULE_ENTERPRISE_WHITE_GLOVE_ESCALATION"
+        result = "ESCALATE"
+        reason = f"Enterprise Tier Account / White-Glove contract requires Account Manager review before outreach."
+        audit_entry = log_audit_entry(
+            event_id=event_id,
+            node_name="check_guardrails",
+            action_taken=f"Guardrail {result} ({rule})",
+            details={"rule": rule, "result": result, "archetype": state.get("subscription_archetype")},
+            reasoning=reason,
+        )
+        return {
+            "guardrail_result": result,
+            "guardrail_rule_fired": rule,
+            "audit_trail": state.get("audit_trail", []) + [audit_entry],
+        }
+
+    # --------------------------------------------------------------------------
     # Guardrail 5: Passed All Compliance Gates
     # --------------------------------------------------------------------------
     rule = "RULE_ALL_GUARDRAILS_PASSED"

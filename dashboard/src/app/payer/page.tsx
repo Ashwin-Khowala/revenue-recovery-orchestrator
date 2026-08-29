@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import AIChatBot from '@/components/AIChatBot';
 import {
@@ -19,10 +20,23 @@ import {
   X,
 } from 'lucide-react';
 
-export default function CustomerPayerPortal() {
-  const [customerName] = useState('Ashwin Khowala');
-  const [originalAmount] = useState(4999);
-  const [amount, setAmount] = useState(4999);
+function PayerPortalContent() {
+  const searchParams = useSearchParams();
+  const paramCustomer = searchParams?.get('customer') || searchParams?.get('name');
+  const paramAmount = searchParams?.get('amount') ? Number(searchParams.get('amount')) : null;
+
+  const [customerName, setCustomerName] = useState(paramCustomer || 'Ashwin Khowala');
+  const [originalAmount, setOriginalAmount] = useState(paramAmount || 4999);
+  const [amount, setAmount] = useState(paramAmount || 4999);
+
+  useEffect(() => {
+    if (paramCustomer) setCustomerName(paramCustomer);
+    if (paramAmount) {
+      setOriginalAmount(paramAmount);
+      setAmount(paramAmount);
+    }
+  }, [paramCustomer, paramAmount]);
+
   const [discountApplied, setDiscountApplied] = useState(false);
   const [ptpDate, setPtpDate] = useState<string | null>(null);
   const [paidSuccess, setPaidSuccess] = useState(false);
@@ -397,5 +411,13 @@ export default function CustomerPayerPortal() {
 
       </div>
     </div>
+  );
+}
+
+export default function CustomerPayerPortal() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center text-slate-500 font-medium">Loading payment portal...</div>}>
+      <PayerPortalContent />
+    </Suspense>
   );
 }

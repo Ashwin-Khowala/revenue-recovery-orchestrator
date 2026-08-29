@@ -64,3 +64,4 @@ Thumbs.db
 .langfuse/
 checkpoints/
 .deepeval/
+scratch/

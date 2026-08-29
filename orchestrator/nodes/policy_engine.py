@@ -185,12 +185,20 @@ def score_policy_options(state: RecoveryState) -> Dict[str, Any]:
         reasoning=reasoning,
     )
 
+    # Margin Shield: Calculate discount if permitted, otherwise strictly 0.0
+    discount_applied = 0.0
+    if state.get("allow_discount") is True and state.get("behavioral_cause") != "comparison_window_shopping":
+        max_pct = state.get("max_discount_pct", 5.0)
+        discount_applied = round(min(amount * (max_pct / 100.0), 500.0), 2)
+
     return {
         "chosen_action": best_action,
         "expected_value": best_action["expected_value"],
+        "discount_applied": discount_applied,
         "ev_breakdown": {
             "all_scored_actions": scored_actions,
             "top_action_metrics": best_action,
+            "margin_shield_active": state.get("allow_discount") is False,
         },
         "audit_trail": state.get("audit_trail", []) + [audit_entry],
     }
