@@ -1,5 +1,5 @@
 """
-Durable Workflow Activities for Temporal & Inngest
+Durable Workflow Activities for Temporal Engine
 Executes discrete, idempotent recovery sub-steps with state persistence.
 """
 

@@ -1,5 +1,5 @@
 """
-Workflows module exposing Temporal and Inngest durable execution engines.
+Workflows module exposing Temporal durable execution engines.
 """
 
 from orchestrator.workflows.activities import (
@@ -11,10 +11,14 @@ from orchestrator.workflows.activities import (
     send_hitl_telegram_activity,
     seal_audit_entry_activity,
 )
-from orchestrator.workflows.temporal_workflow import RevenueRecoveryWorkflow
+from orchestrator.workflows.temporal_workflow import (
+    RevenueRecoveryWorkflow,
+    MandateEntityWorkflow,
+)
 
 __all__ = [
     "RevenueRecoveryWorkflow",
+    "MandateEntityWorkflow",
     "enrich_memory_activity",
     "diagnose_root_cause_activity",
     "score_policy_activity",
