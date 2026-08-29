@@ -134,6 +134,29 @@ def check_guardrails(state: RecoveryState) -> Dict[str, Any]:
         }
 
     # --------------------------------------------------------------------------
+    # Guardrail 4.6: Voice Telephony Compliance (TRAI Calling Window 09:00 - 21:00 IST)
+    # --------------------------------------------------------------------------
+    if channel == "voice" and metadata.get("bypass_calling_hour_check") is not True:
+        from orchestrator.channels.voice import validate_calling_window
+        is_valid_hour, hour_msg = validate_calling_window()
+        if not is_valid_hour and metadata.get("strict_calling_window") is True:
+            rule = "RULE_VOICE_OUTSIDE_LEGAL_CALLING_HOURS"
+            result = "BLOCK"
+            reason = f"{hour_msg} Outbound AI phone outreach postponed until 09:00 AM IST."
+            audit_entry = log_audit_entry(
+                event_id=event_id,
+                node_name="check_guardrails",
+                action_taken=f"Guardrail {result} ({rule})",
+                details={"rule": rule, "result": result, "calling_status": hour_msg},
+                reasoning=reason,
+            )
+            return {
+                "guardrail_result": result,
+                "guardrail_rule_fired": rule,
+                "audit_trail": state.get("audit_trail", []) + [audit_entry],
+            }
+
+    # --------------------------------------------------------------------------
     # Guardrail 5: Passed All Compliance Gates
     # --------------------------------------------------------------------------
     rule = "RULE_ALL_GUARDRAILS_PASSED"

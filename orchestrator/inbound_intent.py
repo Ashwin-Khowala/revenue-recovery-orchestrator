@@ -108,12 +108,12 @@ Customer Context:
 - Incident Context: {json.dumps(ctx)}
 
 Classify into exactly ONE of the following intents:
-1. 'promise_to_pay': Customer agrees to pay on a specific day/date (e.g. 'I will pay this Friday', 'Salary comes on 5th, will clear it then'). If a date is mentioned, calculate the ISO-8601 date (YYYY-MM-DD) based on today ({today_str}).
-2. 'customer_cancellation': Customer explicitly states they want to cancel the subscription, stop the service, or already requested cancellation (e.g. 'I stopped using this', 'Cancel my account, stop charging me', 'I do not want this'). This triggers the STOPPING RULE so we never harass churned users.
+1. 'promise_to_pay': Customer agrees or intends to pay. This includes BOTH exact dates (e.g. 'I will pay this Friday', 'Salary comes on 5th') AND soft commitments / code-switched Hinglish financial pauses (e.g. 'haan bhai, paisa toh bhejunga, but abhi thoda tight hai', 'will pay in 2-3 days', 'give me some time to arrange funds', 'paisa daal dunga kal parso'). If a specific date is mentioned, calculate the ISO-8601 date (YYYY-MM-DD) based on today ({today_str}); if no specific date is given, leave promised_pay_date as null.
+2. 'customer_cancellation': Customer explicitly states they want to cancel the subscription, stop the service, or already requested cancellation (e.g. 'I stopped using this', 'Cancel my account, stop charging me', 'I do not want this', 'band kar do'). This triggers the STOPPING RULE so we never harass churned users.
 3. 'alternative_payment_request': Customer wants a different payment rail (e.g. 'Can I pay via UPI/GPay?', 'Send me a QR code', 'Can I do a bank transfer?').
 4. 'general_dispute_query': Customer asks questions about the bill, invoice items, or why they are being charged.
-5. 'opt_out': Customer asks not to be messaged again.
-6. 'other': Ambiguous or conversational statement.
+5. 'opt_out': Customer asks not to be messaged again (STOP, DND).
+6. 'other': Ambiguous or completely unrelated conversational statement.
 
 Respond ONLY with a valid JSON object matching this schema:
 {{
@@ -130,13 +130,22 @@ Respond ONLY with a valid JSON object matching this schema:
     llm = get_azure_chat_llm(temperature=0.0)
     if llm is None:
         # Fallback heuristic
-        if "cancel" in customer_message.lower() or "don't want" in customer_message.lower():
+        msg_low = customer_message.lower()
+        if "cancel" in msg_low or "don't want" in msg_low or "band kar" in msg_low:
             return InboundIntentResult(
                 intent=InboundIntentType.CUSTOMER_CANCELLATION,
                 confidence=0.85,
                 reasoning="Heuristic fallback match on cancellation intent.",
                 stopping_rule_triggered=True,
                 suggested_reply_message=f"We have noted your cancellation request, {customer_name}. No further charges or outreach will occur.",
+            )
+        if any(ptp_kw in msg_low for ptp_kw in ("bhejunga", "pay", "tight", "kal", "parso", "friday", "monday", "salary", "thoda time")):
+            return InboundIntentResult(
+                intent=InboundIntentType.PROMISE_TO_PAY,
+                confidence=0.85,
+                reasoning="Heuristic match on soft promise-to-pay / payment intention.",
+                stopping_rule_triggered=False,
+                suggested_reply_message=f"Thank you {customer_name}. We have noted your intent and paused automated reminders.",
             )
         return InboundIntentResult(
             intent=InboundIntentType.OTHER,
