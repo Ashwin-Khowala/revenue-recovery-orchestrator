@@ -1096,7 +1096,7 @@ export default function MerchantDashboard() {
                         <td className="px-5 py-3.5 text-emerald-600 font-bold">✓ 1-Click Update Link</td>
                       </tr>
                       <tr className="hover:bg-slate-50">
-                        <td className="px-5 py-3.5 font-bold text-slate-800">RBI >₹15k 2FA (mandate_auth_failed)</td>
+                        <td className="px-5 py-3.5 font-bold text-slate-800">RBI {'>'}₹15k 2FA (mandate_auth_failed)</td>
                         <td className="px-5 py-3.5"><span className="px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-bold">RBI Regulation</span></td>
                         <td className="px-5 py-3.5">Pre-debit WhatsApp consent link</td>
                         <td className="px-5 py-3.5">Immediate</td>

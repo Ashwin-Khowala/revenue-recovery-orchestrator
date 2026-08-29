@@ -11,11 +11,16 @@ from orchestrator.tools.customer_tools import (
     get_customer_intelligence,
     apply_concession_discount,
     register_promise_to_pay,
+    get_payment_link,
 )
 from orchestrator.tools.merchant_tools import (
     get_merchant_financial_overview,
     get_at_risk_incidents,
     approve_high_value_invoice,
+    lookup_decline_code,
+    get_checkout_funnel_metrics,
+    get_subscription_churn_analysis,
+    trigger_outbound_recovery_action,
 )
 
 logger = logging.getLogger("orchestrator.tools.registry")
@@ -25,14 +30,20 @@ ALL_TOOLS_MAP: Dict[str, Callable[..., Any]] = {
     "get_customer_intelligence": get_customer_intelligence,
     "apply_concession_discount": apply_concession_discount,
     "register_promise_to_pay": register_promise_to_pay,
+    "get_payment_link": get_payment_link,
     "get_merchant_financial_overview": get_merchant_financial_overview,
     "get_at_risk_incidents": get_at_risk_incidents,
     "approve_high_value_invoice": approve_high_value_invoice,
+    "lookup_decline_code": lookup_decline_code,
+    "get_checkout_funnel_metrics": get_checkout_funnel_metrics,
+    "get_subscription_churn_analysis": get_subscription_churn_analysis,
+    "trigger_outbound_recovery_action": trigger_outbound_recovery_action,
 }
 
 PAYER_TOOL_NAMES = [
     "apply_concession_discount",
     "register_promise_to_pay",
+    "get_payment_link",
     "get_customer_intelligence",
 ]
 
@@ -41,6 +52,10 @@ MERCHANT_TOOL_NAMES = [
     "get_at_risk_incidents",
     "get_customer_intelligence",
     "approve_high_value_invoice",
+    "lookup_decline_code",
+    "get_checkout_funnel_metrics",
+    "get_subscription_churn_analysis",
+    "trigger_outbound_recovery_action",
     "apply_concession_discount",
     "register_promise_to_pay",
 ]
@@ -65,7 +80,7 @@ OPENAI_TOOL_SCHEMAS: List[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "get_merchant_financial_overview",
-            "description": "Fetches merchant portfolio totals: at-risk revenue, recovered revenue, and zero-spam compliance.",
+            "description": "Fetches merchant portfolio totals: at-risk revenue, recovered revenue, margin protected, pending approvals, and zero-spam compliance.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -79,12 +94,13 @@ OPENAI_TOOL_SCHEMAS: List[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "get_at_risk_incidents",
-            "description": "Fetches unresolved at-risk recovery incidents.",
+            "description": "Fetches pending at-risk recovery incidents requiring review or follow-up.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "merchant_id": {"type": "string", "description": "Merchant ID"},
                     "limit": {"type": "integer", "description": "Max incidents to return", "default": 5},
+                    "issue_type": {"type": "string", "description": "Optional issue filter (e.g. 'mandate_auth_failed', 'subscription_failed')"},
                 },
             },
         },
@@ -92,8 +108,66 @@ OPENAI_TOOL_SCHEMAS: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "lookup_decline_code",
+            "description": "Looks up a bank decline code to explain fault domain, retry delay, and customer contact rules.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "decline_code": {"type": "string", "description": "Decline code (e.g. 'gateway_timeout', 'insufficient_funds', 'card_expired', 'mandate_auth_failed')"},
+                },
+                "required": ["decline_code"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_checkout_funnel_metrics",
+            "description": "Fetches checkout funnel drop-off analytics and margin shield metrics.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "merchant_id": {"type": "string", "description": "Merchant ID", "default": "merch_01"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_subscription_churn_analysis",
+            "description": "Evaluates subscription health to recommend 14-day grace period for active users or pause off-ramp for dormant users.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_id": {"type": "string", "description": "Customer ID (e.g. 'cust_0001')"},
+                },
+                "required": ["customer_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "trigger_outbound_recovery_action",
+            "description": "Dispatches a recovery action across WhatsApp, Telegram, or triggers an AI Voice Call to the customer.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_name": {"type": "string", "description": "Customer recipient name"},
+                    "channel": {"type": "string", "description": "Channel: 'whatsapp', 'telegram', 'voice'"},
+                    "amount": {"type": "number", "description": "Amount in INR"},
+                    "root_cause": {"type": "string", "description": "Issue type"},
+                },
+                "required": ["customer_name", "channel"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "apply_concession_discount",
-            "description": "Applies an instant recovery discount/concession (e.g. 5%) on a pending payment.",
+            "description": "Applies an instant recovery discount/concession (1-15%) on a pending payment.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -111,10 +185,24 @@ OPENAI_TOOL_SCHEMAS: List[Dict[str, Any]] = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "promised_date": {"type": "string", "description": "Date promised by customer (e.g., 'Monday', 'Tomorrow')"},
+                    "promised_date": {"type": "string", "description": "Date promised by customer (e.g., 'Monday', 'Tomorrow', '2026-09-05')"},
                     "note": {"type": "string", "description": "Note or reason"},
                 },
                 "required": ["promised_date"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_payment_link",
+            "description": "Generates a 1-click Razorpay verified checkout link for instant customer settlement.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_name": {"type": "string", "description": "Customer recipient name"},
+                    "amount": {"type": "number", "description": "Payable amount in INR"},
+                },
             },
         },
     },
@@ -198,21 +286,26 @@ def execute_tool(
         import inspect
         sig = inspect.signature(func)
         valid_kwargs = {}
-        for param in sig.parameters.values():
-            if param.name in args:
-                valid_kwargs[param.name] = args[param.name]
-            elif param.default is not inspect.Parameter.empty:
-                valid_kwargs[param.name] = param.default
+        for param_name in sig.parameters:
+            if param_name in args:
+                valid_kwargs[param_name] = args[param_name]
 
-        result = func(**valid_kwargs)
-        if isinstance(result, dict):
-            result.setdefault("success", True)
-            return result
-        return {"tool": tool_name, "success": True, "result": result}
+        res = func(**valid_kwargs)
+        if isinstance(res, dict):
+            res["tool"] = tool_name
+            res["success"] = True
+            return res
+        return {
+            "tool": tool_name,
+            "success": True,
+            "result": res,
+            "message": str(res),
+        }
     except Exception as e:
         logger.error(f"[REGISTRY] Tool execution failed for {tool_name}: {e}", exc_info=True)
         return {
             "tool": tool_name,
             "success": False,
             "error": str(e),
+            "message": f"Tool '{tool_name}' encountered an error: {e}",
         }

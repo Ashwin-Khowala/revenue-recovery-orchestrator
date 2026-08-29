@@ -644,16 +644,18 @@ export default function AIChatBot({
   const quickPrompts =
     role === 'merchant'
       ? [
-          'What is my financial status?',
-          'Why is TechMatrix paused?',
-          'Approve TechMatrix Corp',
-          'Get customer intelligence',
+          'What is our total at-risk revenue today?',
+          'Why is TechMatrix invoice escalated?',
+          'Explain decline code insufficient_funds',
+          'Show checkout funnel & margin shield metrics',
+          'Analyze subscription churn for cust_0001',
+          'Approve TechMatrix Corp high-value invoice',
         ]
       : [
-          'Can I get a discount?',
-          'I will pay next Monday',
-          'Why was my payment held?',
-          'How does re-auth work?',
+          'Can I get a 5% discount if I pay now?',
+          'I will pay next Monday, please pause reminders',
+          'Send me a 1-click Razorpay payment link',
+          'Why did my Axis bank payment fail?',
         ];
 
   if (!isOpen) {

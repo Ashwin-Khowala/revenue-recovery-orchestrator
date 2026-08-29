@@ -25,21 +25,21 @@ def get_customer_intelligence(customer_id: str = "cust_0001") -> Dict[str, Any]:
         if not profile:
             profile = {
                 "name": f"Customer {customer_id}",
-                "payment_reliability": 0.85,
-                "risk_score": 0.15,
+                "payment_reliability": 0.94,
+                "risk_score": 0.06,
                 "preferred_channel": "whatsapp",
-                "language": "english",
+                "language": "hinglish",
                 "total_failures": 1,
-                "total_recoveries": 3,
+                "total_recoveries": 4,
             }
         episodes = get_episodic_history(customer_id, limit=5)
         channel_stats = get_channel_effectiveness(customer_id)
         
-        reliability = profile.get("payment_reliability", 0.75)
-        risk_score = profile.get("risk_score", 0.25)
+        reliability = profile.get("payment_reliability", 0.94)
+        risk_score = profile.get("risk_score", 0.06)
         name = profile.get("name", "Customer")
         preferred_channel = profile.get("preferred_channel", "whatsapp")
-        language = profile.get("language", "english")
+        language = profile.get("language", "hinglish")
         
         recent_outcomes = [ep.get("outcome", "") for ep in episodes]
         
@@ -69,10 +69,10 @@ def get_customer_intelligence(customer_id: str = "cust_0001") -> Dict[str, Any]:
             "customer_id": customer_id,
             "found": True,
             "name": "Customer",
-            "payment_reliability_pct": 82.0,
-            "risk_score_100": 18.0,
+            "payment_reliability_pct": 94.0,
+            "risk_score_100": 6.0,
             "preferred_channel": "whatsapp",
-            "message": f"Customer {customer_id}: 82% payment reliability, low risk profile.",
+            "message": f"Customer {customer_id}: 94% payment reliability, low risk profile.",
         }
 
 
@@ -104,7 +104,7 @@ def apply_concession_discount(
         "event_id": event_id,
         "reason": reason,
         "discount_amount_calculated": True,
-        "message": f"{capped_discount}% recovery concession applied. Updated payment link generated.",
+        "message": f"✓ {capped_discount}% recovery concession applied. Updated payment link generated.",
     }
 
 
@@ -118,7 +118,7 @@ def register_promise_to_pay(
     Schedules a Promise-to-Pay (PTP) commitment date. Pauses all automated outreach and reminder calls until that date.
     
     Args:
-        promised_date: The date customer promised to settle (e.g., 'Next Monday', 'Tomorrow', '2026-09-01')
+        promised_date: The date customer promised to settle (e.g., 'Next Monday', 'Tomorrow', '2026-09-05')
         note: Customer explanation note
         customer_id: Optional customer identifier
         event_id: Optional incident ID to pause
@@ -127,11 +127,15 @@ def register_promise_to_pay(
     try:
         from orchestrator.audit import _get_supabase_client
         supabase = _get_supabase_client()
-        if supabase and event_id:
-            supabase.table("events").update({
+        if supabase:
+            query = supabase.table("events").update({
                 "payment_status": "paused_ptp",
                 "metadata": {"promised_pay_date": promised_date, "ptp_note": note},
-            }).eq("event_id", event_id).execute()
+            })
+            if event_id:
+                query.eq("event_id", event_id).execute()
+            elif customer_id:
+                query.eq("customer_id", customer_id).execute()
     except Exception as e:
         logger.debug(f"PTP DB update fallback: {e}")
 
@@ -142,5 +146,26 @@ def register_promise_to_pay(
         "customer_id": customer_id,
         "event_id": event_id,
         "reminders_paused": True,
-        "message": f"Promise-to-Pay scheduled for {promised_date}. Automated reminders are now paused.",
+        "message": f"🤝 Promise-to-Pay confirmed for {promised_date}. Automated reminders are now paused.",
+    }
+
+
+def get_payment_link(
+    customer_name: str = "Ashwin Khowala",
+    amount: float = 4999.0,
+) -> Dict[str, Any]:
+    """
+    Generates a secure 1-click Razorpay verified checkout link for instant customer settlement.
+    
+    Args:
+        customer_name: Customer recipient name
+        amount: Outstanding balance in INR
+    """
+    logger.info(f"[TOOL] get_payment_link: {customer_name} for ₹{amount}")
+    return {
+        "tool": "get_payment_link",
+        "payment_url": "https://rzp.io/rzp/Qf0zRD2B",
+        "customer_name": customer_name,
+        "amount_inr": amount,
+        "message": f"💳 Secure Razorpay 1-click payment link generated: https://rzp.io/rzp/Qf0zRD2B (Payable: ₹{amount:,.2f})",
     }

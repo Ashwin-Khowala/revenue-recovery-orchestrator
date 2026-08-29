@@ -23,23 +23,24 @@ from orchestrator.tools import (
 def test_gemini_tools_exported():
     """Verifies that all tools are callable for Gemini / Google GenAI."""
     gemini_tools = get_gemini_tools(role="all")
-    assert len(gemini_tools) == 6
+    assert len(gemini_tools) == len(ALL_TOOLS_MAP)
+    assert len(gemini_tools) >= 6
     for t in gemini_tools:
         assert callable(t)
-    print("✅ Test 1: Gemini tool callables exported correctly.")
+    print(f"✅ Test 1: {len(gemini_tools)} Gemini tool callables exported correctly.")
 
 
 def test_openai_tools_schema_validity():
     """Verifies that all tool schemas are valid OpenAI function definitions."""
     openai_tools = get_openai_tools(role="all")
-    assert len(openai_tools) == 6
+    assert len(openai_tools) == len(ALL_TOOLS_MAP)
     for t in openai_tools:
         assert t.get("type") == "function"
         fn = t.get("function", {})
         assert "name" in fn
         assert "description" in fn
         assert "parameters" in fn
-    print("✅ Test 2: OpenAI tool schemas formatted properly.")
+    print(f"✅ Test 2: {len(openai_tools)} OpenAI tool schemas formatted properly.")
 
 
 def test_execute_customer_intelligence():
@@ -78,12 +79,24 @@ def test_execute_merchant_overview():
     print("✅ Test 6: get_merchant_financial_overview executed successfully.")
 
 
+def test_execute_decline_taxonomy_and_funnel():
+    """Verifies decline code lookup and funnel analytics tools."""
+    decline_res = execute_tool("lookup_decline_code", {"decline_code": "insufficient_funds"})
+    assert decline_res.get("success") is True
+    assert decline_res.get("retry_strategy") == "pay_cycle_delay"
+
+    funnel_res = execute_tool("get_checkout_funnel_metrics", {"merchant_id": "merch_01"})
+    assert funnel_res.get("success") is True
+    assert "margin_shield_saved_inr" in funnel_res
+    print("✅ Test 7: Decline taxonomy and checkout funnel tools executed successfully.")
+
+
 def test_context_injection():
     """Verifies that missing arguments are auto-populated from context."""
     res = execute_tool("get_customer_intelligence", {}, context={"customer_id": "cust_0002"})
     assert res.get("success") is True
     assert res.get("customer_id") == "cust_0002"
-    print("✅ Test 7: Context auto-injection verified.")
+    print("✅ Test 8: Context auto-injection verified.")
 
 
 if __name__ == "__main__":
@@ -93,5 +106,6 @@ if __name__ == "__main__":
     test_execute_concession_discount()
     test_execute_register_promise_to_pay()
     test_execute_merchant_overview()
+    test_execute_decline_taxonomy_and_funnel()
     test_context_injection()
     print("\n🎉 ALL UNIFIED TOOL REGISTRY TESTS PASSED!")
