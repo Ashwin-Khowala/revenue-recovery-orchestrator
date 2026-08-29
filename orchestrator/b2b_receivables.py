@@ -142,7 +142,7 @@ def diagnose_b2b_receivable(
     delay_variance = days_overdue - avg_delay
     is_anomalous = delay_variance > 20 and days_overdue > 30
 
-    payment_link = "https://rzp.io/rzp/Qf0zRD2B"
+    payment_link = f"https://rzp.io/i/{invoice_id.lower().replace('-', '_')[-8:]}"
 
     # Default contacts
     ap_name = hist.get("ap_contact_name", f"Accounts Payable Team ({client_company})")

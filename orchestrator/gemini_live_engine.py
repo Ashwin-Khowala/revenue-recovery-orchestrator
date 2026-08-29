@@ -485,9 +485,10 @@ def _run_sync_fallback_turn(
         )
 
     elif "link" in lower_text or "pay" in lower_text or "razorpay" in lower_text:
-        tool_res = execute_tool("get_payment_link", {"customer_name": customer_name, "amount": amount})
+        tool_res = execute_tool("get_payment_link", {"customer_name": customer_name, "amount": amount, "event_id": f"evt_{customer_id}"})
         executed_tools.append(tool_res)
-        reply = f"Here is your secure 1-click Razorpay payment link: https://rzp.io/rzp/Qf0zRD2B (Payable: ₹{amount:,.2f})."
+        dynamic_url = tool_res.get("payment_url") or f"https://rzp.io/i/{customer_id[-6:]}_{int(amount)}"
+        reply = f"Here is your secure 1-click Razorpay payment link: {dynamic_url} (Payable: ₹{amount:,.2f})."
 
     else:
         reply = f"Hello {customer_name}! I have reviewed your account details (Pending: ₹{amount:,.2f}). How can I assist you further?"

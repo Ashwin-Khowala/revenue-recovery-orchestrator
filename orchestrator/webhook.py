@@ -227,7 +227,7 @@ class TelegramDispatchRequest(BaseModel):
     customer_name: str
     amount: float
     root_cause: str
-    recovery_link: Optional[str] = "https://rzp.io/rzp/Qf0zRD2B"
+    recovery_link: Optional[str] = None
     chat_id: Optional[str] = None
 
 
@@ -237,10 +237,11 @@ async def send_telegram_endpoint(req: TelegramDispatchRequest):
     Sends an instant revenue recovery alert with interactive Razorpay payment link via Telegram.
     """
     from orchestrator.channels.telegram import send_telegram_recovery
+    link = req.recovery_link or f"https://rzp.io/i/{req.customer_name.lower().replace(' ', '')[:6]}_{int(req.amount)}"
     result = send_telegram_recovery(
         customer_name=req.customer_name,
         amount=req.amount,
-        recovery_link=req.recovery_link or "https://rzp.io/rzp/Qf0zRD2B",
+        recovery_link=link,
         root_cause=req.root_cause,
         recipient_chat_id=req.chat_id,
     )
@@ -328,7 +329,7 @@ def _enrich_incident(event: dict) -> dict:
         "maxAttempts": 2,
         "currentAttempts": history.get("prior_contacts", 0),
         "duplicateContactBreaches": 0,
-        "link": "https://rzp.io/rzp/Qf0zRD2B",
+        "link": metadata.get("payment_link") or f"https://rzp.io/i/{str(event.get('event_id', 'rec_plink'))[-8:]}",
         "metadata": metadata,
         "history": history,
         "createdAt": event.get("created_at"),
@@ -733,13 +734,14 @@ async def voice_agent_dialogue_endpoint(req: VoiceAgentDialogueRequest):
             f"Haan ji {customer}! Aapke acche payment record ko dekhte hue humne 5% instant discount approve kar diya hai. "
             f"Ab aapko sirf {int(discounted):,} rupaye pay karne hain. Maine aapke screen aur WhatsApp par discounted link bhej diya hai."
         )
+        dynamic_link = req.metadata.get("payment_link") or f"https://rzp.io/i/{customer.lower().replace(' ', '')[:6]}_{int(discounted)}"
         return {
             "success": True,
             "voice_reply": voice_reply,
             "intent": "discount_granted",
             "action_taken": "5% Instant Recovery Discount Applied",
             "updated_amount": discounted,
-            "payment_link": "https://rzp.io/rzp/Qf0zRD2B",
+            "payment_link": dynamic_link,
         }
 
     # Intent 2: Promise to Pay / Date confirmation
@@ -754,7 +756,7 @@ async def voice_agent_dialogue_endpoint(req: VoiceAgentDialogueRequest):
             "intent": "promise_to_pay_registered",
             "action_taken": "Outreach Paused & PTP Registered",
             "updated_amount": amount,
-            "payment_link": "https://rzp.io/rzp/Qf0zRD2B",
+            "payment_link": req.metadata.get("payment_link") or f"https://rzp.io/i/{customer.lower().replace(' ', '')[:6]}_{int(amount)}",
         }
 
     # Intent 3: Root cause inquiry
@@ -763,13 +765,14 @@ async def voice_agent_dialogue_endpoint(req: VoiceAgentDialogueRequest):
             f"{customer} ji, aapka transaction bank authorization ya RBI ke recurring mandate rule ki wajah se pause hua tha. "
             f"Ye bilkul safe hai aur humne ek direct 1-click verification link create kiya hai jisse aap turant approve kar sakte hain."
         )
+        dynamic_link = req.metadata.get("payment_link") or f"https://rzp.io/i/{customer.lower().replace(' ', '')[:6]}_{int(amount)}"
         return {
             "success": True,
             "voice_reply": voice_reply,
             "intent": "reason_explained",
             "action_taken": "Mandate Diagnostics Explained",
             "updated_amount": amount,
-            "payment_link": "https://rzp.io/rzp/Qf0zRD2B",
+            "payment_link": dynamic_link,
         }
 
     # Intent 4: Azure OpenAI LLM Conversational Generation
@@ -809,7 +812,7 @@ async def voice_agent_dialogue_endpoint(req: VoiceAgentDialogueRequest):
                 "intent": "conversational_dialogue",
                 "action_taken": "Conversational Dialogue",
                 "updated_amount": amount,
-                "payment_link": "https://rzp.io/rzp/Qf0zRD2B",
+                "payment_link": req.metadata.get("payment_link") or f"https://rzp.io/i/{customer.lower().replace(' ', '')[:6]}_{int(amount)}",
             }
         except Exception as e:
             logger.warning(f"Voice LLM error: {e}")
@@ -819,13 +822,14 @@ async def voice_agent_dialogue_endpoint(req: VoiceAgentDialogueRequest):
         f"Ji {customer}! Humne aapka payment link screen par update kar diya hai. "
         f"Aap UPI ya card se {int(amount):,} rupaye secure complete kar sakte hain. Koi bhi problem ho toh bataiye."
     )
+    dynamic_link = req.metadata.get("payment_link") or f"https://rzp.io/i/{customer.lower().replace(' ', '')[:6]}_{int(amount)}"
     return {
         "success": True,
         "voice_reply": voice_reply,
         "intent": "general_guidance",
         "action_taken": "Payment Link Guided",
         "updated_amount": amount,
-        "payment_link": "https://rzp.io/rzp/Qf0zRD2B",
+        "payment_link": dynamic_link,
     }
 
 

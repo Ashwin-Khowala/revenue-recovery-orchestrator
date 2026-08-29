@@ -325,7 +325,7 @@ class MandateActionDecision(BaseModel):
     recommended_action: str
     plain_english_rationale: str
     one_click_action_label: str
-    recovery_link: str = "https://rzp.io/rzp/Qf0zRD2B"
+    recovery_link: Optional[str] = None
 
 
 # =============================================================================

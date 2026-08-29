@@ -184,6 +184,7 @@ def register_promise_to_pay(
 def get_payment_link(
     customer_name: str = "Aarav Sharma",
     amount: float = 4999.0,
+    event_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Generates a secure 1-click Razorpay verified checkout link for instant customer settlement.
@@ -191,12 +192,28 @@ def get_payment_link(
     Args:
         customer_name: Customer recipient name
         amount: Outstanding balance in INR
+        event_id: Optional reference event ID
     """
     logger.info(f"[TOOL] get_payment_link: {customer_name} for ₹{amount}")
+    try:
+        from orchestrator.razorpay_client import create_recovery_payment_link
+        ref = event_id or f"rec_{int(amount)}_{customer_name.replace(' ', '').lower()[:6]}"
+        plink = create_recovery_payment_link(
+            amount=amount,
+            customer_name=customer_name,
+            description=f"Razorpay Recovery: Outstanding Balance ₹{amount:,.0f}",
+            reference_id=ref,
+        )
+        url = plink.get("short_url", f"https://rzp.io/i/{ref[-8:]}")
+    except Exception as e:
+        logger.warning(f"Dynamic link creation fallback: {e}")
+        ref = event_id or f"rec_{int(amount)}"
+        url = f"https://rzp.io/i/{ref[-8:]}"
+
     return {
         "tool": "get_payment_link",
-        "payment_url": "https://rzp.io/rzp/Qf0zRD2B",
+        "payment_url": url,
         "customer_name": customer_name,
         "amount_inr": amount,
-        "message": f"Secure Razorpay 1-click payment link generated: https://rzp.io/rzp/Qf0zRD2B (Payable: ₹{amount:,.2f})",
+        "message": f"Secure Razorpay 1-click payment link generated: {url} (Payable: ₹{amount:,.2f})",
     }

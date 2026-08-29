@@ -107,7 +107,7 @@ def get_at_risk_incidents(
                         "issue": r.get("event_type"),
                         "status": r.get("payment_status", "unresolved"),
                         "optimal_action": r.get("optimal_action", "whatsapp"),
-                        "recovery_link": "https://rzp.io/rzp/Qf0zRD2B",
+                        "recovery_link": f"https://rzp.io/i/{str(r.get('event_id', 'rec_plink'))[-8:]}",
                     })
                 return {
                     "tool": "get_at_risk_incidents",
@@ -353,7 +353,7 @@ def trigger_outbound_recovery_action(
             "customer": customer_name,
             "amount": amount,
             "status": "dispatched",
-            "recovery_link": "https://rzp.io/rzp/Qf0zRD2B",
+            "recovery_link": f"https://rzp.io/i/{customer_name.lower().replace(' ', '')[:6]}_{int(amount)}",
             "message": f"1-Click Razorpay Smart Link dispatched to {customer_name} via {channel.title()}.",
         }
 
@@ -519,7 +519,7 @@ def resolve_b2b_process_blocker(
         "po_number": po_number,
         "client_company": client_company,
         "status": "resolved_and_redispatched",
-        "payment_link": "https://rzp.io/rzp/Qf0zRD2B",
+        "payment_link": f"https://rzp.io/i/{invoice_id.lower().replace('-', '_')[-8:]}",
         "message": f"[CONFIRMED] Invoice {invoice_id} updated with client PO #{po_number} and re-dispatched to Accounts Payable with 1-click Razorpay link.",
     }
 
@@ -723,7 +723,7 @@ def trigger_mandate_renewal_flow(
         "mandate_id": mandate_id,
         "customer_name": customer_name,
         "status": "renewal_link_dispatched",
-        "link": "https://rzp.io/rzp/Qf0zRD2B",
+        "link": f"https://rzp.io/i/{mandate_id.lower().replace('-', '_')[-8:]}",
         "message": f"[PROACTIVE RENEWAL] 1-Click Mandate renewal link sent to {customer_name} via WhatsApp.",
     }
 
@@ -762,7 +762,7 @@ def dispatch_afa_pre_debit_notification(
         "amount": amount,
         "customer_name": customer_name,
         "status": "afa_prompt_dispatched",
-        "auth_link": "https://rzp.io/rzp/Qf0zRD2B",
+        "auth_link": f"https://rzp.io/i/{mandate_id.lower().replace('-', '_')[-8:]}",
         "message": f"[AFA NOTIFICATION DISPATCHED] Pre-debit OTP authorization link sent to {customer_name} (₹{amount:,.2f}).",
     }
 

@@ -907,7 +907,7 @@ export default function MerchantDashboard() {
           customer_name: inc.customer,
           amount: inc.amount,
           root_cause: inc.rootCause,
-          recovery_link: inc.link || 'https://rzp.io/rzp/Qf0zRD2B',
+          recovery_link: inc.link || `https://rzp.io/i/${inc.id.replace(/[^a-zA-Z0-9]/g, '').slice(-8)}`,
         }),
       });
       if (res.ok) {

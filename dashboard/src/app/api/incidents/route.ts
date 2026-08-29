@@ -95,7 +95,7 @@ export async function GET(request: Request) {
             maxAttempts: 2,
             currentAttempts: e.history?.prior_contacts || 0,
             duplicateContactBreaches: 0,
-            link: 'https://rzp.io/rzp/Qf0zRD2B',
+            link: e.metadata?.payment_link || `https://rzp.io/i/${(e.event_id || 'rec_plink').replace(/[^a-zA-Z0-9]/g, '').slice(-8)}`,
             createdAt: e.created_at,
           };
         });

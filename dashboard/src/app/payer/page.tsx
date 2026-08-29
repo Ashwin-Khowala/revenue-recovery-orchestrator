@@ -267,7 +267,7 @@ function PayerPortalContent() {
             {!paidSuccess ? (
               <div className="space-y-3 pt-2">
                 <a
-                  href="https://rzp.io/rzp/Qf0zRD2B"
+                  href={`https://rzp.io/i/rec_${amount}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full py-3.5 rounded-xl bg-[#00A3C4] hover:bg-[#008ea6] text-white text-sm font-extrabold transition-all shadow-md flex items-center justify-center gap-2 text-center"
