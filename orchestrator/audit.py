@@ -9,6 +9,10 @@ import hashlib
 import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List
+from dotenv import load_dotenv
+
+load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env.local"), override=True)
 
 logger = logging.getLogger("orchestrator.audit")
 
@@ -52,7 +56,7 @@ def _get_langfuse_client():
             )
             logger.info("Langfuse Cloud Tracing client initialized successfully.")
         except Exception as e:
-            logger.debug(f"Could not initialize Langfuse client: {e}")
+            logger.warning(f"Could not initialize Langfuse client: {e}")
     return _langfuse_client
 
 
@@ -106,19 +110,33 @@ def log_audit_entry(
             except Exception as e:
                 logger.debug(f"Could not persist audit log to Supabase: {e}")
 
-    # 2. Trace to Langfuse Cloud
+    # 2. Trace to Langfuse Cloud (v4 SDK create_event & flush)
     lf = _get_langfuse_client()
     if lf:
         try:
-            lf.trace(
+            lf.create_event(
                 name=f"node_{node_name}",
-                session_id=event_id,
-                input={"event_id": event_id, "node": node_name},
-                output={"action_taken": action_taken, "details": details, "reasoning": reasoning},
-                metadata={"timestamp": entry["timestamp"], "node": node_name},
+                input={
+                    "event_id": event_id,
+                    "node_name": node_name,
+                    "action_taken": action_taken,
+                },
+                output={
+                    "details": details,
+                    "reasoning": reasoning or "",
+                    "entry_hash": entry_hash,
+                },
+                metadata={
+                    "event_id": event_id,
+                    "node_name": node_name,
+                    "timestamp": entry["timestamp"],
+                    "service": "revenue_recovery_orchestrator",
+                },
+                status_message=f"Action executed: {action_taken}",
             )
+            lf.flush()
         except Exception as e:
-            logger.debug(f"Could not send trace to Langfuse: {e}")
+            logger.warning(f"Could not send trace to Langfuse: {e}")
 
     return entry
 
