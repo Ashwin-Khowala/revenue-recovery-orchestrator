@@ -269,47 +269,35 @@ def classify_root_cause(state: RecoveryState) -> Dict[str, Any]:
 
     if llm is not None:
         try:
-            prompt = f"""You are the Root-Cause Classifier for an AI Revenue Recovery Orchestrator.
-Analyze the following payment/revenue incident and output structured JSON.
+            from orchestrator.prompts import (
+                STATIC_ROOT_CAUSE_CLASSIFIER_SYSTEM_PROMPT,
+                build_root_cause_user_payload,
+                extract_and_log_prompt_cache_metrics,
+            )
+            from langchain_core.messages import SystemMessage, HumanMessage
 
-Event Details:
-- Event ID: {event_id}
-- Event Type: {event_type}
-- Amount: ₹{amount}
-- Customer History: {json.dumps(history)}
-- Incident Metadata: {json.dumps(metadata)}
+            messages = [
+                SystemMessage(content=STATIC_ROOT_CAUSE_CLASSIFIER_SYSTEM_PROMPT),
+                HumanMessage(content=build_root_cause_user_payload(
+                    event_id=event_id,
+                    event_type=event_type,
+                    amount=amount,
+                    customer_history=history,
+                    incident_metadata=metadata,
+                )),
+            ]
 
-Possible Categories:
-1. 'subscription_failed': Recurring billing decline (card expired, soft decline, insufficient funds).
-2. 'checkout_abandoned': Cart drop-off by high-intent user.
-3. 'receivable_overdue': B2B unpaid invoice past terms.
-4. 'payment_degraded': Technical failure/route degradation.
-5. 'mandate_auth_failed': Recurring mandate > ₹15,000 lacking AFA consent.
-6. 'promise_to_pay': Customer promised to pay on a specific date.
-
-Respond ONLY with a valid JSON object formatted as:
-{{
-  "root_cause": "<category>",
-  "confidence": <float 0.0 to 1.0>,
-  "reasoning": "<brief explanation>",
-  "candidate_actions": [
-    {{
-      "action_type": "<e.g. whatsapp_quick_link | email_invoice_reminder | do_nothing | scheduled_ptp_check>",
-      "target_channel": "<whatsapp | email | reroute | scheduled_check | none>",
-      "cost": <float estimated execution cost in INR>,
-      "description": "<action description>"
-    }}
-  ]
-}}
-"""
             try:
-                response = llm.invoke(prompt)
+                response = llm.invoke(messages)
+                extract_and_log_prompt_cache_metrics(response, operation_name="root_cause_classifier", event_id=event_id)
             except Exception as azure_err:
                 logger.warning(f"Azure OpenAI failed for event {event_id}: {azure_err}. Attempting Gemini fallback.")
                 from orchestrator.llm import get_gemini_chat_llm
                 gemini_llm = get_gemini_chat_llm(temperature=0.0)
                 if gemini_llm is not None:
-                    response = gemini_llm.invoke(prompt)
+                    # Fallback string representation for simple SDK wrapper
+                    prompt_str = f"{STATIC_ROOT_CAUSE_CLASSIFIER_SYSTEM_PROMPT}\n\n{build_root_cause_user_payload(event_id, event_type, amount, history, metadata)}"
+                    response = gemini_llm.invoke(prompt_str)
                 else:
                     raise azure_err
 

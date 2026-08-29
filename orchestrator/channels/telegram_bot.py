@@ -593,6 +593,12 @@ def _llm_fallback(
         )
         role = USER_ROLES.get(chat_id, "payer")
 
+        from orchestrator.prompts import (
+            STATIC_TELEGRAM_BOT_SYSTEM_PROMPT,
+            build_telegram_user_context_block,
+            extract_and_log_prompt_cache_metrics,
+        )
+
         ctx = context or _get_customer_context_for_chat(chat_id, user_name=user_name)
         total_due = ctx.get("total_due_inr", 4999.0)
         cust_name = ctx.get("name", user_name or "Valued Customer")
@@ -601,27 +607,20 @@ def _llm_fallback(
         root_cause = ctx.get("root_cause", "subscription_failed")
         reliability = ctx.get("reliability_score", 0.94)
 
-        system_prompt = f"""You are the official Razorpay AI Recovery Assistant on Telegram.
-You are assisting {cust_name} (Customer ID: {ctx.get('customer_id', 'cust_0001')}).
-
-LIVE ACCOUNT CONTEXT (From Database):
-- Customer Name: {cust_name}
-- Total Outstanding Balance Due: ₹{total_due:,.2f}
-- Active Incident: {event_id} ({root_cause})
-- Payment Track Record: {reliability:.0%} on-time reliability
-- Verified Razorpay Payment Link: {plink}
-
-CAPABILITIES & TOOLS:
-- You have tools to check customer intelligence, apply recovery discounts (5%-15%), schedule Promise-to-Pay dates, or generate payment links.
-- When asked "how much is due" or "what is my balance", state the exact balance of ₹{total_due:,.2f} clearly.
-- Provide the verified payment link {plink} whenever the user asks how to pay.
-- Reply in the user's language (English, Hindi, or Hinglish).
-- Be helpful, concise, and professional (under 100 words).
-"""
+        user_payload = build_telegram_user_context_block(
+            customer_name=cust_name,
+            customer_id=ctx.get("customer_id", "cust_0001"),
+            total_due=total_due,
+            event_id=event_id,
+            root_cause=root_cause,
+            reliability_score=reliability,
+            payment_link=plink,
+            user_text=user_text,
+        )
 
         messages: List[Dict[str, Any]] = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_text},
+            {"role": "system", "content": STATIC_TELEGRAM_BOT_SYSTEM_PROMPT},
+            {"role": "user", "content": user_payload},
         ]
 
         # Use payer tools for customers, all tools for merchants
@@ -633,6 +632,7 @@ CAPABILITIES & TOOLS:
             tools=tool_schemas,
             max_completion_tokens=250,
         )
+        extract_and_log_prompt_cache_metrics(res, operation_name="telegram_bot", event_id=event_id)
 
         choice = res.choices[0]
         msg = choice.message
