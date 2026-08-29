@@ -55,6 +55,9 @@ interface CustomerDetail {
     total_recoveries: number;
     total_revenue_at_risk: number;
     total_revenue_recovered: number;
+    ltv_inr?: number;
+    typical_payment_delay_days?: number;
+    historical_promise_accuracy?: number;
   };
   channel_effectiveness: Record<string, number>;
   episodic_history: Episode[];

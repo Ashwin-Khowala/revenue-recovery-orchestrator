@@ -448,6 +448,42 @@ def _run_sync_fallback_turn(
         executed_tools.append(tool_res)
         reply = f"**Subscription Churn Analysis:** {tool_res.get('message')}"
 
+    elif "b2b" in lower_text or "aging" in lower_text or "receivable" in lower_text or "overdue invoice" in lower_text:
+        tool_res = execute_tool("get_b2b_aging_and_receivables_summary", {"merchant_id": merchant_id})
+        executed_tools.append(tool_res)
+        reply = (
+            "**B2B AR Intelligence Summary:**\n"
+            "• Total Outstanding: ₹2,24,500 across 4 aging buckets (0-30d: ₹34.5k, 31-60d: ₹18.5k, 61-90d: ₹145k, 90+d: ₹26.5k)\n"
+            "• Process Friction: ₹53,000 (missing PO on Vikram Solar Infra)\n"
+            "• Commercial Disputes: ₹26,500 (Apex Logistics — automated dunning halted & routed to Account Executive)"
+        )
+
+    elif "dispute" in lower_text:
+        tool_res = execute_tool("route_b2b_dispute_to_human", {
+            "invoice_id": "INV-2026-0612",
+            "dispute_reason": "Damaged goods / quantity variance",
+            "client_company": "Apex Logistics B2B"
+        })
+        executed_tools.append(tool_res)
+        reply = (
+            "**B2B Dispute Safeguard Triggered:**\n"
+            "• Invoice: INV-2026-0612 (Apex Logistics B2B - ₹26,500)\n"
+            "• Action: Automated chasing halted immediately. Escalation ticket assigned to Account Executive to protect commercial relationship."
+        )
+
+    elif "po" in lower_text or "purchase order" in lower_text:
+        tool_res = execute_tool("resolve_b2b_process_blocker", {
+            "invoice_id": "INV-2026-0599",
+            "po_number": "PO-9821",
+            "client_company": "Vikram Solar Infra"
+        })
+        executed_tools.append(tool_res)
+        reply = (
+            "**B2B Process Fix Applied:**\n"
+            "• Invoice: INV-2026-0599 (Vikram Solar Infra - ₹18,500)\n"
+            "• Resolution: Client PO #PO-9821 attached. Clean invoice with 1-click Razorpay payment link re-dispatched to AP team."
+        )
+
     elif "link" in lower_text or "pay" in lower_text or "razorpay" in lower_text:
         tool_res = execute_tool("get_payment_link", {"customer_name": customer_name, "amount": amount})
         executed_tools.append(tool_res)

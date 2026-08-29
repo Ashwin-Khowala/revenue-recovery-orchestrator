@@ -503,13 +503,19 @@ async def copilot_chat_endpoint(req: CopilotChatRequest):
                 "• Mobile Form Friction: 1-click Razorpay Smart Resume links generated to bypass broken checkout steps.\n"
                 "• Comparison Shoppers: Strict Margin Shield (0% discount) enforced to prevent coupon gaming.\n"
                 "• Shipping Shock: Free-shipping threshold bundling links dispatched.\n\n"
+                "B2B RECEIVABLES & ENTERPRISE AR INTELLIGENCE:\n"
+                "• Aging Buckets: 0-30d (₹34.5k), 31-60d (₹18.5k), 61-90d (₹145k), 90+d (₹26.5k).\n"
+                "• Administrative Process Friction: Vikram Solar Infra (₹18,500) missing PO reference. AI auto-requests PO from AP analyst.\n"
+                "• Commercial Dispute Isolation: Apex Logistics (₹26,500) disputed damaged goods. Automated dunning halted immediately; assigned to Account Executive.\n"
+                "• Multi-Tier Contact Escalation: AP contact -> Finance Director -> Business Owner if AP goes unresponsive across 2 cycles.\n"
+                "• Promise-to-Pay Snooze: Outgoing reminders strictly muted during promised settlement windows.\n\n"
                 "ACTIVE INCIDENTS:\n"
                 "1. TechMatrix Corp: ₹1,45,000 — B2B Overdue Invoice. Status: Paused for Human Approval (HITL) because amount ≥ ₹1,00,000 cap.\n"
                 "2. Kavita Iyer: ₹52,000 — Promise-to-Pay scheduled for Sept 2nd. Reminders paused.\n"
                 "3. Ananya Verma: ₹28,500 — RBI Mandate (>₹15k) AFA Re-Auth link sent via WhatsApp/Telegram.\n"
                 "4. Aarav Sharma: ₹12,000 — Bank route failure (Axis bank spike). Silently rerouted to HDFC. Fully recovered (0 customer contact).\n"
-                "5. Ashwin Khowala: ₹4,999 — Subscription soft-decline. Active user in 14-day grace period; payroll-aligned retry.\n"
-                "6. Rohan Mehta: ₹3,499 — Abandoned Cart (Comparison shopper). Margin Shield active: 0% discount, zero brand fatigue.\n\n"
+                "5. Rohan Mehta: ₹3,499 — Abandoned Cart (Comparison shopper). Margin Shield active: 0% discount, zero brand fatigue.\n"
+                "6. Apex Logistics B2B: ₹26,500 — Commercial Dispute. Dunning halted; Account Executive notified.\n\n"
                 "GUIDELINES:\n"
                 "• Answer in a clear, executive, friendly tone for merchants and business CFOs.\n"
                 "• Explain the financial rationale: why 'Do Nothing' or Margin Shield protects long-term profits."
@@ -1302,3 +1308,78 @@ async def get_temporal_workflow_status_endpoint(workflow_id: str):
             "message": "Workflow completed and archived in SHA-256 audit log.",
         }
     return wf
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# B2B Receivables & Enterprise AR Intelligence Endpoints
+# ──────────────────────────────────────────────────────────────────────────────
+
+class B2BSimulateReplyRequest(BaseModel):
+    email_text: str
+    invoice_id: Optional[str] = "INV-2026-0587"
+    client_company: Optional[str] = "TechMatrix Corp"
+    amount_inr: Optional[float] = 145000.0
+
+
+class B2BResolvePORequest(BaseModel):
+    invoice_id: str
+    po_number: str
+    client_company: Optional[str] = "Vikram Solar Infra"
+
+
+class B2BRouteDisputeRequest(BaseModel):
+    invoice_id: str
+    dispute_reason: str
+    client_company: Optional[str] = "Apex Logistics B2B"
+
+
+@app.get("/api/orchestrator/b2b-receivables")
+async def get_b2b_receivables_endpoint(merchant_id: str = "merch_01"):
+    """
+    Returns enterprise B2B Accounts Receivable aging buckets, active commercial disputes,
+    PO friction invoices, and multi-tier contact escalation pipelines.
+    """
+    from orchestrator.tools.merchant_tools import get_b2b_aging_and_receivables_summary
+    return get_b2b_aging_and_receivables_summary(merchant_id=merchant_id)
+
+
+@app.post("/api/orchestrator/b2b-simulate-reply")
+async def simulate_b2b_reply_endpoint(req: B2BSimulateReplyRequest):
+    """
+    Executes semantic Mem0-style intent extraction on incoming AP email replies.
+    Distinguishes administrative process fixes, commercial disputes, and payment promises.
+    """
+    from orchestrator.b2b_receivables import extract_b2b_email_intent
+    result = extract_b2b_email_intent(
+        email_text=req.email_text,
+        invoice_id=req.invoice_id or "INV-2026-0587",
+        client_company=req.client_company or "TechMatrix Corp",
+        amount_inr=req.amount_inr or 145000.0,
+    )
+    return result.model_dump()
+
+
+@app.post("/api/orchestrator/b2b-resolve-po")
+async def resolve_b2b_po_endpoint(req: B2BResolvePORequest):
+    """
+    Applies missing PO reference and re-issues clean invoice with Razorpay link.
+    """
+    from orchestrator.tools.merchant_tools import resolve_b2b_process_blocker
+    return resolve_b2b_process_blocker(
+        invoice_id=req.invoice_id,
+        po_number=req.po_number,
+        client_company=req.client_company or "Vikram Solar Infra",
+    )
+
+
+@app.post("/api/orchestrator/b2b-route-dispute")
+async def route_b2b_dispute_endpoint(req: B2BRouteDisputeRequest):
+    """
+    Halts automated dunning on a commercial dispute and routes an escalation ticket to human AE.
+    """
+    from orchestrator.tools.merchant_tools import route_b2b_dispute_to_human
+    return route_b2b_dispute_to_human(
+        invoice_id=req.invoice_id,
+        dispute_reason=req.dispute_reason,
+        client_company=req.client_company or "Apex Logistics B2B",
+    )

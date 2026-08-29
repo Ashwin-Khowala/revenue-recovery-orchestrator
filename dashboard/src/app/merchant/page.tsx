@@ -44,6 +44,8 @@ import {
   ClipboardCheck,
   Briefcase,
   XCircle,
+  Mail,
+  FileCheck,
 } from 'lucide-react';
 
 interface Incident {
@@ -154,7 +156,7 @@ export default function MerchantDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'hitl' | 'recovering' | 'recovered'>('all');
-  const [mainView, setMainView] = useState<'queue' | 'checkout_funnel' | 'subscription_churn' | 'decline_taxonomy'>('queue');
+  const [mainView, setMainView] = useState<'queue' | 'checkout_funnel' | 'subscription_churn' | 'decline_taxonomy' | 'b2b_receivables'>('queue');
   const [selectedPreset, setSelectedPreset] = useState<string>('all');
   const [sendingChannel, setSendingChannel] = useState<string | null>(null);
   const [channelResult, setChannelResult] = useState<string | null>(null);
@@ -162,6 +164,171 @@ export default function MerchantDashboard() {
   // Selected incident for detail drawer
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [customPtpDate, setCustomPtpDate] = useState<string>('2026-09-05');
+
+  // B2B Receivables Ledger & Interactive Simulator State
+  const [b2bInvoices, setB2bInvoices] = useState<any[]>([
+    {
+      id: 'INV-2026-0587',
+      clientCompany: 'TechMatrix Corp',
+      amount: 145000,
+      daysOverdue: 45,
+      agingBucket: '31_60_days',
+      poStatus: 'approved',
+      poNumber: 'PO-8832',
+      contactTier: 'Buyer / Commercial Owner',
+      contactName: 'Raghavan Pillai (VP Procurement)',
+      status: 'pending_hitl',
+      disputeFlag: false,
+      recommendedAction: 'Escalate to Buyer (2 silent AP cycles)',
+    },
+    {
+      id: 'INV-2026-0599',
+      clientCompany: 'Vikram Solar Infra',
+      amount: 18500,
+      daysOverdue: 35,
+      agingBucket: '31_60_days',
+      poStatus: 'missing_po',
+      poNumber: null,
+      contactTier: 'AP Analyst',
+      contactName: 'Suresh Menon (AP Specialist)',
+      status: 'missing_po_blocker',
+      disputeFlag: false,
+      recommendedAction: 'Request PO & Re-issue Invoice with 1-Click Link',
+    },
+    {
+      id: 'INV-2026-0612',
+      clientCompany: 'Apex Logistics B2B',
+      amount: 26500,
+      daysOverdue: 65,
+      agingBucket: '61_90_days',
+      poStatus: 'approved',
+      poNumber: 'PO-7741',
+      contactTier: 'Account Executive',
+      contactName: 'Deepak Verma (Enterprise AE)',
+      status: 'commercial_dispute',
+      disputeFlag: true,
+      disputeReason: '40 damaged units out of 100 in transit',
+      recommendedAction: 'Dunning Halted; Assigned to Account Executive',
+    },
+    {
+      id: 'INV-2026-0640',
+      clientCompany: 'Zenith Cloud Labs',
+      amount: 34500,
+      daysOverdue: 12,
+      agingBucket: '0_30_days',
+      poStatus: 'approved',
+      poNumber: 'PO-9104',
+      contactTier: 'AP Analyst',
+      contactName: 'Ananya Roy (AP Team)',
+      status: 'current_outreach',
+      disputeFlag: false,
+      recommendedAction: 'Standard 1-Click Razorpay AP Settlement Link Dispatched',
+    },
+  ]);
+
+  const [b2bSimulatorText, setB2bSimulatorText] = useState<string>(
+    'Hi, our AP portal rejected this invoice because it is missing PO reference #PO-9821. Please resend with PO included.'
+  );
+  const [b2bSimulatorResult, setB2bSimulatorResult] = useState<any>(null);
+  const [isSimulatingB2B, setIsSimulatingB2B] = useState<boolean>(false);
+  const [b2bPresetKey, setB2bPresetKey] = useState<string>('missing_po');
+
+  const handleSelectB2BPreset = (preset: 'missing_po' | 'commercial_dispute' | 'promise_to_pay') => {
+    setB2bPresetKey(preset);
+    if (preset === 'missing_po') {
+      setB2bSimulatorText('Hi, our AP portal rejected this invoice because it is missing PO reference #PO-9821. Please resend with PO included.');
+    } else if (preset === 'commercial_dispute') {
+      setB2bSimulatorText('We are disputing line item 3. 40 units out of 100 arrived damaged in transit so we are withholding payment until credit note is issued.');
+    } else if (preset === 'promise_to_pay') {
+      setB2bSimulatorText('Invoice approved by finance director. Payment is scheduled in our bi-weekly batch and will be paid by Friday 20th.');
+    }
+  };
+
+  const handleRunB2BSimulator = async (overrideText?: string) => {
+    const textToRun = overrideText || b2bSimulatorText;
+    setIsSimulatingB2B(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/orchestrator/b2b-simulate-reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email_text: textToRun,
+          invoice_id: 'INV-2026-0599',
+          client_company: 'Vikram Solar Infra',
+          amount_inr: 18500,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setB2bSimulatorResult(data);
+        setChannelResult(`B2B AP Reply processed: Extracted ${data.reply_type.replace('_', ' ')} intent.`);
+      } else {
+        if (textToRun.toLowerCase().includes('po')) {
+          setB2bSimulatorResult({
+            reply_type: 'process_fix',
+            extracted_po_number: 'PO-9821',
+            extracted_dispute_reason: null,
+            promised_pay_date: null,
+            stop_automated_dunning: false,
+            escalation_required: false,
+            action_summary: 'Attached PO #PO-9821 and re-issued clean invoice with 1-click Razorpay link to AP team.',
+          });
+        } else if (textToRun.toLowerCase().includes('disput')) {
+          setB2bSimulatorResult({
+            reply_type: 'commercial_dispute',
+            extracted_po_number: null,
+            extracted_dispute_reason: 'Damaged goods in transit (40 units)',
+            promised_pay_date: null,
+            stop_automated_dunning: true,
+            escalation_required: true,
+            action_summary: 'Automated dunning halted immediately. Escalation ticket routed to Account Executive.',
+          });
+        } else {
+          setB2bSimulatorResult({
+            reply_type: 'promise_to_pay',
+            extracted_po_number: null,
+            extracted_dispute_reason: null,
+            promised_pay_date: 'Friday 20th',
+            stop_automated_dunning: false,
+            escalation_required: false,
+            action_summary: 'Promise-to-pay registered for Friday 20th. Reminders muted until promised date.',
+          });
+        }
+      }
+    } catch {
+      setB2bSimulatorResult({
+        reply_type: textToRun.toLowerCase().includes('disput') ? 'commercial_dispute' : textToRun.toLowerCase().includes('po') ? 'process_fix' : 'promise_to_pay',
+        extracted_po_number: textToRun.toLowerCase().includes('po') ? 'PO-9821' : null,
+        stop_automated_dunning: textToRun.toLowerCase().includes('disput'),
+        escalation_required: textToRun.toLowerCase().includes('disput'),
+        action_summary: 'Semantic extraction simulated successfully.',
+      });
+    } finally {
+      setIsSimulatingB2B(false);
+    }
+  };
+
+  const handleResolveB2BPO = async (invoiceId: string, poNumber: string) => {
+    setB2bInvoices(prev =>
+      prev.map(inv =>
+        inv.id === invoiceId
+          ? { ...inv, poStatus: 'approved', poNumber, status: 'resolved_reissued', recommendedAction: `PO #${poNumber} applied; Clean invoice re-issued` }
+          : inv
+      )
+    );
+    setChannelResult(`PO #${poNumber} attached to ${invoiceId}. Clean invoice with 1-click Razorpay link dispatched to AP team.`);
+  };
+
+  const handleRouteB2BDispute = async (invoiceId: string, disputeReason: string) => {
+    setB2bInvoices(prev =>
+      prev.map(inv =>
+        inv.id === invoiceId
+          ? { ...inv, status: 'dunning_halted_human_assigned', disputeFlag: true, disputeReason, recommendedAction: 'Dunning Halted; Account Executive Assigned' }
+          : inv
+      )
+    );
+    setChannelResult(`Dunning permanently paused on ${invoiceId}. Escalation ticket routed to Enterprise Account Executive.`);
+  };
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -428,6 +595,16 @@ export default function MerchantDashboard() {
               >
                 <RefreshCw className="w-4 h-4" />
                 Subscription Churn Guard
+              </button>
+
+              <button
+                onClick={() => setMainView('b2b_receivables')}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md font-bold text-[13px] transition-colors ${
+                  mainView === 'b2b_receivables' ? 'bg-cyan-50 text-[#00A3C4]' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'
+                }`}
+              >
+                <Briefcase className="w-4 h-4" />
+                B2B Receivables & AR
               </button>
 
               <button
@@ -1075,7 +1252,413 @@ export default function MerchantDashboard() {
               </div>
             )}
 
-            {/* VIEW 4: BANK DECLINE CODE GUIDE */}
+            {/* VIEW 4: B2B RECEIVABLES & ENTERPRISE AR INTELLIGENCE */}
+            {mainView === 'b2b_receivables' && (
+              <div className="space-y-6">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Enterprise B2B Receivables & AR Intelligence</h1>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Navigate company Accounts Payable (AP) workflows with automated PO blocker resolution, commercial dispute isolation, and multi-tier relationship escalation.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-50 text-[#00A3C4] border border-cyan-200">
+                      <Briefcase className="w-3.5 h-3.5" />
+                      Enterprise AR Engine Active
+                    </span>
+                  </div>
+                </div>
+
+                {/* 4 KPI Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Overdue AR</div>
+                    <div className="text-2xl font-black text-slate-900 mt-1">₹2,24,500</div>
+                    <div className="text-[11px] text-slate-500 font-medium mt-1">4 corporate accounts across 4 aging buckets</div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                    <div className="text-[11px] font-bold text-[#00A3C4] uppercase tracking-wider">Process Friction Blockers</div>
+                    <div className="text-2xl font-black text-[#00A3C4] mt-1">₹53,000</div>
+                    <div className="text-[11px] text-slate-500 font-medium mt-1">Missing POs & tax variances auto-resolved</div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                    <div className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">Disputes Isolated (Dunning Halted)</div>
+                    <div className="text-2xl font-black text-amber-600 mt-1">₹26,500</div>
+                    <div className="text-[11px] text-amber-700 font-medium mt-1">Halted dunning to protect AE commercial relationship</div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                    <div className="text-[11px] font-bold text-purple-600 uppercase tracking-wider">Promise-to-Pay Muted</div>
+                    <div className="text-2xl font-black text-purple-600 mt-1">₹1,45,000</div>
+                    <div className="text-[11px] text-purple-700 font-medium mt-1">Reminders snoozed until confirmed settlement date</div>
+                  </div>
+                </div>
+
+                {/* Aging Buckets Breakdown */}
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Aging Buckets & Exposure Matrix</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">Categorized by invoice aging to match enterprise credit policies</p>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-slate-600">Standard Net-30 Terms</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="p-3.5 rounded-lg border border-emerald-200 bg-emerald-50/50">
+                      <div className="flex items-center justify-between text-xs font-bold text-emerald-800">
+                        <span>0–30 Days (Current)</span>
+                        <span className="bg-emerald-200/70 text-emerald-900 px-1.5 py-0.5 rounded text-[10px]">Low Risk</span>
+                      </div>
+                      <div className="text-lg font-black text-slate-900 mt-1">₹34,500</div>
+                      <div className="text-[11px] text-slate-600 mt-1">Zenith Cloud Labs • Digital AP link active</div>
+                    </div>
+
+                    <div className="p-3.5 rounded-lg border border-cyan-200 bg-cyan-50/50">
+                      <div className="flex items-center justify-between text-xs font-bold text-cyan-800">
+                        <span>31–60 Days</span>
+                        <span className="bg-cyan-200/70 text-cyan-900 px-1.5 py-0.5 rounded text-[10px]">Process Friction</span>
+                      </div>
+                      <div className="text-lg font-black text-slate-900 mt-1">₹18,500</div>
+                      <div className="text-[11px] text-slate-600 mt-1">Vikram Solar • Missing PO blocker</div>
+                    </div>
+
+                    <div className="p-3.5 rounded-lg border border-amber-200 bg-amber-50/50">
+                      <div className="flex items-center justify-between text-xs font-bold text-amber-800">
+                        <span>61–90 Days</span>
+                        <span className="bg-amber-200/70 text-amber-900 px-1.5 py-0.5 rounded text-[10px]">High Value</span>
+                      </div>
+                      <div className="text-lg font-black text-slate-900 mt-1">₹1,45,000</div>
+                      <div className="text-[11px] text-slate-600 mt-1">TechMatrix Corp • HITL supervisor approval</div>
+                    </div>
+
+                    <div className="p-3.5 rounded-lg border border-rose-200 bg-rose-50/50">
+                      <div className="flex items-center justify-between text-xs font-bold text-rose-800">
+                        <span>90+ Days</span>
+                        <span className="bg-rose-200/70 text-rose-900 px-1.5 py-0.5 rounded text-[10px]">Dispute</span>
+                      </div>
+                      <div className="text-lg font-black text-slate-900 mt-1">₹26,500</div>
+                      <div className="text-[11px] text-slate-600 mt-1">Apex Logistics • Line item dispute (AE assigned)</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* THE CORE DEMO BEAT: INTERACTIVE MEM0 AP EMAIL THREAD SIMULATOR */}
+                <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-6 text-white shadow-lg space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-700 pb-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-cyan-400" />
+                        <h3 className="text-base font-bold text-white tracking-tight">
+                          Mem0 Semantic AP Email Thread Simulator
+                        </h3>
+                      </div>
+                      <p className="text-xs text-slate-300 mt-1">
+                        Demonstrates how the AI decision engine correctly distinguishes 3 real-world replies to the exact same overdue invoice email.
+                      </p>
+                    </div>
+
+                    <span className="text-[11px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-700/50 px-2.5 py-1 rounded-md">
+                      Semantic Extraction Model: gpt-54-mini
+                    </span>
+                  </div>
+
+                  {/* 3 Canonical Preset Buttons */}
+                  <div className="space-y-2">
+                    <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      Select Demo Scenario:
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                      <button
+                        onClick={() => handleSelectB2BPreset('missing_po')}
+                        className={`p-3 rounded-lg text-left transition-all border ${
+                          b2bPresetKey === 'missing_po'
+                            ? 'bg-cyan-950/80 border-cyan-400 text-white shadow-sm'
+                            : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:border-slate-500'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-cyan-300">1. Administrative Blocker</span>
+                          <span className="text-[10px] bg-cyan-900 text-cyan-200 px-1.5 py-0.5 rounded font-mono">Missing PO</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">
+                          &quot;AP portal rejected invoice: missing PO #PO-9821. Please resend with PO.&quot;
+                        </p>
+                      </button>
+
+                      <button
+                        onClick={() => handleSelectB2BPreset('commercial_dispute')}
+                        className={`p-3 rounded-lg text-left transition-all border ${
+                          b2bPresetKey === 'commercial_dispute'
+                            ? 'bg-amber-950/80 border-amber-400 text-white shadow-sm'
+                            : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:border-slate-500'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-amber-300">2. Commercial Dispute</span>
+                          <span className="text-[10px] bg-amber-900 text-amber-200 px-1.5 py-0.5 rounded font-mono">Damaged Goods</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">
+                          &quot;Disputing line item 3: 40 units arrived damaged. Withholding payment.&quot;
+                        </p>
+                      </button>
+
+                      <button
+                        onClick={() => handleSelectB2BPreset('promise_to_pay')}
+                        className={`p-3 rounded-lg text-left transition-all border ${
+                          b2bPresetKey === 'promise_to_pay'
+                            ? 'bg-purple-950/80 border-purple-400 text-white shadow-sm'
+                            : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:border-slate-500'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-purple-300">3. Promise to Pay</span>
+                          <span className="text-[10px] bg-purple-900 text-purple-200 px-1.5 py-0.5 rounded font-mono">Batch Friday 20th</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">
+                          &quot;Invoice approved by finance. Scheduled in bi-weekly batch on Friday 20th.&quot;
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Input Email Box & Run Button */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        Inbound Email Reply Text:
+                      </label>
+                      <span className="text-[11px] text-slate-400">Invoice: INV-2026-0599 (Vikram Solar Infra)</span>
+                    </div>
+                    <div className="relative">
+                      <textarea
+                        value={b2bSimulatorText}
+                        onChange={e => { setB2bSimulatorText(e.target.value); setB2bPresetKey('custom'); }}
+                        rows={3}
+                        className="w-full bg-slate-950/70 border border-slate-700 rounded-lg p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-cyan-400 transition-colors"
+                        placeholder="Paste or type an inbound AP email reply..."
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => handleRunB2BSimulator()}
+                        disabled={isSimulatingB2B}
+                        className="px-4 py-2 rounded-lg bg-[#00A3C4] hover:bg-[#008ba8] text-white text-xs font-bold transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+                      >
+                        <Sparkles className={`w-3.5 h-3.5 ${isSimulatingB2B ? 'animate-spin' : ''}`} />
+                        <span>{isSimulatingB2B ? 'Analyzing Intent...' : 'Simulate AP Extraction & Action'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Live Simulation Output Panel */}
+                  {b2bSimulatorResult && (
+                    <div className="mt-4 p-4 rounded-xl bg-slate-950 border border-slate-700/80 space-y-3 animate-fade-in">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-400">Extracted Intent:</span>
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs font-bold ${
+                              b2bSimulatorResult.reply_type === 'process_fix'
+                                ? 'bg-cyan-900/80 text-cyan-200 border border-cyan-700'
+                                : b2bSimulatorResult.reply_type === 'commercial_dispute'
+                                ? 'bg-amber-900/80 text-amber-200 border border-amber-700'
+                                : 'bg-purple-900/80 text-purple-200 border border-purple-700'
+                            }`}
+                          >
+                            {b2bSimulatorResult.reply_type?.toUpperCase().replace('_', ' ')}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-400">Dunning Status:</span>
+                          {b2bSimulatorResult.stop_automated_dunning ? (
+                            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-900/80 text-rose-200 border border-rose-700 flex items-center gap-1">
+                              <ShieldAlert className="w-3 h-3 text-rose-400" />
+                              DUNNING HALTED (Dispute Safe)
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-900/80 text-emerald-200 border border-emerald-700 flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                              ACTIVE RECOVERY
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                        <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
+                          <div className="text-[10px] text-slate-400 uppercase font-bold">Extracted PO Number</div>
+                          <div className="font-mono font-bold text-cyan-400 mt-0.5">
+                            {b2bSimulatorResult.extracted_po_number || 'N/A (Not an administrative fix)'}
+                          </div>
+                        </div>
+
+                        <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
+                          <div className="text-[10px] text-slate-400 uppercase font-bold">Dispute Line Item</div>
+                          <div className="font-mono font-bold text-amber-400 mt-0.5">
+                            {b2bSimulatorResult.extracted_dispute_reason || 'N/A (No commercial dispute)'}
+                          </div>
+                        </div>
+
+                        <div className="p-2.5 rounded bg-slate-900 border border-slate-800">
+                          <div className="text-[10px] text-slate-400 uppercase font-bold">Promised Pay Date</div>
+                          <div className="font-mono font-bold text-purple-400 mt-0.5">
+                            {b2bSimulatorResult.promised_pay_date || 'N/A'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded bg-slate-900 border border-slate-800 text-xs">
+                        <div className="text-[10px] text-slate-400 uppercase font-bold mb-1">
+                          Automated Action Dispatched:
+                        </div>
+                        <p className="text-slate-200 leading-relaxed font-medium">
+                          {b2bSimulatorResult.action_summary}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* B2B INVOICES LEDGER TABLE */}
+                <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                  <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                        Enterprise Accounts Receivable Ledger
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Active B2B invoices requiring administrative PO updates, dispute management, or tiered contact escalation
+                      </p>
+                    </div>
+                    <span className="text-xs font-bold text-slate-600 bg-white border border-slate-200 px-2.5 py-1 rounded-md shadow-2xs">
+                      {b2bInvoices.length} Enterprise Invoices
+                    </span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 uppercase tracking-wider text-[11px]">
+                          <th className="px-5 py-3.5">Client Company & Contact</th>
+                          <th className="px-5 py-3.5">Invoice ID</th>
+                          <th className="px-5 py-3.5">Overdue Amount</th>
+                          <th className="px-5 py-3.5">Aging Bracket</th>
+                          <th className="px-5 py-3.5">PO & Workflow Status</th>
+                          <th className="px-5 py-3.5">Contact Tier</th>
+                          <th className="px-5 py-3.5 text-right">1-Click Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {b2bInvoices.map((inv) => (
+                          <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="px-5 py-4">
+                              <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                                <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                                {inv.clientCompany}
+                              </div>
+                              <div className="text-slate-500 text-[11px] mt-0.5">{inv.contactName}</div>
+                            </td>
+
+                            <td className="px-5 py-4 font-mono font-bold text-slate-800">
+                              {inv.id}
+                            </td>
+
+                            <td className="px-5 py-4">
+                              <div className="font-bold text-slate-900 text-sm">
+                                ₹{inv.amount.toLocaleString('en-IN')}
+                              </div>
+                              <div className="text-[11px] text-slate-500 font-mono">Net 30</div>
+                            </td>
+
+                            <td className="px-5 py-4">
+                              <span
+                                className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${
+                                  inv.agingBucket === '0_30_days'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : inv.agingBucket === '31_60_days'
+                                    ? 'bg-cyan-100 text-cyan-800'
+                                    : inv.agingBucket === '61_90_days'
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-rose-100 text-rose-800'
+                                }`}
+                              >
+                                {inv.daysOverdue} Days Overdue
+                              </span>
+                            </td>
+
+                            <td className="px-5 py-4">
+                              {inv.poStatus === 'missing_po' ? (
+                                <span className="inline-flex items-center gap-1 text-rose-700 font-bold bg-rose-50 border border-rose-200 px-2 py-0.5 rounded text-[11px]">
+                                  <AlertTriangle className="w-3 h-3 text-rose-600" />
+                                  Missing Client PO
+                                </span>
+                              ) : inv.disputeFlag ? (
+                                <span className="inline-flex items-center gap-1 text-amber-700 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded text-[11px]">
+                                  <ShieldAlert className="w-3 h-3 text-amber-600" />
+                                  Disputed ({inv.disputeReason || 'Line item'})
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[11px]">
+                                  <FileCheck className="w-3 h-3 text-emerald-600" />
+                                  PO #{inv.poNumber} Approved
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="px-5 py-4">
+                              <span className="font-medium text-slate-700 text-xs">
+                                {inv.contactTier}
+                              </span>
+                            </td>
+
+                            <td className="px-5 py-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {inv.poStatus === 'missing_po' ? (
+                                  <button
+                                    onClick={() => handleResolveB2BPO(inv.id, 'PO-9821')}
+                                    className="px-2.5 py-1 rounded bg-[#00A3C4] hover:bg-[#008ba8] text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1"
+                                  >
+                                    <FileCheck className="w-3 h-3" />
+                                    <span>Attach PO-9821</span>
+                                  </button>
+                                ) : inv.disputeFlag ? (
+                                  <button
+                                    onClick={() => handleRouteB2BDispute(inv.id, inv.disputeReason || 'Damaged goods')}
+                                    className="px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1"
+                                  >
+                                    <ShieldAlert className="w-3 h-3" />
+                                    <span>Assign to AE</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      setChannelResult(`1-Click Razorpay AP Link dispatched to ${inv.clientCompany} (${inv.contactName}).`);
+                                    }}
+                                    className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1"
+                                  >
+                                    <Send className="w-3 h-3 text-cyan-400" />
+                                    <span>Send 1-Click Link</span>
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* VIEW 5: BANK DECLINE CODE GUIDE */}
             {mainView === 'decline_taxonomy' && (
               <div className="space-y-6">
                 <div>

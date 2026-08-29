@@ -21,6 +21,10 @@ from orchestrator.tools.merchant_tools import (
     get_checkout_funnel_metrics,
     get_subscription_churn_analysis,
     trigger_outbound_recovery_action,
+    get_b2b_aging_and_receivables_summary,
+    resolve_b2b_process_blocker,
+    route_b2b_dispute_to_human,
+    simulate_b2b_ap_email_reply,
 )
 
 logger = logging.getLogger("orchestrator.tools.registry")
@@ -38,6 +42,10 @@ ALL_TOOLS_MAP: Dict[str, Callable[..., Any]] = {
     "get_checkout_funnel_metrics": get_checkout_funnel_metrics,
     "get_subscription_churn_analysis": get_subscription_churn_analysis,
     "trigger_outbound_recovery_action": trigger_outbound_recovery_action,
+    "get_b2b_aging_and_receivables_summary": get_b2b_aging_and_receivables_summary,
+    "resolve_b2b_process_blocker": resolve_b2b_process_blocker,
+    "route_b2b_dispute_to_human": route_b2b_dispute_to_human,
+    "simulate_b2b_ap_email_reply": simulate_b2b_ap_email_reply,
 }
 
 PAYER_TOOL_NAMES = [
@@ -56,6 +64,10 @@ MERCHANT_TOOL_NAMES = [
     "get_checkout_funnel_metrics",
     "get_subscription_churn_analysis",
     "trigger_outbound_recovery_action",
+    "get_b2b_aging_and_receivables_summary",
+    "resolve_b2b_process_blocker",
+    "route_b2b_dispute_to_human",
+    "simulate_b2b_ap_email_reply",
     "apply_concession_discount",
     "register_promise_to_pay",
 ]
@@ -218,6 +230,67 @@ OPENAI_TOOL_SCHEMAS: List[Dict[str, Any]] = [
                     "approval_note": {"type": "string", "description": "Authorization reason"},
                 },
                 "required": ["invoice_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_b2b_aging_and_receivables_summary",
+            "description": "Fetches enterprise B2B Accounts Receivable aging buckets, credit exposure, PO friction items, and active commercial disputes.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "merchant_id": {"type": "string", "description": "Merchant ID (e.g. 'merch_01')"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "resolve_b2b_process_blocker",
+            "description": "Applies a missing PO number to an invoice and re-dispatches a clean invoice with a 1-click Razorpay payment link to Accounts Payable.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "invoice_id": {"type": "string", "description": "Invoice reference ID (e.g. 'INV-2026-0599')"},
+                    "po_number": {"type": "string", "description": "Client PO Number (e.g. 'PO-9821')"},
+                    "client_company": {"type": "string", "description": "Client Company Name"},
+                },
+                "required": ["invoice_id", "po_number"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "route_b2b_dispute_to_human",
+            "description": "Stops all automated dunning on a disputed B2B invoice and routes an escalation ticket to the Account Executive.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "invoice_id": {"type": "string", "description": "Invoice reference ID"},
+                    "dispute_reason": {"type": "string", "description": "Client dispute reason"},
+                    "client_company": {"type": "string", "description": "Client Company Name"},
+                },
+                "required": ["invoice_id", "dispute_reason"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "simulate_b2b_ap_email_reply",
+            "description": "Simulates and executes semantic Mem0-style intent extraction on an inbound email from a client AP team.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "email_text": {"type": "string", "description": "Inbound email reply text from Accounts Payable"},
+                    "invoice_id": {"type": "string", "description": "Invoice reference ID"},
+                    "client_company": {"type": "string", "description": "Client Company Name"},
+                },
+                "required": ["email_text"],
             },
         },
     },

@@ -324,3 +324,115 @@ def trigger_outbound_recovery_action(
             "recovery_link": "https://rzp.io/rzp/Qf0zRD2B",
             "message": f"1-Click Razorpay Smart Link dispatched to {customer_name} via {channel.title()}.",
         }
+
+
+def get_b2b_aging_and_receivables_summary(merchant_id: str = "merch_01") -> Dict[str, Any]:
+    """
+    Returns enterprise B2B Accounts Receivable aging buckets, exposure metrics,
+    and breakdown of process friction vs. commercial disputes vs. credit risk.
+    """
+    logger.info(f"[TOOL] get_b2b_aging_and_receivables_summary: {merchant_id}")
+    return {
+        "tool": "get_b2b_aging_and_receivables_summary",
+        "merchant_id": merchant_id,
+        "total_b2b_outstanding_inr": 224500.0,
+        "aging_buckets": {
+            "0_30_days": {"amount_inr": 34500.0, "invoice_count": 1, "status": "low_risk"},
+            "31_60_days": {"amount_inr": 18500.0, "invoice_count": 1, "status": "po_blocker"},
+            "61_90_days": {"amount_inr": 145000.0, "invoice_count": 1, "status": "high_value_escalation"},
+            "90_plus_days": {"amount_inr": 26500.0, "invoice_count": 1, "status": "commercial_dispute_paused"},
+        },
+        "category_distribution": {
+            "process_friction_inr": 53000.0,
+            "commercial_dispute_inr": 26500.0,
+            "cash_flow_risk_inr": 145000.0,
+        },
+        "active_disputes": [
+            {
+                "invoice_id": "INV-2026-0612",
+                "client": "Apex Logistics B2B",
+                "amount_inr": 26500.0,
+                "dispute_reason": "Damaged goods in transit (40 units)",
+                "status": "paused_routed_to_account_executive",
+            }
+        ],
+        "po_friction_invoices": [
+            {
+                "invoice_id": "INV-2026-0599",
+                "client": "Vikram Solar Infra",
+                "amount_inr": 18500.0,
+                "issue": "Missing client PO number",
+                "status": "po_request_sent_to_ap",
+            }
+        ],
+        "message": "Retrieved B2B AR summary: ₹2,24,500 total outstanding across 4 aging buckets. 1 commercial dispute safely paused.",
+    }
+
+
+def resolve_b2b_process_blocker(
+    invoice_id: str = "INV-2026-0599",
+    po_number: str = "PO-9821",
+    client_company: str = "Vikram Solar Infra",
+) -> Dict[str, Any]:
+    """
+    Applies missing PO reference or tax number to a B2B invoice and re-dispatches
+    a compliant invoice with 1-click Razorpay corporate payment link to the client AP team.
+    """
+    logger.info(f"[TOOL] resolve_b2b_process_blocker: {invoice_id} -> PO #{po_number}")
+    return {
+        "tool": "resolve_b2b_process_blocker",
+        "invoice_id": invoice_id,
+        "po_number": po_number,
+        "client_company": client_company,
+        "status": "resolved_and_redispatched",
+        "payment_link": "https://rzp.io/rzp/Qf0zRD2B",
+        "message": f"[CONFIRMED] Invoice {invoice_id} updated with client PO #{po_number} and re-dispatched to Accounts Payable with 1-click Razorpay link.",
+    }
+
+
+def route_b2b_dispute_to_human(
+    invoice_id: str = "INV-2026-0612",
+    dispute_reason: str = "Disputed quantity / partial delivery",
+    client_company: str = "Apex Logistics B2B",
+) -> Dict[str, Any]:
+    """
+    Stops all automated dunning on a disputed B2B invoice and routes an escalation ticket
+    to the designated Account Executive to protect the commercial relationship.
+    """
+    logger.info(f"[TOOL] route_b2b_dispute_to_human: {invoice_id} -> {dispute_reason}")
+    return {
+        "tool": "route_b2b_dispute_to_human",
+        "invoice_id": invoice_id,
+        "client_company": client_company,
+        "dispute_reason": dispute_reason,
+        "status": "dunning_halted_human_assigned",
+        "assigned_to": "Account Executive (Strategic Accounts)",
+        "message": f"[DISPUTE ROUTED] Automated chasing stopped for {client_company} (Invoice {invoice_id}). Escalation ticket assigned to Account Executive.",
+    }
+
+
+def simulate_b2b_ap_email_reply(
+    email_text: str = "Please resend with PO #PO-9821 approved by engineering.",
+    invoice_id: str = "INV-2026-0587",
+    client_company: str = "TechMatrix Corp",
+) -> Dict[str, Any]:
+    """
+    Simulates and executes semantic Mem0-style intent extraction on incoming AP email replies.
+    Distinguishes administrative process fixes from disputes and payment commitments.
+    """
+    logger.info(f"[TOOL] simulate_b2b_ap_email_reply: {client_company} - '{email_text[:60]}...'")
+    from orchestrator.b2b_receivables import extract_b2b_email_intent
+    result = extract_b2b_email_intent(email_text, invoice_id=invoice_id, client_company=client_company)
+    return {
+        "tool": "simulate_b2b_ap_email_reply",
+        "invoice_id": invoice_id,
+        "client_company": client_company,
+        "reply_type": result.reply_type,
+        "extracted_po_number": result.extracted_po_number,
+        "extracted_dispute_reason": result.extracted_dispute_reason,
+        "promised_pay_date": result.promised_pay_date,
+        "stop_automated_dunning": result.stop_automated_dunning,
+        "action_taken_summary": result.action_taken_summary,
+        "suggested_next_step": result.suggested_next_step,
+        "message": f"[{result.reply_type.upper()}] {result.action_taken_summary}",
+    }
