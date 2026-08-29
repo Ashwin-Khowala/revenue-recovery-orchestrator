@@ -83,7 +83,8 @@ def apply_concession_discount(
     event_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Applies an instant recovery discount/concession (default 5%) to a pending invoice or payment link.
+    Applies an instant recovery discount/concession (default 5%, max 15%) to a pending invoice or payment link.
+    Persists update directly to Supabase database and logs cryptographic audit record.
     
     Args:
         discount_percent: Percentage discount to apply (e.g. 5, 10)
@@ -96,6 +97,28 @@ def apply_concession_discount(
     # Cap discount at 15% to satisfy financial guardrail invariants
     capped_discount = min(max(1, discount_percent), 15)
     
+    try:
+        from orchestrator.audit import log_audit_entry, _get_supabase_client
+        supabase = _get_supabase_client()
+        if supabase and (event_id or customer_id):
+            query = supabase.table("events").update({
+                "metadata": {"discount_concession_pct": capped_discount, "concession_reason": reason},
+            })
+            if event_id:
+                query.eq("event_id", event_id).execute()
+            elif customer_id:
+                query.eq("customer_id", customer_id).execute()
+
+        log_audit_entry(
+            event_id=event_id or customer_id or "discount_tool",
+            node_name="apply_concession_discount",
+            action_taken=f"DISCOUNT_CONCESSION_{capped_discount}PCT",
+            details={"discount_percent": capped_discount, "reason": reason, "customer_id": customer_id, "event_id": event_id},
+            reasoning=f"Applied {capped_discount}% instant concession (capped at 15% financial invariant). Reason: {reason}",
+        )
+    except Exception as e:
+        logger.warning(f"Concession DB update error: {e}")
+
     return {
         "tool": "apply_concession_discount",
         "status": "applied",
@@ -125,7 +148,7 @@ def register_promise_to_pay(
     """
     logger.info(f"[TOOL] register_promise_to_pay: {promised_date} - {note}")
     try:
-        from orchestrator.audit import _get_supabase_client
+        from orchestrator.audit import log_audit_entry, _get_supabase_client
         supabase = _get_supabase_client()
         if supabase:
             query = supabase.table("events").update({
@@ -136,8 +159,16 @@ def register_promise_to_pay(
                 query.eq("event_id", event_id).execute()
             elif customer_id:
                 query.eq("customer_id", customer_id).execute()
+
+        log_audit_entry(
+            event_id=event_id or customer_id or "ptp_commitment",
+            node_name="register_promise_to_pay",
+            action_taken="PTP_SCHEDULED_OUTREACH_PAUSED",
+            details={"promised_date": promised_date, "note": note, "customer_id": customer_id, "event_id": event_id},
+            reasoning=f"Customer confirmed payment commitment for {promised_date}. Paused all dunning until T+24h after promised date.",
+        )
     except Exception as e:
-        logger.debug(f"PTP DB update fallback: {e}")
+        logger.warning(f"PTP DB update and audit log error: {e}")
 
     return {
         "tool": "register_promise_to_pay",

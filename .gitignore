@@ -38,6 +38,9 @@ htmlcov/
 # Next.js / Node
 node_modules/
 dashboard/node_modules/
+.next/
+dashboard/.next/
+*.tsbuildinfo
 dashboard/.next/
 dashboard/out/
 dashboard/build/
