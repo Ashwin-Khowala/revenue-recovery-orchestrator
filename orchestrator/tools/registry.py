@@ -25,6 +25,10 @@ from orchestrator.tools.merchant_tools import (
     resolve_b2b_process_blocker,
     route_b2b_dispute_to_human,
     simulate_b2b_ap_email_reply,
+    get_mandate_portfolio_health,
+    simulate_mandate_rail_decision,
+    trigger_mandate_renewal_flow,
+    dispatch_afa_pre_debit_notification,
 )
 
 logger = logging.getLogger("orchestrator.tools.registry")
@@ -46,6 +50,10 @@ ALL_TOOLS_MAP: Dict[str, Callable[..., Any]] = {
     "resolve_b2b_process_blocker": resolve_b2b_process_blocker,
     "route_b2b_dispute_to_human": route_b2b_dispute_to_human,
     "simulate_b2b_ap_email_reply": simulate_b2b_ap_email_reply,
+    "get_mandate_portfolio_health": get_mandate_portfolio_health,
+    "simulate_mandate_rail_decision": simulate_mandate_rail_decision,
+    "trigger_mandate_renewal_flow": trigger_mandate_renewal_flow,
+    "dispatch_afa_pre_debit_notification": dispatch_afa_pre_debit_notification,
 }
 
 PAYER_TOOL_NAMES = [
@@ -68,6 +76,10 @@ MERCHANT_TOOL_NAMES = [
     "resolve_b2b_process_blocker",
     "route_b2b_dispute_to_human",
     "simulate_b2b_ap_email_reply",
+    "get_mandate_portfolio_health",
+    "simulate_mandate_rail_decision",
+    "trigger_mandate_renewal_flow",
+    "dispatch_afa_pre_debit_notification",
     "apply_concession_discount",
     "register_promise_to_pay",
 ]
@@ -291,6 +303,70 @@ OPENAI_TOOL_SCHEMAS: List[Dict[str, Any]] = [
                     "client_company": {"type": "string", "description": "Client Company Name"},
                 },
                 "required": ["email_text"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_mandate_portfolio_health",
+            "description": "Fetches portfolio-level recurring mandate health, mandates expiring in 30 days, AFA threshold breaches, and issuing bank registration success rates.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "merchant_id": {"type": "string", "description": "Merchant ID (e.g. 'merch_01')"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "simulate_mandate_rail_decision",
+            "description": "Evaluates a mandate debit attempt against declarative scheme Rule-Packs (UPI Autopay, eNACH, Bacs, SEPA).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "rail": {"type": "string", "description": "Scheme name ('upi_autopay', 'enach', 'bacs_direct_debit', 'sepa_core')"},
+                    "amount": {"type": "number", "description": "Debit amount in INR"},
+                    "failure_reason": {"type": "string", "description": "Bank return reason or code"},
+                    "current_retry_count": {"type": "integer", "description": "Attempts made so far in current cycle"},
+                    "mandate_status": {"type": "string", "description": "'active', 'expiring_soon', 'expired', 'revoked_by_payer'"},
+                },
+                "required": ["rail", "amount"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "trigger_mandate_renewal_flow",
+            "description": "Dispatches a proactive 1-click mandate re-registration link ahead of mandate expiration.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "mandate_id": {"type": "string", "description": "Mandate ID"},
+                    "customer_name": {"type": "string", "description": "Customer Name"},
+                    "customer_phone": {"type": "string", "description": "Customer Phone Number"},
+                },
+                "required": ["mandate_id", "customer_name"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "dispatch_afa_pre_debit_notification",
+            "description": "Dispatches RBI-compliant 24h pre-debit AFA notification with 1-tap OTP/UPI auth link for debits > ₹15,000.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "mandate_id": {"type": "string", "description": "Mandate ID"},
+                    "amount": {"type": "number", "description": "Debit amount in INR"},
+                    "customer_name": {"type": "string", "description": "Customer Name"},
+                    "customer_phone": {"type": "string", "description": "Customer Phone Number"},
+                },
+                "required": ["mandate_id", "amount", "customer_name"],
             },
         },
     },

@@ -599,3 +599,170 @@ def simulate_b2b_ap_email_reply(
         "suggested_next_step": result.suggested_next_step,
         "message": f"[{result.reply_type.upper()}] {result.action_taken_summary}",
     }
+
+
+def get_mandate_portfolio_health(merchant_id: str = "merch_01") -> Dict[str, Any]:
+    """
+    Merchant Tool: Fetches portfolio-level health for recurring mandates (UPI Autopay, eNACH, Direct Debit, SEPA).
+    Analyzes mandates expiring in 30 days, AFA threshold breaches (>₹15,000), and issuing bank registration success rates.
+    
+    Args:
+        merchant_id: Merchant identifier (e.g. 'merch_01')
+    """
+    logger.info(f"[TOOL] get_mandate_portfolio_health: {merchant_id}")
+    from orchestrator.mandate_orchestrator import get_mandate_portfolio_summary
+    return get_mandate_portfolio_summary(merchant_id)
+
+
+def simulate_mandate_rail_decision(
+    rail: str = "upi_autopay",
+    amount: float = 24500.0,
+    failure_reason: str = "Transaction amount > ₹15,000; AFA authentication required",
+    current_retry_count: int = 1,
+    mandate_status: str = "active",
+    days_until_expiry: int = 120,
+    customer_name: str = "Priya Sharma",
+    mandate_id: str = "man_upi_9821",
+) -> Dict[str, Any]:
+    """
+    Simulates and evaluates a mandate debit failure or renewal trigger against declarative scheme Rule-Packs.
+    Demonstrates why silent retries are blocked for AFA breaches and expired/revoked mandates.
+    
+    Args:
+        rail: Payment scheme ('upi_autopay', 'enach', 'bacs_direct_debit', 'sepa_core')
+        amount: Outstanding debit amount in INR
+        failure_reason: Return error string or code from bank
+        current_retry_count: Number of attempts already made in current cycle
+        mandate_status: Current mandate state ('active', 'expiring_soon', 'expired', 'revoked_by_payer')
+        days_until_expiry: Days remaining on mandate standing permission
+        customer_name: Payer customer name
+        mandate_id: Mandate unique identifier
+    """
+    logger.info(f"[TOOL] simulate_mandate_rail_decision: {rail} - ₹{amount} ({mandate_status})")
+    from orchestrator.mandate_orchestrator import (
+        PaymentRail,
+        MandateStatus,
+        evaluate_mandate_debit_attempt,
+    )
+    
+    # Parse rail enum
+    try:
+        rail_enum = PaymentRail(rail.lower())
+    except Exception:
+        rail_enum = PaymentRail.UPI_AUTOPAY
+
+    try:
+        status_enum = MandateStatus(mandate_status.lower())
+    except Exception:
+        status_enum = MandateStatus.ACTIVE
+
+    decision = evaluate_mandate_debit_attempt(
+        mandate_id=mandate_id,
+        rail=rail_enum,
+        amount_inr=amount,
+        current_cycle_failures=current_retry_count,
+        mandate_status=status_enum,
+        days_until_expiry=days_until_expiry,
+        raw_error_message=failure_reason,
+        customer_name=customer_name,
+    )
+
+    return {
+        "tool": "simulate_mandate_rail_decision",
+        "mandate_id": decision.mandate_id,
+        "customer_name": decision.customer_name,
+        "rail": decision.rail.value,
+        "amount_inr": decision.amount_inr,
+        "mandate_status": decision.mandate_status.value,
+        "failure_category": decision.failure_category.value,
+        "root_cause": decision.root_cause.value,
+        "is_silent_retry_allowed": decision.is_silent_retry_allowed,
+        "is_hard_compliance_stop": decision.is_hard_compliance_stop,
+        "current_cycle_attempt": decision.current_cycle_attempt,
+        "max_allowed_attempts": decision.max_allowed_attempts,
+        "next_retry_time": decision.next_retry_time,
+        "cooldown_hours_enforced": decision.cooldown_hours_enforced,
+        "proactive_renewal_required": decision.proactive_renewal_required,
+        "afa_prompt_required": decision.afa_prompt_required,
+        "recommended_action": decision.recommended_action,
+        "plain_english_rationale": decision.plain_english_rationale,
+        "one_click_action_label": decision.one_click_action_label,
+        "recovery_link": decision.recovery_link,
+        "message": f"[{decision.rail.value.upper()} RULE-PACK] {decision.plain_english_rationale}",
+    }
+
+
+def trigger_mandate_renewal_flow(
+    mandate_id: str = "man_enach_0411",
+    customer_name: str = "Aditi Chawla",
+    customer_phone: str = "+919876543210",
+) -> Dict[str, Any]:
+    """
+    Dispatches a proactive 1-click mandate re-registration link ahead of expiration.
+    
+    Args:
+        mandate_id: Mandate identifier
+        customer_name: Customer name
+        customer_phone: Customer phone number
+    """
+    logger.info(f"[TOOL] trigger_mandate_renewal_flow: {mandate_id} for {customer_name}")
+    try:
+        from orchestrator.audit import log_audit_entry
+        log_audit_entry(
+            event_id=mandate_id,
+            node_name="trigger_mandate_renewal_flow",
+            action_taken="PROACTIVE_MANDATE_RENEWAL_DISPATCHED",
+            details={"mandate_id": mandate_id, "customer_name": customer_name, "phone": customer_phone},
+            reasoning=f"Proactively sent 1-click renewal link to {customer_name} before mandate expiration.",
+        )
+    except Exception as e:
+        logger.warning(f"Audit log error: {e}")
+
+    return {
+        "tool": "trigger_mandate_renewal_flow",
+        "mandate_id": mandate_id,
+        "customer_name": customer_name,
+        "status": "renewal_link_dispatched",
+        "link": "https://rzp.io/rzp/Qf0zRD2B",
+        "message": f"[PROACTIVE RENEWAL] 1-Click Mandate renewal link sent to {customer_name} via WhatsApp.",
+    }
+
+
+def dispatch_afa_pre_debit_notification(
+    mandate_id: str = "man_upi_9821",
+    amount: float = 24500.0,
+    customer_name: str = "Priya Sharma",
+    customer_phone: str = "+919876543210",
+) -> Dict[str, Any]:
+    """
+    Dispatches RBI-compliant 24h pre-debit AFA notification with 1-tap OTP/UPI auth link for debits > ₹15,000.
+    
+    Args:
+        mandate_id: Mandate identifier
+        amount: Outstanding debit amount
+        customer_name: Payer customer name
+        customer_phone: Recipient phone number
+    """
+    logger.info(f"[TOOL] dispatch_afa_pre_debit_notification: {mandate_id} (₹{amount}) to {customer_name}")
+    try:
+        from orchestrator.audit import log_audit_entry
+        log_audit_entry(
+            event_id=mandate_id,
+            node_name="dispatch_afa_pre_debit_notification",
+            action_taken="RBI_AFA_PRE_DEBIT_NOTIFICATION_SENT",
+            details={"mandate_id": mandate_id, "amount": amount, "customer_name": customer_name},
+            reasoning=f"Amount ₹{amount:,.2f} > ₹15,000 threshold. Sent 1-tap pre-debit AFA approval link.",
+        )
+    except Exception as e:
+        logger.warning(f"Audit log error: {e}")
+
+    return {
+        "tool": "dispatch_afa_pre_debit_notification",
+        "mandate_id": mandate_id,
+        "amount": amount,
+        "customer_name": customer_name,
+        "status": "afa_prompt_dispatched",
+        "auth_link": "https://rzp.io/rzp/Qf0zRD2B",
+        "message": f"[AFA NOTIFICATION DISPATCHED] Pre-debit OTP authorization link sent to {customer_name} (₹{amount:,.2f}).",
+    }
+

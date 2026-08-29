@@ -1383,3 +1383,78 @@ async def route_b2b_dispute_endpoint(req: B2BRouteDisputeRequest):
         dispute_reason=req.dispute_reason,
         client_company=req.client_company or "Apex Logistics B2B",
     )
+
+
+# =============================================================================
+# MANDATE RECURRING PAYMENTS & REGULATORY RULE-PACK ENDPOINTS
+# =============================================================================
+
+class MandateSimulateRequest(BaseModel):
+    rail: str = "upi_autopay"
+    amount: float = 24500.0
+    failure_reason: str = "Transaction amount > ₹15,000; AFA authentication required"
+    current_retry_count: int = 1
+    mandate_status: str = "active"
+    days_until_expiry: int = 120
+    customer_name: str = "Priya Sharma"
+    mandate_id: str = "man_upi_9821"
+
+
+class MandateRenewalRequest(BaseModel):
+    mandate_id: str = "man_enach_0411"
+    customer_name: str = "Aditi Chawla"
+    customer_phone: Optional[str] = "+919876543210"
+
+
+class MandateAFARequest(BaseModel):
+    mandate_id: str = "man_upi_9821"
+    amount: float = 24500.0
+    customer_name: str = "Priya Sharma"
+    customer_phone: Optional[str] = "+919876543210"
+
+
+@app.get("/api/orchestrator/mandates/health")
+def api_get_mandate_portfolio_health(merchant_id: str = "merch_01"):
+    """Fetches recurring mandate portfolio metrics, expiring counts, and bank registration matrix."""
+    from orchestrator.tools.merchant_tools import get_mandate_portfolio_health
+    return get_mandate_portfolio_health(merchant_id=merchant_id)
+
+
+@app.post("/api/orchestrator/mandates/simulate-rail")
+def api_simulate_mandate_rail(req: MandateSimulateRequest):
+    """Simulates scheme Rule-Pack evaluation and compliance enforcement."""
+    from orchestrator.tools.merchant_tools import simulate_mandate_rail_decision
+    return simulate_mandate_rail_decision(
+        rail=req.rail,
+        amount=req.amount,
+        failure_reason=req.failure_reason,
+        current_retry_count=req.current_retry_count,
+        mandate_status=req.mandate_status,
+        days_until_expiry=req.days_until_expiry,
+        customer_name=req.customer_name,
+        mandate_id=req.mandate_id,
+    )
+
+
+@app.post("/api/orchestrator/mandates/trigger-renewal")
+def api_trigger_mandate_renewal(req: MandateRenewalRequest):
+    """Triggers proactive mandate re-registration flow ahead of expiry."""
+    from orchestrator.tools.merchant_tools import trigger_mandate_renewal_flow
+    return trigger_mandate_renewal_flow(
+        mandate_id=req.mandate_id,
+        customer_name=req.customer_name,
+        customer_phone=req.customer_phone or "+919876543210",
+    )
+
+
+@app.post("/api/orchestrator/mandates/trigger-afa")
+def api_trigger_mandate_afa(req: MandateAFARequest):
+    """Dispatches RBI-compliant 1-tap AFA pre-debit authorization notification."""
+    from orchestrator.tools.merchant_tools import dispatch_afa_pre_debit_notification
+    return dispatch_afa_pre_debit_notification(
+        mandate_id=req.mandate_id,
+        amount=req.amount,
+        customer_name=req.customer_name,
+        customer_phone=req.customer_phone or "+919876543210",
+    )
+
