@@ -469,8 +469,8 @@ export default function AIChatBot({
       const fallbackReply =
         role === 'merchant'
           ? isEnglish
-            ? '📊 **Business Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 customer accounts\n• **Recovered:** ₹44,075 with 0 duplicate spam contacts\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp'
-            : '📊 **Financial Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 accounts\n• **Recovered:** ₹44,075 (0 duplicate spam contacts)\n• **Pending Approval:** ₹1,45,000 TechMatrix Corp'
+            ? '**Business Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 customer accounts\n• **Recovered:** ₹44,075 with 0 duplicate spam contacts\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp'
+            : '**Financial Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 accounts\n• **Recovered:** ₹44,075 (0 duplicate spam contacts)\n• **Pending Approval:** ₹1,45,000 TechMatrix Corp'
           : isEnglish
           ? `Your payment of ₹${amount.toLocaleString('en-IN')} is currently pending. You can apply a 5% concession discount or schedule a payment date.`
           : `Aapka ₹${amount.toLocaleString('en-IN')} ka payment pending hai. Aap 5% discount le sakte hain ya date schedule kar sakte hain.`;
@@ -672,7 +672,7 @@ export default function AIChatBot({
             <span>AI Copilot & Voice</span>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           </div>
-          <div className="text-[10px] text-slate-400">Click to expand pane (⌘J)</div>
+          <div className="text-[10px] text-slate-400">Click to expand pane (Ctrl+J)</div>
         </div>
       </button>
     );
@@ -732,7 +732,7 @@ export default function AIChatBot({
           <button
             onClick={toggleOpen}
             className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-xs font-bold transition-colors"
-            title="Collapse Panel (⌘J)"
+            title="Collapse Panel (Ctrl+J)"
           >
             <X className="w-3.5 h-3.5" />
           </button>

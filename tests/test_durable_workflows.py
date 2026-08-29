@@ -78,7 +78,7 @@ async def test_temporal_durable_workflow_standard_flow():
             assert result is not None
             assert result.get("payment_status") == "recovered"
             assert result.get("recovered_amount") == 4999.0
-            print("✅ Test 1 Passed: Temporal workflow executed with payment captured signal!")
+            print("[PASS] Test 1 Passed: Temporal workflow executed with payment captured signal!")
 
 
 @pytest.mark.asyncio
@@ -127,7 +127,7 @@ async def test_temporal_hitl_escalation_and_approval():
             assert result is not None
             assert result.get("guardrail_result") == "ESCALATE"
             assert result.get("human_decision") == "APPROVED"
-            print("✅ Test 2 Passed: High-value HITL escalation & approval signal verified in Temporal!")
+            print("[PASS] Test 2 Passed: High-value HITL escalation & approval signal verified in Temporal!")
 
 
 if __name__ == "__main__":

@@ -65,7 +65,7 @@ def send_tg_message(
         if not data.get("ok"):
             logger.warning(f"[TG SEND FAIL] chat_id={chat_id}: {data.get('description', 'unknown')}")
         else:
-            logger.info(f"[TG SENT] ✅ To chat_id={chat_id}")
+            logger.info(f"[TG SENT] To chat_id={chat_id}")
         return data
     except Exception as e:
         logger.error(f"[TG SEND ERROR] {e}")
@@ -102,29 +102,29 @@ def send_recovery_message(
     # 2. Build language-aware message
     if language in ("hindi", "hinglish"):
         msg = (
-            f"🔔 <b>Namaste! Aapke payment ke baare mein reminder hai.</b>\n\n"
+            f"<b>[REMINDER] Namaste! Aapke payment ke baare mein reminder hai.</b>\n\n"
             f"• Amount: <b>₹{amount:,.0f}</b>\n"
             f"• Merchant: <b>{merchant_name}</b>\n"
         )
         if offer_discount and discount_amount > 0:
-            msg += f"• 🎁 <b>Special Offer: ₹{discount_amount:,.0f} ki chhoot!</b>\n"
+            msg += f"• <b>Special Offer: ₹{discount_amount:,.0f} ki chhoot!</b>\n"
         msg += f"\nNeeche button click karein aur abhi settle karein:"
     else:
         msg = (
-            f"🔔 <b>Payment Recovery Reminder</b>\n\n"
+            f"<b>[REMINDER] Payment Recovery Reminder</b>\n\n"
             f"• Amount Due: <b>₹{amount:,.0f}</b>\n"
             f"• Merchant: <b>{merchant_name}</b>\n"
         )
         if offer_discount and discount_amount > 0:
             final = amount - discount_amount
-            msg += f"• 🎁 <b>Recovery Offer: ₹{discount_amount:,.0f} OFF — Pay ₹{final:,.0f}</b>\n"
+            msg += f"• <b>Recovery Offer: ₹{discount_amount:,.0f} OFF — Pay ₹{final:,.0f}</b>\n"
         msg += "\nTap below to settle now:"
 
     keyboard = {
         "inline_keyboard": [
-            [{"text": "💳 Pay Now", "url": payment_link}],
-            [{"text": "📅 I'll Pay Later (Set Date)", "callback_data": f"promise_to_pay:{event_id}"}],
-            [{"text": "❓ Why did this happen?", "callback_data": f"explain_failure:{event_id}"}],
+            [{"text": "Pay Now", "url": payment_link}],
+            [{"text": "I'll Pay Later (Set Date)", "callback_data": f"promise_to_pay:{event_id}"}],
+            [{"text": "Why did this happen?", "callback_data": f"explain_failure:{event_id}"}],
         ]
     }
 
@@ -158,7 +158,7 @@ def send_hitl_alert_to_merchant(
         return False
     
     msg = (
-        f"⚠️ <b>HITL Escalation — Human Approval Required</b>\n\n"
+        f"<b>[HITL ESCALATION] Human Approval Required</b>\n\n"
         f"• Event: <code>{event_id}</code>\n"
         f"• Customer: <b>{customer_name}</b>\n"
         f"• Amount: <b>₹{amount:,.0f}</b>\n"
@@ -167,9 +167,9 @@ def send_hitl_alert_to_merchant(
     )
     keyboard = {
         "inline_keyboard": [
-            [{"text": f"✅ Approve ₹{amount:,.0f} Recovery", "callback_data": f"approve_hitl:{event_id}"}],
-            [{"text": "❌ Reject / Cancel", "callback_data": f"reject_hitl:{event_id}"}],
-            [{"text": "📊 View Customer History", "callback_data": f"customer_history:{event_id}"}],
+            [{"text": f"[Approve] Authorize ₹{amount:,.0f} Recovery", "callback_data": f"approve_hitl:{event_id}"}],
+            [{"text": "[Reject] Reject / Cancel", "callback_data": f"reject_hitl:{event_id}"}],
+            [{"text": "[History] View Customer History", "callback_data": f"customer_history:{event_id}"}],
         ]
     }
     
@@ -275,10 +275,10 @@ def _generate_agent_reply(user_text: str, chat_id: str) -> tuple[str, Optional[D
         stats_msg = _get_live_merchant_stats()
         keyboard = {
             "inline_keyboard": [
-                [{"text": "✅ Approve Pending HITL", "callback_data": "approve_hitl_menu"}],
-                [{"text": "📊 View Benchmark Results", "callback_data": "merchant_benchmark"}],
-                [{"text": "👥 Customer Risk Overview", "callback_data": "customer_overview"}],
-                [{"text": "👤 Switch to Customer Mode", "callback_data": "payer_mode"}],
+                [{"text": "Approve Pending HITL", "callback_data": "approve_hitl_menu"}],
+                [{"text": "View Benchmark Results", "callback_data": "merchant_benchmark"}],
+                [{"text": "Customer Risk Overview", "callback_data": "customer_overview"}],
+                [{"text": "Switch to Customer Mode", "callback_data": "payer_mode"}],
             ]
         }
         return stats_msg, keyboard
@@ -287,13 +287,13 @@ def _generate_agent_reply(user_text: str, chat_id: str) -> tuple[str, Optional[D
     if text_lower.startswith("approve_hitl"):
         event_id = text_lower.split(":", 1)[-1] if ":" in text_lower else "evt_pending"
         return _handle_hitl_approval(event_id), {
-            "inline_keyboard": [[{"text": "🏢 Back to Merchant Menu", "callback_data": "merchant"}]]
+            "inline_keyboard": [[{"text": "Back to Merchant Menu", "callback_data": "merchant"}]]
         }
     
     if text_lower.startswith("reject_hitl"):
         event_id = text_lower.split(":", 1)[-1] if ":" in text_lower else "evt_pending"
-        return f"❌ <b>HITL Case <code>{event_id}</code> Rejected.</b>\nNo action will be taken. Customer outreach has been cancelled.", {
-            "inline_keyboard": [[{"text": "🏢 Back to Merchant Menu", "callback_data": "merchant"}]]
+        return f"<b>[REJECTED] HITL Case <code>{event_id}</code> Rejected.</b>\nNo action will be taken. Customer outreach has been cancelled.", {
+            "inline_keyboard": [[{"text": "Back to Merchant Menu", "callback_data": "merchant"}]]
         }
 
     # PAYER MODE
@@ -308,21 +308,21 @@ def _generate_agent_reply(user_text: str, chat_id: str) -> tuple[str, Optional[D
             return _get_personalized_greeting(cid, razorpay_link)
         
         reply = (
-            "👋 <b>Namaste! Welcome to Razorpay AI Recovery Assistant.</b>\n\n"
+            "<b>Namaste! Welcome to Razorpay AI Recovery Assistant.</b>\n\n"
             "I help resolve payment issues, re-authorize mandates, and manage payment commitments.\n\n"
             "<b>What I can do for you:</b>\n"
-            "• 💳 <b>Pay Outstanding Bill</b>\n"
-            "• 🎁 <b>Request Recovery Discount</b>\n"
-            "• 📅 <b>Promise to Pay Later</b>\n"
-            "• ❓ <b>Why did my payment fail?</b>\n\n"
+            "• <b>Pay Outstanding Bill</b>\n"
+            "• <b>Request Recovery Discount</b>\n"
+            "• <b>Promise to Pay Later</b>\n"
+            "• <b>Why did my payment fail?</b>\n\n"
             "<i>(Merchants: send /merchant for operations dashboard)</i>"
         )
         keyboard = {
             "inline_keyboard": [
-                [{"text": "💳 Pay Now (Razorpay)", "url": razorpay_link}],
-                [{"text": "🎁 Request Recovery Discount", "callback_data": "request_discount"}],
-                [{"text": "📅 Promise to Pay Later", "callback_data": "promise_to_pay"}],
-                [{"text": "🏢 Merchant Mode", "callback_data": "merchant"}],
+                [{"text": "Pay Now (Razorpay)", "url": razorpay_link}],
+                [{"text": "Request Recovery Discount", "callback_data": "request_discount"}],
+                [{"text": "Promise to Pay Later", "callback_data": "promise_to_pay"}],
+                [{"text": "Merchant Mode", "callback_data": "merchant"}],
             ]
         }
         return reply, keyboard
@@ -330,38 +330,38 @@ def _generate_agent_reply(user_text: str, chat_id: str) -> tuple[str, Optional[D
     # Promise-to-pay callbacks
     if text_lower.startswith("promise_to_pay"):
         reply = (
-            "🤝 <b>Promise-to-Pay Registered!</b>\n\n"
+            "<b>[CONFIRMED] Promise-to-Pay Registered!</b>\n\n"
             "All automated reminders are now <b>paused</b>. "
             "We'll check back on your scheduled date.\n\n"
             "You can still pay anytime before then:"
         )
-        return reply, {"inline_keyboard": [[{"text": "💳 Pay Now Anytime", "url": razorpay_link}]]}
+        return reply, {"inline_keyboard": [[{"text": "Pay Now Anytime", "url": razorpay_link}]]}
 
     # Discount request
     if any(k in text_lower for k in ("discount", "offer", "request_discount", "kam")):
         reply = (
-            "🎉 <b>Recovery Discount Approved!</b>\n\n"
+            "<b>[APPROVED] Recovery Discount Approved!</b>\n\n"
             "Based on your track record, we've approved a <b>5% Recovery Discount (₹250 OFF)</b>.\n\n"
             "• Original: <s>₹4,999</s>\n• Final: <b>₹4,749</b>\n\n"
             "Settle your payment below:"
         )
-        return reply, {"inline_keyboard": [[{"text": "💳 Pay ₹4,749 (Discounted)", "url": razorpay_link}]]}
+        return reply, {"inline_keyboard": [[{"text": "Pay ₹4,749 (Discounted)", "url": razorpay_link}]]}
 
     # Explain failure
     if any(k in text_lower for k in ("why", "fail", "reason", "mandate", "rbi", "explain_failure")):
         reply = (
-            "🔍 <b>Payment Diagnostic Report</b>\n\n"
+            "<b>Payment Diagnostic Report</b>\n\n"
             "Your transaction encountered a <b>temporary bank authorization hold</b>.\n\n"
             "• <b>Root Cause:</b> Soft decline / RBI AFA verification required\n"
             "• <b>Resolution:</b> 1-click retry via Razorpay secure checkout\n"
             "• <b>Safety:</b> Zero duplicate debits guaranteed"
         )
-        return reply, {"inline_keyboard": [[{"text": "💳 Complete Re-Auth", "url": razorpay_link}]]}
+        return reply, {"inline_keyboard": [[{"text": "Complete Re-Auth", "url": razorpay_link}]]}
 
     # LLM conversational fallback
     llm_reply = _llm_fallback(user_text, chat_id)
     if llm_reply:
-        return llm_reply, {"inline_keyboard": [[{"text": "💳 Pay Now", "url": razorpay_link}]]}
+        return llm_reply, {"inline_keyboard": [[{"text": "Pay Now", "url": razorpay_link}]]}
 
     # Default
     role = USER_ROLES.get(chat_id, "unknown")
@@ -369,7 +369,7 @@ def _generate_agent_reply(user_text: str, chat_id: str) -> tuple[str, Optional[D
         f"I received: <i>\"{user_text[:100]}\"</i>\n\n"
         "Send <b>/merchant</b> for merchant dashboard or <b>/start</b> for payment help."
     )
-    return reply, {"inline_keyboard": [[{"text": "💳 Pay Now", "url": razorpay_link}]]}
+    return reply, {"inline_keyboard": [[{"text": "Pay Now", "url": razorpay_link}]]}
 
 
 def _get_live_merchant_stats() -> str:
@@ -392,18 +392,18 @@ def _get_live_merchant_stats() -> str:
             pending_hitl = len([e for e in events if e["payment_status"] == "escalated"])
             
             return (
-                "🏢 <b>Merchant Operations Dashboard</b>\n\n"
+                "<b>Merchant Operations Dashboard</b>\n\n"
                 f"• <b>At-Risk Revenue:</b> ₹{total_at_risk:,.0f}\n"
                 f"• <b>Recovery Rate:</b> {recovery_rate:.1f}%\n"
                 f"• <b>Duplicate Contacts:</b> <code>0 (Guaranteed)</code>\n"
                 f"• <b>Pending HITL Approvals:</b> {pending_hitl}\n\n"
-                "⚡ All guardrails active."
+                "All guardrails active."
             )
     except Exception as e:
         logger.debug(f"Live stats error: {e}")
     
     return (
-        "🏢 <b>Merchant Operations Center</b>\n\n"
+        "<b>Merchant Operations Center</b>\n\n"
         "• <b>At-Risk Revenue:</b> ₹2,45,998 (6 accounts)\n"
         "• <b>Recovery Rate:</b> 18.0% (auto) | 88.4% (batch)\n"
         "• <b>Duplicate Contacts:</b> <code>0 (Invariant)</code>\n"
@@ -429,7 +429,7 @@ def _handle_hitl_approval(event_id: str) -> str:
         logger.debug(f"HITL update error: {e}")
     
     return (
-        f"✅ <b>HITL Approved!</b>\n\n"
+        f"<b>[APPROVED] HITL Approved!</b>\n\n"
         f"• Event: <code>{event_id}</code>\n"
         f"• Status: LangGraph <code>Command(resume)</code> dispatched\n"
         f"• Audit: Updated in Supabase\n\n"
@@ -448,25 +448,25 @@ def _get_personalized_greeting(customer_id: str, payment_link: str) -> tuple[str
             lang = profile.get("language", "english")
             
             if lang in ("hindi", "hinglish"):
-                greeting = f"👋 <b>Namaste {name}!</b> Aapka swagat hai."
+                greeting = f"<b>Namaste {name}!</b> Aapka swagat hai."
             else:
-                greeting = f"👋 <b>Hello {name}!</b> Great to see you again."
+                greeting = f"<b>Hello {name}!</b> Great to see you again."
             
             greeting += f"\n\n• <b>Payment Track Record:</b> {reliability:.0%} on-time\n"
             greeting += "I'm here to help with any payment issues you might have."
             
             return greeting, {
                 "inline_keyboard": [
-                    [{"text": "💳 Pay Outstanding Balance", "url": payment_link}],
-                    [{"text": "📅 Promise to Pay Later", "callback_data": "promise_to_pay"}],
-                    [{"text": "❓ Payment Help", "callback_data": "explain_failure:recent"}],
+                    [{"text": "Pay Outstanding Balance", "url": payment_link}],
+                    [{"text": "Promise to Pay Later", "callback_data": "promise_to_pay"}],
+                    [{"text": "Payment Help", "callback_data": "explain_failure:recent"}],
                 ]
             }
     except Exception:
         pass
     
-    return "👋 <b>Welcome back!</b> How can I help?", {
-        "inline_keyboard": [[{"text": "💳 Pay Now", "url": payment_link}]]
+    return "<b>Welcome back!</b> How can I help?", {
+        "inline_keyboard": [[{"text": "Pay Now", "url": payment_link}]]
     }
 
 

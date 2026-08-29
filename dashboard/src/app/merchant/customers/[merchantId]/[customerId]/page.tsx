@@ -3,29 +3,59 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import {
+  MessageSquare,
+  Mail,
+  Phone,
+  Send,
+  Smartphone,
+  AlertTriangle,
+  Bot,
+  PauseCircle,
+  Layers,
+  CheckCircle2,
+  AlertCircle,
+  FileText,
+} from 'lucide-react';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface RiskIndicator {
   type: string;
   severity: 'high' | 'medium' | 'low';
-  message: string;
+  detail: string;
 }
 
 interface Episode {
-  customer_id: string;
   episode_type: string;
-  amount: number;
   channel: string;
   outcome: string;
-  response_hours: number;
-  notes: string;
+  amount?: number;
+  notes?: string;
+  response_hours?: number;
   created_at: string;
 }
 
 interface CustomerDetail {
-  customer_id: string;
-  profile: Record<string, any>;
+  profile: {
+    customer_id: string;
+    merchant_id: string;
+    name: string;
+    email: string;
+    phone: string;
+    whatsapp_number?: string;
+    language: string;
+    customer_type: string;
+    city: string;
+    payment_reliability: number;
+    risk_score: number;
+    preferred_channel: string;
+    telegram_chat_id?: string;
+    total_failures: number;
+    total_recoveries: number;
+    total_revenue_at_risk: number;
+    total_revenue_recovered: number;
+  };
   channel_effectiveness: Record<string, number>;
   episodic_history: Episode[];
   active_events: any[];
@@ -33,15 +63,28 @@ interface CustomerDetail {
   risk_indicators: RiskIndicator[];
 }
 
-const SEVERITY_STYLE: Record<string, { bg: string; color: string; icon: string }> = {
-  high:   { bg: '#ef444422', color: '#ef4444', icon: '🔴' },
-  medium: { bg: '#f59e0b22', color: '#f59e0b', icon: '🟡' },
-  low:    { bg: '#22c55e22', color: '#22c55e', icon: '🟢' },
+const SEVERITY_STYLE: Record<string, { bg: string; color: string; dotColor: string }> = {
+  high:   { bg: '#ef444422', color: '#ef4444', dotColor: '#ef4444' },
+  medium: { bg: '#f59e0b22', color: '#f59e0b', dotColor: '#f59e0b' },
+  low:    { bg: '#22c55e22', color: '#22c55e', dotColor: '#22c55e' },
 };
 
-const CHANNEL_ICONS: Record<string, string> = {
-  whatsapp: '💬', email: '📧', voice: '📞', telegram: '✈️', sms: '📱',
-};
+function renderChannelIcon(channel: string) {
+  switch (channel) {
+    case 'whatsapp':
+      return <MessageSquare style={{ width: 14, height: 14, color: '#22c55e' }} />;
+    case 'email':
+      return <Mail style={{ width: 14, height: 14, color: '#60a5fa' }} />;
+    case 'voice':
+      return <Phone style={{ width: 14, height: 14, color: '#f59e0b' }} />;
+    case 'telegram':
+      return <Send style={{ width: 14, height: 14, color: '#06b6d4' }} />;
+    case 'sms':
+      return <Smartphone style={{ width: 14, height: 14, color: '#a855f7' }} />;
+    default:
+      return <FileText style={{ width: 14, height: 14, color: '#94a3b8' }} />;
+  }
+}
 
 const OUTCOME_COLORS: Record<string, string> = {
   recovered: '#22c55e', paid: '#22c55e', kept: '#22c55e',
@@ -64,7 +107,10 @@ function ChannelBar({ channel, rate }: { channel: string; rate: number }) {
   const color = pct >= 60 ? '#22c55e' : pct >= 35 ? '#f59e0b' : '#ef4444';
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-      <span style={{ width: 80, fontSize: 13, color: '#94a3b8' }}>{CHANNEL_ICONS[channel] || '❓'} {channel}</span>
+      <span style={{ width: 90, fontSize: 13, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6 }}>
+        {renderChannelIcon(channel)}
+        <span>{channel}</span>
+      </span>
       <div style={{ flex: 1, height: 8, background: '#0f1117', borderRadius: 4, overflow: 'hidden' }}>
         <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 4, transition: 'width 0.6s ease' }} />
       </div>
@@ -119,12 +165,16 @@ export default function CustomerDetailPage({ params }: { params: { customerId: s
         {/* Risk badge */}
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
           {risk_indicators.length > 0 && (
-            <span style={{ background: '#ef444422', color: '#ef4444', padding: '4px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
-              ⚠️ {risk_indicators.filter(r => r.severity === 'high').length} High Risk Signals
+            <span style={{ background: '#ef444422', color: '#ef4444', padding: '4px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <AlertTriangle style={{ width: 14, height: 14 }} />
+              <span>{risk_indicators.filter(r => r.severity === 'high').length} High Risk Signals</span>
             </span>
           )}
           {profile.telegram_chat_id ? (
-            <span style={{ color: '#06b6d4', fontSize: 13 }}>✈️ Telegram Linked</span>
+            <span style={{ color: '#06b6d4', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Send style={{ width: 14, height: 14 }} />
+              <span>Telegram Linked</span>
+            </span>
           ) : (
             <span style={{ color: '#475569', fontSize: 13 }}>No Telegram</span>
           )}
@@ -136,7 +186,10 @@ export default function CustomerDetailPage({ params }: { params: { customerId: s
         <div>
           {/* AI Overview */}
           <div style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #1a1f2e 100%)', border: '1px solid #1e40af', borderRadius: 12, padding: '20px 24px', marginBottom: 20 }}>
-            <div style={{ fontSize: 12, color: '#60a5fa', marginBottom: 8, fontWeight: 600, letterSpacing: '0.08em' }}>🤖 AI RISK OVERVIEW</div>
+            <div style={{ fontSize: 12, color: '#60a5fa', marginBottom: 8, fontWeight: 600, letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Bot style={{ width: 14, height: 14 }} />
+              <span>AI RISK OVERVIEW</span>
+            </div>
             <MarkdownRenderer content={ai_overview} isDark={true} />
           </div>
 
@@ -163,8 +216,8 @@ export default function CustomerDetailPage({ params }: { params: { customerId: s
                   const s = SEVERITY_STYLE[r.severity] || SEVERITY_STYLE.low;
                   return (
                     <div key={i} style={{ background: s.bg, border: `1px solid ${s.color}44`, borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span>{s.icon}</span>
-                      <span style={{ fontSize: 13, color: '#e2e8f0' }}>{r.message}</span>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.dotColor }} />
+                      <span style={{ fontSize: 13, color: '#e2e8f0' }}>{r.detail || r.type}</span>
                       <span style={{ marginLeft: 'auto', fontSize: 11, color: s.color, fontWeight: 600 }}>{r.severity.toUpperCase()}</span>
                     </div>
                   );
@@ -206,7 +259,7 @@ export default function CustomerDetailPage({ params }: { params: { customerId: s
                 <div style={{ color: '#475569', fontSize: 13, padding: 16, textAlign: 'center' }}>No history yet</div>
               ) : episodic_history.map((ep, i) => (
                 <div key={i} style={{ background: '#1a1f2e', border: '1px solid #1e293b', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ fontSize: 15 }}>{CHANNEL_ICONS[ep.channel] || '📋'}</span>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>{renderChannelIcon(ep.channel)}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, color: '#e2e8f0' }}>{ep.episode_type?.replace(/_/g, ' ')}</div>
                     {ep.notes && <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{ep.notes}</div>}
@@ -266,15 +319,16 @@ export default function CustomerDetailPage({ params }: { params: { customerId: s
           <div style={{ background: '#1a1f2e', border: '1px solid #1e293b', borderRadius: 12, padding: '20px' }}>
             <h3 style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Actions</h3>
             {[
-              { label: '💬 Send WhatsApp Recovery', color: '#22c55e' },
-              { label: '📧 Send Email Link', color: '#60a5fa' },
-              { label: '⚠️ Escalate to HITL', color: '#f59e0b' },
-              { label: '⏸️ Pause Outreach', color: '#64748b' },
+              { label: 'Send WhatsApp Recovery', icon: <MessageSquare style={{ width: 14, height: 14 }} />, color: '#22c55e' },
+              { label: 'Send Email Link', icon: <Mail style={{ width: 14, height: 14 }} />, color: '#60a5fa' },
+              { label: 'Escalate to HITL', icon: <AlertTriangle style={{ width: 14, height: 14 }} />, color: '#f59e0b' },
+              { label: 'Pause Outreach', icon: <PauseCircle style={{ width: 14, height: 14 }} />, color: '#64748b' },
             ].map(action => (
-              <button key={action.label} style={{ width: '100%', padding: '10px 14px', background: 'transparent', border: `1px solid ${action.color}44`, borderRadius: 8, color: action.color, fontSize: 13, cursor: 'pointer', marginBottom: 8, textAlign: 'left', transition: 'background 0.15s' }}
+              <button key={action.label} style={{ width: '100%', padding: '10px 14px', background: 'transparent', border: `1px solid ${action.color}44`, borderRadius: 8, color: action.color, fontSize: 13, cursor: 'pointer', marginBottom: 8, textAlign: 'left', transition: 'background 0.15s', display: 'flex', alignItems: 'center', gap: 8 }}
                 onMouseEnter={e => (e.currentTarget.style.background = action.color + '11')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                {action.label}
+                {action.icon}
+                <span>{action.label}</span>
               </button>
             ))}
           </div>

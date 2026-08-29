@@ -105,7 +105,7 @@ def diagnose_subscription_failure(
                 "Your Account Manager is reviewing this transaction."
             ),
             merchant_lifecycle_alert=(
-                f"🚨 Enterprise Account Renewal Alert: ₹{amount:,.0f}/mo subscription for {customer_name} failed ({code}). "
+                f"[Enterprise Alert] Renewal failed: ₹{amount:,.0f}/mo subscription for {customer_name} ({code}). "
                 "Automated messages paused. Review and approve direct executive outreach."
             ),
         )
@@ -137,7 +137,7 @@ def diagnose_subscription_failure(
                 f"Would you like to pause your subscription or switch to our free tier? Manage your account: {recovery_payment_link}"
             ),
             merchant_lifecycle_alert=(
-                f"📉 Voluntary Churn Warning: {customer_name} ({tier.value}) was inactive for {days_since_login} days. "
+                f"[Churn Warning] Voluntary churn risk: {customer_name} ({tier.value}) was inactive for {days_since_login} days. "
                 "Routed to graceful exit survey / downgrade to prevent credit card disputes."
             ),
         )

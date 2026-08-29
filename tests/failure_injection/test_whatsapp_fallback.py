@@ -36,7 +36,7 @@ def test_whatsapp_failure_email_failover():
             assert result["contact_count"] == 1
             assert result["execution_result"]["status"] == "delivered"
             assert any("Email Recovery Dispatched (Failover)" in a["action_taken"] for a in result["audit_trail"])
-            print("✓ Passed: WhatsApp failure cleanly failed over to Email with zero duplicate contacts.")
+            print("[PASS] Passed: WhatsApp failure cleanly failed over to Email with zero duplicate contacts.")
 
 
 if __name__ == "__main__":

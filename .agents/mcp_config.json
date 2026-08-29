@@ -4,7 +4,7 @@
       "command": "npx",
       "args": ["-y", "@prisma/mcp-server"],
       "env": {
-        "DATABASE_URL": "postgresql://postgres:postgres@db.gmttsomarcefwjbbhlik.supabase.co:5432/postgres"
+        "DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/postgres"
       }
     }
   }

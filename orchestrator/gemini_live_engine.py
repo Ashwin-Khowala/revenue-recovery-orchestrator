@@ -414,44 +414,44 @@ def _run_sync_fallback_turn(
         tool_res = execute_tool("apply_concession_discount", {"discount_percent": 5, "reason": "Customer requested settlement concession"})
         executed_tools.append(tool_res)
         updated_amount = round(amount * 0.95)
-        reply = f"✓ I have applied a 5% settlement concession for you! Your updated payable total is ₹{updated_amount:,.2f}. Would you like the 1-click Razorpay payment link?"
+        reply = f"I have applied a 5% settlement concession for you! Your updated payable total is ₹{updated_amount:,.2f}. Would you like the 1-click Razorpay payment link?"
 
     elif "promise" in lower_text or "monday" in lower_text or "tomorrow" in lower_text or "pay on" in lower_text or "pause" in lower_text:
         promised_date = "Next Monday" if "monday" in lower_text else "Tomorrow" if "tomorrow" in lower_text else "2026-09-05"
         tool_res = execute_tool("register_promise_to_pay", {"promised_date": promised_date, "customer_id": customer_id})
         executed_tools.append(tool_res)
-        reply = f"🤝 Thank you! I have confirmed your Promise-to-Pay for {promised_date}. All automated outreach and reminders have been paused."
+        reply = f"Thank you! I have confirmed your Promise-to-Pay for {promised_date}. All automated outreach and reminders have been paused."
 
     elif "financial" in lower_text or "status" in lower_text or "at-risk" in lower_text or "overview" in lower_text or "portfolio" in lower_text:
         tool_res = execute_tool("get_merchant_financial_overview", {"merchant_id": merchant_id})
         executed_tools.append(tool_res)
-        reply = f"📊 **Financial Status:**\n• Total At-Risk: ₹{tool_res.get('total_at_risk_inr', 245998):,.2f}\n• Auto-Recovered: ₹{tool_res.get('total_recovered_inr', 44075):,.2f} ({tool_res.get('recovery_rate_pct', 17.9)}%)\n• Margin Shield Saved: ₹{tool_res.get('margin_shield_saved_inr', 24500):,.2f}\n• Pending Approvals (≥₹1L): {tool_res.get('pending_hitl_count', 2)}\n• Zero-Spam Violations: strictly 0."
+        reply = f"**Financial Status:**\n• Total At-Risk: ₹{tool_res.get('total_at_risk_inr', 245998):,.2f}\n• Auto-Recovered: ₹{tool_res.get('total_recovered_inr', 44075):,.2f} ({tool_res.get('recovery_rate_pct', 17.9)}%)\n• Margin Shield Saved: ₹{tool_res.get('margin_shield_saved_inr', 24500):,.2f}\n• Pending Approvals (≥₹1L): {tool_res.get('pending_hitl_count', 2)}\n• Zero-Spam Violations: strictly 0."
 
     elif "approve" in lower_text or "techmatrix" in lower_text or "145000" in lower_text or "1,45,000" in lower_text:
         tool_res = execute_tool("approve_high_value_invoice", {"invoice_id": "TechMatrix Corp", "approval_note": "Supervisor authorized"})
         executed_tools.append(tool_res)
-        reply = f"✓ High-value invoice for TechMatrix Corp (₹1,45,000) has been approved. Executive recovery outreach dispatched."
+        reply = f"High-value invoice for TechMatrix Corp (₹1,45,000) has been approved. Executive recovery outreach dispatched."
 
     elif "decline" in lower_text or "insufficient" in lower_text or "fail" in lower_text or "expired" in lower_text:
         decline_code = "insufficient_funds" if "insufficient" in lower_text else "card_expired" if "expired" in lower_text else "gateway_timeout"
         tool_res = execute_tool("lookup_decline_code", {"decline_code": decline_code})
         executed_tools.append(tool_res)
-        reply = f"ℹ️ **Decline Diagnosis for '{decline_code}':**\n• Fault Domain: {tool_res.get('category_label', 'Payer Fault')}\n• Retry Delay: {tool_res.get('retry_delay_hours', 72)} hours\n• Action: {tool_res.get('plain_english_action')}"
+        reply = f"**Decline Diagnosis for '{decline_code}':**\n• Fault Domain: {tool_res.get('category_label', 'Payer Fault')}\n• Retry Delay: {tool_res.get('retry_delay_hours', 72)} hours\n• Action: {tool_res.get('plain_english_action')}"
 
     elif "funnel" in lower_text or "cart" in lower_text or "drop" in lower_text:
         tool_res = execute_tool("get_checkout_funnel_metrics", {"merchant_id": merchant_id})
         executed_tools.append(tool_res)
-        reply = f"🛒 **Funnel Status:** 1,420 carts created -> 540 converted (38% completion rate). Biggest drop is at Shipping Info (31%). Margin Shield has protected ₹24,500 by withholding discounts from repeat window shoppers."
+        reply = f"**Funnel Status:** 1,420 carts created -> 540 converted (38% completion rate). Biggest drop is at Shipping Info (31%). Margin Shield has protected ₹24,500 by withholding discounts from repeat window shoppers."
 
     elif "churn" in lower_text or "subscription" in lower_text or "cust_0001" in lower_text:
         tool_res = execute_tool("get_subscription_churn_analysis", {"customer_id": customer_id})
         executed_tools.append(tool_res)
-        reply = f"🔄 **Subscription Churn Analysis:** {tool_res.get('message')}"
+        reply = f"**Subscription Churn Analysis:** {tool_res.get('message')}"
 
     elif "link" in lower_text or "pay" in lower_text or "razorpay" in lower_text:
         tool_res = execute_tool("get_payment_link", {"customer_name": customer_name, "amount": amount})
         executed_tools.append(tool_res)
-        reply = f"💳 Here is your secure 1-click Razorpay payment link: https://rzp.io/rzp/Qf0zRD2B (Payable: ₹{amount:,.2f})."
+        reply = f"Here is your secure 1-click Razorpay payment link: https://rzp.io/rzp/Qf0zRD2B (Payable: ₹{amount:,.2f})."
 
     else:
         reply = f"Hello {customer_name}! I have reviewed your account details (Pending: ₹{amount:,.2f}). How can I assist you further?"

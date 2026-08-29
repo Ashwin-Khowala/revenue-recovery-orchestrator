@@ -24,7 +24,7 @@ def test_webhook_race_condition_cancellation():
     assert result["payment_status"] == "cancelled_by_webhook"
     assert result["recovered_amount"] == 25000.0
     assert any("Action Cancelled" in a["action_taken"] for a in result["audit_trail"])
-    print("✓ Passed: Webhook race condition successfully averted duplicate customer outreach.")
+    print("[PASS] Passed: Webhook race condition successfully averted duplicate customer outreach.")
 
 
 if __name__ == "__main__":

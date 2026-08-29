@@ -534,64 +534,64 @@ async def copilot_chat_endpoint(req: CopilotChatRequest):
     # Rich Deterministic knowledge base response
     if any(w in query_lower for w in ["financial", "status", "money", "pending", "balance", "total", "summary", "overview", "how much"]):
         answer = (
-            "📊 **Your Business Financial & Recovery Summary:**\n\n"
+            "**Your Business Financial & Recovery Summary:**\n\n"
             "• **Total Revenue At-Risk:** ₹2,45,998 across 6 customer incidents\n"
             "• **Successfully Recovered:** ₹44,075 (18% direct recovery rate, 100% on bank route outages)\n"
             "• **Gross Margin Preserved (Margin Shield):** ₹24,500 saved by withholding blanket discounts from window shoppers\n"
             "• **Awaiting Your Approval (HITL):** ₹1,45,000 (TechMatrix Corp — high-value safety gate)\n"
             "• **Scheduled for Payment:** ₹52,000 (Kavita Iyer — Promise-to-Pay for Sept 2nd)\n"
             "• **Pending Customer Self-Action:** ₹33,499 (Ananya Verma ₹28,500 + Ashwin Khowala ₹4,999)\n\n"
-            "💡 **Recommendation:** Review and approve the ₹1,45,000 TechMatrix invoice in the 'Pending Payments' tab to release outreach."
+            "**Recommendation:** Review and approve the ₹1,45,000 TechMatrix invoice in the 'Pending Payments' tab to release outreach."
         )
     elif any(w in query_lower for w in ["margin", "discount", "shield", "coupon", "funnel", "abandoned"]):
         answer = (
-            "🛡️ **Checkout Funnel & Margin-Shield Intelligence:**\n\n"
+            "**Checkout Funnel & Margin-Shield Intelligence:**\n\n"
             "• **Anti-Coupon Harvesting:** Traditional tools give 10–15% discounts blindly. Our system detected that 42% of abandoned carts were comparison shoppers who visited multiple times for <15s. We applied our **Strict Margin Shield (0% discount)**, saving **₹24,500 in profit margins**.\n"
             "• **Technical Self-Healing:** For users dropping due to mobile form glitches, we generated 1-click Razorpay Smart Resume links that bypass the broken step with zero marketing spam."
         )
     elif any(w in query_lower for w in ["churn", "subscription", "involuntary", "voluntary", "dormant", "kill switch"]):
         answer = (
-            "🔄 **Subscription Churn Intelligence:**\n\n"
+            "**Subscription Churn Intelligence:**\n\n"
             "• **Involuntary Churn (Engaged Users):** When active users hit a card decline, we give them a 14-day grace period and schedule smart retries around their pay cycle (72h wait for insufficient balance).\n"
             "• **Voluntary Churn (Dormant Users):** For users inactive for >45 days, we trigger the **Dunning Kill Switch**—sending 1 polite pause/downgrade off-ramp and halting retries to eliminate credit card chargebacks and disputes."
         )
     elif "rbi" in query_lower or "mandate" in query_lower or "15000" in query_lower:
         answer = (
-            "📌 **RBI Recurring Mandate Rule (> ₹15,000):**\n\n"
+            "**RBI Recurring Mandate Rule (> ₹15,000):**\n\n"
             "Under Reserve Bank of India (RBI) guidelines, any recurring payment above ₹15,000 requires 1-time Additional Factor Authentication (AFA).\n\n"
             "• Instead of permanently cancelling the customer's subscription, our AI creates a **1-click secure authorization link** and sends it via WhatsApp or Telegram.\n"
             "• **Current Case:** Ananya Verma (₹28,500) received this link and can approve it with one tap."
         )
     elif any(w in query_lower for w in ["escalate", "hitl", "human", "100000", "1 lakh", "cap", "techmatrix"]):
         answer = (
-            "🛡️ **High-Value Safety Gate (Human-In-The-Loop / HITL):**\n\n"
+            "**High-Value Safety Gate (Human-In-The-Loop / HITL):**\n\n"
             "To protect your business relationships, the AI **never** sends aggressive automated collection messages on large sums.\n\n"
             "• **Strict Rule:** Any transaction of **₹1,00,000 or higher** is automatically paused.\n"
             "• **Current Case:** TechMatrix Corp (₹1,45,000) is paused awaiting your 1-click approval in the dashboard or Telegram bot before any message moves."
         )
     elif any(w in query_lower for w in ["do nothing", "rohan", "friction", "fatigue"]):
         answer = (
-            "🧠 **Smart 'Do Nothing' Decision:**\n\n"
+            "**Smart 'Do Nothing' Decision:**\n\n"
             "Many recovery systems spam customers immediately, which annoys good buyers and damages your brand.\n\n"
             "• If a customer has a **96% on-time payment track record** (like Rohan Mehta, ₹3,499), sending an instant reminder costs more in customer goodwill than it gains.\n"
             "• The AI calculates that waiting yields the highest net revenue without spam."
         )
     elif any(w in query_lower for w in ["route", "bank", "degraded", "outage", "aarav"]):
         answer = (
-            "⚡ **Automatic Bank Outage Protection:**\n\n"
+            "**Automatic Bank Outage Protection:**\n\n"
             "When a bank gateway experiences server downtime or high failure rates (e.g. Axis Bank spike):\n\n"
             "• The system **silently switches** the transaction to a healthy backup gateway (e.g. HDFC).\n"
             "• **Zero Customer Spam:** The customer is never bothered for an infrastructure issue on the bank's side."
         )
     elif any(w in query_lower for w in ["race", "duplicate", "spam"]):
         answer = (
-            "🛡️ **Zero Duplicate Messages Invariant:**\n\n"
+            "**Zero Duplicate Messages Invariant:**\n\n"
             "If a customer pays on their own right after a payment fails, our system instantly cancels the queued reminder.\n\n"
             "• We mathematically guarantee **0 duplicate or embarrassing reminder messages** to customers who have already paid."
         )
     else:
         answer = (
-            "👋 **Razorpay AI Recovery Assistant:**\n\n"
+            "**Razorpay AI Recovery Assistant:**\n\n"
             "I monitor your at-risk payments and automatically recover failed revenue without spamming your customers.\n\n"
             "• **Current Balance At-Risk:** ₹2,45,998 across 6 accounts\n"
             "• **Recovered:** ₹44,075 with 0 duplicate contacts\n\n"

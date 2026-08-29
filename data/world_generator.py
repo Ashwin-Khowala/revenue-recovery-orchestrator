@@ -385,7 +385,7 @@ def generate_world(
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs("evals", exist_ok=True)
     
-    print("🏗️  Generating merchant world...")
+    print("[WORLD] Generating merchant world...")
     
     # Layer 1: Merchants
     merchants = []
@@ -399,18 +399,18 @@ def generate_world(
         merchant = random.choice(merchants)
         customers.append(make_customer(i + 1, merchant))
     
-    print(f"✅ {len(merchants)} merchants, {len(customers)} customers")
+    print(f"[SUCCESS] {len(merchants)} merchants, {len(customers)} customers")
     
     # Layer 2: Episodic history
-    print("📖 Generating episodic histories...")
+    print("[WORLD] Generating episodic histories...")
     all_episodes = []
     for customer in customers:
         n = random.randint(5, 50)
         all_episodes.extend(make_episodes(customer, n))
-    print(f"✅ {len(all_episodes)} episodic history entries")
+    print(f"[SUCCESS] {len(all_episodes)} episodic history entries")
     
     # Layer 3+4: Current events with hidden ground truth
-    print("⚡ Generating current revenue-risk events...")
+    print("[WORLD] Generating current revenue-risk events...")
     events = []
     for i in range(num_events):
         merchant = random.choice(merchants)
@@ -422,7 +422,7 @@ def generate_world(
     
     # Layer 5: Adversarial
     adversarial = make_adversarial_events(merchants, customers)
-    print(f"✅ {len(events)} events + {len(adversarial)} adversarial cases")
+    print(f"[SUCCESS] {len(events)} events + {len(adversarial)} adversarial cases")
     
     # ── Strip internal keys before saving ──────────────────────────────────────
     def clean(obj: Dict) -> Dict:
@@ -454,7 +454,7 @@ def generate_world(
     with open(f"{output_dir}/synthetic_events_500.json", "w", encoding="utf-8") as f:
         json.dump(events, f, indent=2, default=str)
     
-    print(f"\n✅ World generated:")
+    print(f"\n[WORLD CREATED] Summary:")
     print(f"   data/world.json              ({len(merchants_clean)} merchants, {len(customers_clean)} customers, {len(all_episodes)} episodes)")
     print(f"   evals/labeled_holdout.json   ({len(holdout)} cases including {len(adversarial)} adversarial)")
     print(f"   data/synthetic_events_500.json  ({len(events)} training events)")

@@ -104,7 +104,7 @@ def diagnose_checkout_dropoff(
                 f"We saved your order (₹{cart_val:,.0f}). Tap here to complete securely with 1 click: {resume_payment_link}"
             ),
             merchant_ux_alert=(
-                f"⚠️ UX Alert: Form validation failure at checkout step '{step.value}' "
+                f"[UX Alert] Form validation failure at checkout step '{step.value}' "
                 f"on {telemetry.device_type}. Error: {telemetry.error_message or 'Form glitch'}"
             ),
         )
@@ -135,7 +135,7 @@ def diagnose_checkout_dropoff(
             max_discount_pct=5.0,
             suggested_message=f"Hi {customer_name}, {shipping_msg}",
             merchant_ux_alert=(
-                f"💡 Conversion Insight: {cart_val:,.0f} cart dropped at shipping reveal. "
+                f"[Conversion Insight] {cart_val:,.0f} cart dropped at shipping reveal. "
                 "Consider displaying shipping calculators earlier in the product page."
             ),
         )

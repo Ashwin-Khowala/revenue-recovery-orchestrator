@@ -30,7 +30,7 @@ def free_port(port: int):
                 if len(parts) >= 5 and "LISTENING" in line:
                     pid = parts[-1]
                     if pid != "0" and pid != str(os.getpid()):
-                        print(f"  ⚡ Freeing port {port} (Terminating orphan PID {pid})...")
+                        print(f"  [INFO] Freeing port {port} (Terminating orphan PID {pid})...")
                         subprocess.run(f"taskkill /F /PID {pid}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except Exception:
             pass
@@ -38,11 +38,11 @@ def free_port(port: int):
 
 def main():
     print("=" * 70)
-    print("🚀 STARTING RAZORPAY REVENUE RECOVERY ORCHESTRATOR")
+    print("STARTING RAZORPAY REVENUE RECOVERY ORCHESTRATOR")
     print("=" * 70)
-    print("  • 🖥️  FastAPI Backend API:    http://localhost:8000")
-    print("  • 🌐 Next.js Dashboard UI:   http://localhost:3000")
-    print("  • 🤖 Telegram Recovery Bot:  @razorpaytestbot (Long-Polling Active)")
+    print("  • FastAPI Backend API:    http://localhost:8000")
+    print("  • Next.js Dashboard UI:   http://localhost:3000")
+    print("  • Telegram Recovery Bot:  @razorpaytestbot (Long-Polling Active)")
     print("=" * 70)
     print("Press Ctrl+C anytime to stop all servers cleanly.\n")
 
@@ -90,7 +90,7 @@ def main():
         )
         processes.append(("Telegram Bot Worker", p_tg))
 
-        print("\n✅ All 3 services are running! Open http://localhost:3000 in your browser.\n")
+        print("\n[READY] All 3 services are running! Open http://localhost:3000 in your browser.\n")
 
         # Keep parent alive and monitor children
         dead_notified = set()
@@ -99,10 +99,10 @@ def main():
             for name, p in processes:
                 if p.poll() is not None and name not in dead_notified:
                     dead_notified.add(name)
-                    print(f"⚠️ Process {name} exited with code {p.returncode}")
+                    print(f"[WARNING] Process {name} exited with code {p.returncode}")
 
     except KeyboardInterrupt:
-        print("\n🛑 Stopping all servers...")
+        print("\n[SHUTDOWN] Stopping all servers...")
         for name, p in processes:
             print(f"  Terminating {name}...")
             try:
@@ -119,7 +119,7 @@ def main():
                 p.kill()
             except Exception:
                 pass
-        print("✓ All processes shut down cleanly.")
+        print("[SUCCESS] All processes shut down cleanly.")
 
 
 if __name__ == "__main__":

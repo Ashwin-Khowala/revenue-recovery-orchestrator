@@ -160,7 +160,7 @@ def main():
             with conn.cursor() as cur:
                 print("1. Creating tables in Supabase Postgres...")
                 cur.execute(SCHEMA_SQL)
-                print("✓ Tables created successfully!")
+                print("[SUCCESS] Tables created successfully!")
 
                 print("2. Seeding events and audit records...")
                 for evt in SEED_DATA:
@@ -207,7 +207,7 @@ def main():
                     0,
                 ))
 
-                print("✓ Seeded all tables successfully!")
+                print("[SUCCESS] Seeded all tables successfully!")
 
                 # Verify counts
                 cur.execute("SELECT COUNT(*) FROM events;")
@@ -216,7 +216,7 @@ def main():
                 audit_count = cur.fetchone()[0]
                 cur.execute("SELECT COUNT(*) FROM evaluation_runs;")
                 eval_count = cur.fetchone()[0]
-                print(f"📊 Verified in Supabase: {event_count} events, {audit_count} audit logs, {eval_count} eval runs.")
+                print(f"[VERIFIED] Supabase counts: {event_count} events, {audit_count} audit logs, {eval_count} eval runs.")
 
     except Exception as e:
         print(f"Error during DB setup: {e}")

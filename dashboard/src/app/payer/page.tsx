@@ -339,9 +339,16 @@ function PayerPortalContent() {
               <button
                 onClick={handleClaimDiscount}
                 disabled={discountApplied || paidSuccess}
-                className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-bold transition-all shadow-xs"
+                className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-bold transition-all shadow-xs inline-flex items-center justify-center gap-1.5"
               >
-                {discountApplied ? '✓ 5% Discount Applied (₹4,749)' : 'Claim 5% Discount Now'}
+                {discountApplied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>5% Discount Applied (₹4,749)</span>
+                  </>
+                ) : (
+                  <span>Claim 5% Discount Now</span>
+                )}
               </button>
             </div>
 
@@ -375,8 +382,9 @@ function PayerPortalContent() {
                   ))}
                 </div>
                 {ptpDate && (
-                  <div className="text-[11px] text-purple-700 font-medium text-center">
-                    ✓ Outreach paused until {ptpDate}
+                  <div className="text-[11px] text-purple-700 font-medium text-center inline-flex items-center justify-center gap-1 w-full">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Outreach paused until {ptpDate}</span>
                   </div>
                 )}
               </div>

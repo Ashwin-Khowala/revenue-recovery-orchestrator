@@ -39,7 +39,7 @@ def test_deterministic_fallback_on_llm_failure():
         assert result_mandate["root_cause"] == "mandate_auth_failed"
         assert result_mandate["confidence"] == 0.98
 
-    print("✓ Passed: Deterministic rules successfully protected unambiguous financial decisions during LLM outage.")
+    print("[PASS] Passed: Deterministic rules successfully protected unambiguous financial decisions during LLM outage.")
 
 
 if __name__ == "__main__":

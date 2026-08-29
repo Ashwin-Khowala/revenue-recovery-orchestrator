@@ -322,9 +322,9 @@ def run_benchmark(models_to_test: Optional[List[str]] = None) -> List[ModelBench
     target_models = models_to_test or list(MODEL_SPECS.keys())
     results: List[ModelBenchmarkSummary] = []
 
-    print("\n" + "═" * 80)
-    print("🚀 RUNNING REVENUE RECOVERY ORCHESTRATOR — MULTI-MODEL LLM BENCHMARK")
-    print("═" * 80)
+    print("\n" + "=" * 80)
+    print("RUNNING REVENUE RECOVERY ORCHESTRATOR — MULTI-MODEL LLM BENCHMARK")
+    print("=" * 80)
 
     for model_key in target_models:
         spec = MODEL_SPECS[model_key]
@@ -371,9 +371,9 @@ def run_benchmark(models_to_test: Optional[List[str]] = None) -> List[ModelBench
                     "chosen_action": (res.get("chosen_action") or {}).get("action_type"),
                     "latency_ms": round(lat, 2),
                 })
-                print(f"  ✓ {scen['id']:<35} -> {res.get('root_cause')} ({lat:.1f}ms)")
+                print(f"  [PASS] {scen['id']:<35} -> {res.get('root_cause')} ({lat:.1f}ms)")
             except Exception as e:
-                print(f"  ✗ {scen['id']:<35} -> ERROR: {e}")
+                print(f"  [FAIL] {scen['id']:<35} -> ERROR: {e}")
                 latencies.append(5000.0)
                 details.append({
                     "scenario_id": scen["id"],
@@ -425,15 +425,15 @@ def run_benchmark(models_to_test: Optional[List[str]] = None) -> List[ModelBench
 
 def print_comparison_table(results: List[ModelBenchmarkSummary]) -> None:
     """Prints a beautiful markdown comparison table to terminal."""
-    print("\n" + "═" * 110)
-    print("🏆 FINAL MODEL EVALUATION BENCHMARK & COMPARISON TABLE")
-    print("═" * 110)
+    print("\n" + "=" * 110)
+    print("FINAL MODEL EVALUATION BENCHMARK & COMPARISON TABLE")
+    print("=" * 110)
     header = f"{'Model':<32} | {'Accuracy':<10} | {'Guardrails':<11} | {'Do-Nothing':<11} | {'p50 (ms)':<9} | {'Cost/10k ($)':<12} | {'Value Score':<11}"
     print(header)
     print("-" * len(header))
 
     for r in results:
-        star = " ★ BEST" if r == results[0] else ""
+        star = " [SELECTED]" if r == results[0] else ""
         print(
             f"{r.display_name:<32} | "
             f"{r.classification_accuracy:>8.1f}% | "
@@ -443,7 +443,7 @@ def print_comparison_table(results: List[ModelBenchmarkSummary]) -> None:
             f"${r.cost_per_10k_events_usd:>10.4f} | "
             f"{r.composite_value_score:>10.2f}{star}"
         )
-    print("═" * 110)
+    print("=" * 110)
 
 
 if __name__ == "__main__":
@@ -458,4 +458,4 @@ if __name__ == "__main__":
     out_dict = [asdict(r) for r in bench_results]
     with open(args.output, "w", encoding="utf-8") as f:
         json.dump(out_dict, f, indent=2)
-    print(f"\n[✓] Saved complete benchmark results to: {args.output}")
+    print(f"\n[SUCCESS] Saved complete benchmark results to: {args.output}")

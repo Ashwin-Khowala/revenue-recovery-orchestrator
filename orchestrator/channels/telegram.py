@@ -72,40 +72,40 @@ def send_telegram_recovery(
     target_chat_ids = [recipient_chat_id] if recipient_chat_id else get_all_active_chat_ids(bot_token)
 
     # Format contextual recovery message with HTML formatting
-    discount_text = f"\n🎁 <i>Special Recovery Discount Applied: ₹{int(discount_applied):,} OFF</i>" if discount_applied > 0 else ""
+    discount_text = f"\n<i>[Special Offer] Recovery Discount Applied: ₹{int(discount_applied):,} OFF</i>" if discount_applied > 0 else ""
     
     if root_cause == "mandate_auth_failed":
         message_text = (
-            f"⚠️ <b>RBI Mandate Re-Authorization Required</b>\n\n"
+            f"<b>[RBI MANDATE] Re-Authorization Required</b>\n\n"
             f"Hello <b>{customer_name}</b>, your recurring payment of <b>₹{amount:,.2f}</b> requires 1-click Additional Factor Authentication (AFA) under RBI regulations.\n"
             f"{discount_text}\n"
-            f"👉 <b>Authorize Mandate:</b> <a href='{recovery_link}'>{recovery_link}</a>"
+            f"<b>Authorize Mandate:</b> <a href='{recovery_link}'>{recovery_link}</a>"
         )
     elif root_cause == "checkout_abandoned":
         message_text = (
-            f"🛒 <b>Complete Your Order</b>\n\n"
+            f"<b>[CART RECOVERY] Complete Your Order</b>\n\n"
             f"Hi <b>{customer_name}</b>, we noticed you left items in your cart (<b>₹{amount:,.2f}</b>).\n"
             f"{discount_text}\n"
-            f"👉 <b>Complete Order Now:</b> <a href='{recovery_link}'>{recovery_link}</a>"
+            f"<b>Complete Order Now:</b> <a href='{recovery_link}'>{recovery_link}</a>"
         )
     elif root_cause == "receivable_overdue":
         message_text = (
-            f"📄 <b>High-Value Invoice Authorization Alert</b>\n\n"
+            f"<b>[INVOICE ALERT] High-Value Invoice Authorization</b>\n\n"
             f"Hello <b>{customer_name}</b>, high-value invoice outreach of <b>₹{amount:,.2f}</b> has been authorized.\n"
-            f"👉 <b>Settle Online:</b> <a href='{recovery_link}'>{recovery_link}</a>"
+            f"<b>Settle Online:</b> <a href='{recovery_link}'>{recovery_link}</a>"
         )
     elif root_cause == "promise_to_pay":
         message_text = (
-            f"🤝 <b>Promise-to-Pay Confirmation</b>\n\n"
+            f"<b>[PROMISE TO PAY] Commitment Scheduled</b>\n\n"
             f"Hello <b>{customer_name}</b>, your agreed payment of <b>₹{amount:,.2f}</b> has been scheduled.\n"
             f"Outreach paused. Settle anytime: <a href='{recovery_link}'>{recovery_link}</a>"
         )
     else:
         message_text = (
-            f"💳 <b>Payment Recovery Notice</b>\n\n"
+            f"<b>[RECOVERY] Payment Recovery Notice</b>\n\n"
             f"Hi <b>{customer_name}</b>, we noticed a temporary issue with your payment of <b>₹{amount:,.2f}</b>.\n"
             f"{discount_text}\n"
-            f"👉 <b>Complete Payment:</b> <a href='{recovery_link}'>{recovery_link}</a>"
+            f"<b>Complete Payment:</b> <a href='{recovery_link}'>{recovery_link}</a>"
         )
 
     dispatched_to = []
@@ -121,9 +121,9 @@ def send_telegram_recovery(
                     "disable_web_page_preview": False,
                     "reply_markup": {
                         "inline_keyboard": [
-                            [{"text": f"💳 Pay ₹{amount:,.2f} (Razorpay)", "url": recovery_link}],
-                            [{"text": "🎁 Claim 5% Discount", "callback_data": "request_discount"}],
-                            [{"text": "📅 Promise to Pay Later", "callback_data": "promise_to_pay"}],
+                            [{"text": f"Pay ₹{amount:,.2f} (Razorpay)", "url": recovery_link}],
+                            [{"text": "Claim 5% Discount", "callback_data": "request_discount"}],
+                            [{"text": "Promise to Pay Later", "callback_data": "promise_to_pay"}],
                         ]
                     },
                 }

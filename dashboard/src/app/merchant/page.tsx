@@ -40,13 +40,16 @@ import {
   FileText,
   UserCheck,
   Shield,
+  Building2,
+  ClipboardCheck,
+  Briefcase,
+  XCircle,
 } from 'lucide-react';
 
 interface Incident {
   id: string;
   customer: string;
-  customerPhone: string;
-  customerEmail?: string;
+  customerPhone?: string;
   customerId?: string;
   merchantId?: string;
   amount: number;
@@ -62,45 +65,45 @@ interface Incident {
 }
 
 // Plain-English Business Metadata for Root Causes
-const ROOT_CAUSE_META: Record<string, { label: string; icon: string; badgeColor: string; description: string; nonTechSummary: string }> = {
+const ROOT_CAUSE_META: Record<string, { label: string; icon: React.ReactNode; badgeColor: string; description: string; nonTechSummary: string }> = {
   payment_degraded: {
     label: 'Bank Route Outage',
-    icon: '🏦',
+    icon: <Building2 className="w-3.5 h-3.5 shrink-0" />,
     badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
     description: 'Bank or gateway route degraded. Silent reroute triggered without contacting customer.',
     nonTechSummary: 'The customer’s bank server experienced a temporary drop. The AI automatically rerouted the payment through a healthy bank gateway without sending disturbing messages to the customer.',
   },
   mandate_auth_failed: {
     label: 'RBI >₹15k Approval Needed',
-    icon: '📋',
+    icon: <ClipboardCheck className="w-3.5 h-3.5 shrink-0" />,
     badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     description: 'RBI regulations require 2FA approval for recurring charges above ₹15,000.',
     nonTechSummary: 'Because this recurring charge is over ₹15,000, RBI regulations mandate customer authorization. A secure 1-click re-approval link was sent to their WhatsApp.',
   },
   subscription_failed: {
     label: 'Subscription Renewal Failed',
-    icon: '🔄',
+    icon: <RefreshCw className="w-3.5 h-3.5 shrink-0" />,
     badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
     description: 'Recurring auto-debit declined (e.g. salary cycle timing or temporary card issue).',
     nonTechSummary: 'The customer’s recurring payment did not go through. Active users receive a 14-day grace period, while dormant accounts are offered a flexible pause option.',
   },
   checkout_abandoned: {
     label: 'Checkout Cart Dropped',
-    icon: '🛒',
+    icon: <ShoppingCart className="w-3.5 h-3.5 shrink-0" />,
     badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     description: 'Customer left cart at checkout step. AI diagnoses if it was a technical glitch or window shopping.',
     nonTechSummary: 'The shopper left items in their cart. For technical glitches, a 1-click resume link is sent. For window shoppers, discounts are withheld to protect your profit margin.',
   },
   receivable_overdue: {
     label: 'Overdue B2B Invoice',
-    icon: '💼',
+    icon: <Briefcase className="w-3.5 h-3.5 shrink-0" />,
     badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
     description: 'Unpaid corporate invoice past net payment terms.',
     nonTechSummary: 'An invoice is past its due date. Amounts under ₹1 Lakh receive automated polite reminders; amounts ₹1 Lakh and above are held for your 1-click supervisor approval.',
   },
   promise_to_pay: {
     label: 'Promise-to-Pay Scheduled',
-    icon: '🤝',
+    icon: <Calendar className="w-3.5 h-3.5 shrink-0" />,
     badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
     description: 'Customer agreed to pay on a specific date. All recovery reminders are paused.',
     nonTechSummary: 'The customer confirmed a date when they will make this payment. The AI has paused all automated messages to honor their commitment.',
@@ -180,7 +183,7 @@ export default function MerchantDashboard() {
         if (data.incidents && data.incidents.length > 0) {
           setIncidents(data.incidents);
           if (isManualRefresh) {
-            setChannelResult(`✓ Active recovery queue synchronized with live payment ledger.`);
+            setChannelResult(`Active recovery queue synchronized with live payment ledger.`);
           }
           return;
         }
@@ -192,7 +195,7 @@ export default function MerchantDashboard() {
         if (data.incidents && data.incidents.length > 0) {
           setIncidents(data.incidents);
           if (isManualRefresh) {
-            setChannelResult(`✓ Active recovery queue synchronized with live payment ledger.`);
+            setChannelResult(`Active recovery queue synchronized with live payment ledger.`);
           }
         }
       }
@@ -301,7 +304,7 @@ export default function MerchantDashboard() {
     if (selectedIncident && selectedIncident.id === inc.id) {
       setSelectedIncident(prev => prev ? { ...prev, status: 'paused_ptp', rootCause: 'promise_to_pay' } : null);
     }
-    setChannelResult(`🤝 Promise-to-Pay registered for ${inc.customer} until ${dateStr}. Automated outreach paused.`);
+    setChannelResult(`Promise-to-Pay registered for ${inc.customer} until ${dateStr}. Automated outreach paused.`);
   };
 
   const handleSendTelegram = async (inc: Incident) => {
@@ -319,12 +322,12 @@ export default function MerchantDashboard() {
         }),
       });
       if (res.ok) {
-        setChannelResult(`✓ 1-Click WhatsApp / Telegram recovery link dispatched to ${inc.customer}!`);
+        setChannelResult(`1-Click WhatsApp / Telegram recovery link dispatched to ${inc.customer}.`);
       } else {
-        setChannelResult(`✓ Recovery payment link dispatched to ${inc.customer}.`);
+        setChannelResult(`Recovery payment link dispatched to ${inc.customer}.`);
       }
     } catch {
-      setChannelResult(`✓ Recovery payment link dispatched to ${inc.customer}.`);
+      setChannelResult(`Recovery payment link dispatched to ${inc.customer}.`);
     } finally {
       setSendingChannel(null);
     }
@@ -346,12 +349,12 @@ export default function MerchantDashboard() {
       });
       if (res.ok) {
         const data = await res.json();
-        setChannelResult(`📞 Outbound AI Voice Assistant is calling ${inc.customer} at ${data.target_phone || inc.customerPhone}...`);
+        setChannelResult(`Outbound AI Voice Assistant calling ${inc.customer} at ${data.target_phone || inc.customerPhone}...`);
       } else {
-        setChannelResult(`📞 Outbound Voice Call initiated to ${inc.customer}.`);
+        setChannelResult(`Outbound Voice Call initiated to ${inc.customer}.`);
       }
     } catch {
-      setChannelResult(`📞 Outbound Voice Call initiated to ${inc.customer}.`);
+      setChannelResult(`Outbound Voice Call initiated to ${inc.customer}.`);
     } finally {
       setSendingChannel(null);
     }
@@ -628,7 +631,7 @@ export default function MerchantDashboard() {
               onClick={() => setChannelResult(null)}
               className="text-slate-400 hover:text-white transition-colors ml-4 text-xs font-bold"
             >
-              ✕
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
@@ -749,7 +752,7 @@ export default function MerchantDashboard() {
                           paginatedIncidents.map(inc => {
                             const meta = ROOT_CAUSE_META[inc.rootCause] || {
                               label: inc.rootCause,
-                              icon: '⚡',
+                              icon: <Zap className="w-3.5 h-3.5 text-slate-500" />,
                               badgeColor: 'bg-slate-100 text-slate-700 border-slate-200',
                               description: 'Automated recovery rule active.',
                               nonTechSummary: 'AI is managing recovery according to policy rules.',
@@ -797,7 +800,7 @@ export default function MerchantDashboard() {
 
                                 <td className="px-5 py-4 whitespace-nowrap">
                                   <span
-                                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold inline-flex items-center gap-1 ${
+                                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold inline-flex items-center gap-1.5 ${
                                       inc.status === 'recovered'
                                         ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                                         : inc.status === 'pending_hitl'
@@ -807,10 +810,30 @@ export default function MerchantDashboard() {
                                         : 'bg-blue-100 text-blue-800 border border-blue-200'
                                     }`}
                                   >
-                                    {inc.status === 'pending_hitl' && '⏳ Needs Approval'}
-                                    {inc.status === 'auto_recovering' && '⚡ In Progress'}
-                                    {inc.status === 'paused_ptp' && '⏸️ Paused (PTP)'}
-                                    {inc.status === 'recovered' && '✓ Recovered'}
+                                    {inc.status === 'pending_hitl' && (
+                                      <>
+                                        <Clock className="w-3 h-3 text-amber-700" />
+                                        <span>Needs Approval</span>
+                                      </>
+                                    )}
+                                    {inc.status === 'auto_recovering' && (
+                                      <>
+                                        <RefreshCw className="w-3 h-3 text-blue-700 animate-spin" />
+                                        <span>In Progress</span>
+                                      </>
+                                    )}
+                                    {inc.status === 'paused_ptp' && (
+                                      <>
+                                        <Calendar className="w-3 h-3 text-purple-700" />
+                                        <span>Paused (PTP)</span>
+                                      </>
+                                    )}
+                                    {inc.status === 'recovered' && (
+                                      <>
+                                        <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                                        <span>Recovered</span>
+                                      </>
+                                    )}
                                   </span>
                                 </td>
 
@@ -1079,35 +1102,35 @@ export default function MerchantDashboard() {
                         <td className="px-5 py-3.5"><span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">Bank Gateway</span></td>
                         <td className="px-5 py-3.5">Silent retry via backup HDFC/ICICI route</td>
                         <td className="px-5 py-3.5">5 minutes</td>
-                        <td className="px-5 py-3.5 text-rose-600 font-bold">❌ Do Not Message (0 Spam)</td>
+                        <td className="px-5 py-3.5 text-rose-600 font-bold inline-flex items-center gap-1"><XCircle className="w-3.5 h-3.5 text-rose-500" /> Do Not Message (0 Spam)</td>
                       </tr>
                       <tr className="hover:bg-slate-50">
                         <td className="px-5 py-3.5 font-bold text-slate-800">Insufficient Balance (insufficient_funds)</td>
                         <td className="px-5 py-3.5"><span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">Customer Account</span></td>
                         <td className="px-5 py-3.5">Smart retry aligned to salary day</td>
                         <td className="px-5 py-3.5">72 hours (Friday)</td>
-                        <td className="px-5 py-3.5 text-emerald-600 font-bold">✓ Polite WhatsApp Reminder</td>
+                        <td className="px-5 py-3.5 text-emerald-600 font-bold inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Polite WhatsApp Reminder</td>
                       </tr>
                       <tr className="hover:bg-slate-50">
                         <td className="px-5 py-3.5 font-bold text-slate-800">Card Expired (card_expired)</td>
                         <td className="px-5 py-3.5"><span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">Customer Card</span></td>
                         <td className="px-5 py-3.5">Send 1-click card update link</td>
                         <td className="px-5 py-3.5">Immediate</td>
-                        <td className="px-5 py-3.5 text-emerald-600 font-bold">✓ 1-Click Update Link</td>
+                        <td className="px-5 py-3.5 text-emerald-600 font-bold inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> 1-Click Update Link</td>
                       </tr>
                       <tr className="hover:bg-slate-50">
                         <td className="px-5 py-3.5 font-bold text-slate-800">RBI {'>'}₹15k 2FA (mandate_auth_failed)</td>
                         <td className="px-5 py-3.5"><span className="px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-bold">RBI Regulation</span></td>
                         <td className="px-5 py-3.5">Pre-debit WhatsApp consent link</td>
                         <td className="px-5 py-3.5">Immediate</td>
-                        <td className="px-5 py-3.5 text-emerald-600 font-bold">✓ WhatsApp Consent Link</td>
+                        <td className="px-5 py-3.5 text-emerald-600 font-bold inline-flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> WhatsApp Consent Link</td>
                       </tr>
                       <tr className="hover:bg-slate-50">
                         <td className="px-5 py-3.5 font-bold text-slate-800">Lost or Stolen Card (stolen_card)</td>
                         <td className="px-5 py-3.5"><span className="px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-bold">Hard Security Decline</span></td>
                         <td className="px-5 py-3.5">Cancel all retries immediately</td>
                         <td className="px-5 py-3.5">None</td>
-                        <td className="px-5 py-3.5 text-rose-600 font-bold">❌ Blocked (Fraud Safety)</td>
+                        <td className="px-5 py-3.5 text-rose-600 font-bold inline-flex items-center gap-1"><ShieldAlert className="w-3.5 h-3.5 text-rose-500" /> Blocked (Fraud Safety)</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1126,7 +1149,7 @@ export default function MerchantDashboard() {
                 <div className="p-6 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-cyan-100 text-[#00A3C4] flex items-center justify-center font-bold text-base">
-                      {ROOT_CAUSE_META[selectedIncident.rootCause]?.icon || '⚡'}
+                      {ROOT_CAUSE_META[selectedIncident.rootCause]?.icon || <Zap className="w-4 h-4" />}
                     </div>
                     <div>
                       <div className="text-base font-bold text-slate-900">{selectedIncident.customer}</div>
@@ -1153,7 +1176,7 @@ export default function MerchantDashboard() {
                     <div>
                       <div className="text-xs font-bold text-slate-500 uppercase text-right">Current Status</div>
                       <span
-                        className={`inline-block mt-1 px-3 py-1 rounded-md text-xs font-bold ${
+                        className={`inline-flex items-center gap-1.5 mt-1 px-3 py-1 rounded-md text-xs font-bold ${
                           selectedIncident.status === 'recovered'
                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                             : selectedIncident.status === 'pending_hitl'
@@ -1163,10 +1186,30 @@ export default function MerchantDashboard() {
                             : 'bg-blue-100 text-blue-800 border border-blue-200'
                         }`}
                       >
-                        {selectedIncident.status === 'pending_hitl' && '⏳ Needs Your Approval'}
-                        {selectedIncident.status === 'auto_recovering' && '⚡ AI Recovering'}
-                        {selectedIncident.status === 'paused_ptp' && '⏸️ Outreach Paused'}
-                        {selectedIncident.status === 'recovered' && '✓ Successfully Recovered'}
+                        {selectedIncident.status === 'pending_hitl' && (
+                          <>
+                            <Clock className="w-3.5 h-3.5 text-amber-700" />
+                            <span>Needs Your Approval</span>
+                          </>
+                        )}
+                        {selectedIncident.status === 'auto_recovering' && (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 text-blue-700 animate-spin" />
+                            <span>AI Recovering</span>
+                          </>
+                        )}
+                        {selectedIncident.status === 'paused_ptp' && (
+                          <>
+                            <Calendar className="w-3.5 h-3.5 text-purple-700" />
+                            <span>Outreach Paused</span>
+                          </>
+                        )}
+                        {selectedIncident.status === 'recovered' && (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                            <span>Successfully Recovered</span>
+                          </>
+                        )}
                       </span>
                     </div>
                   </div>

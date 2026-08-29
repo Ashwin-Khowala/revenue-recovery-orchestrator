@@ -81,7 +81,7 @@ def send_whatsapp_recovery(
                 to=to_whatsapp,
                 body=body,
             )
-            logger.info("✅ WhatsApp sent via Twilio: SID=%s to=%s", msg.sid, clean_phone)
+            logger.info("[TWILIO SENT] WhatsApp sent via Twilio: SID=%s to=%s", msg.sid, clean_phone)
             return {
                 "success": True,
                 "channel": "whatsapp",

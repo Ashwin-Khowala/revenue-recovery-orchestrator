@@ -19,4 +19,4 @@ These rules are ALWAYS ON for any AI agent interacting with this repository or d
    - If an incoming `payment.captured` webhook arrives while a recovery action is in-flight, the action must be cancelled immediately.
 
 5. **Customer Privacy & Safe Mode**:
-   - In non-production environments, override all recipient phone numbers with `SAFE_MODE_PHONE_OVERRIDE` (+919876543210).
+   - In non-production environments, override all recipient phone numbers with `SAFE_MODE_PHONE_OVERRIDE` configured in environment variables.

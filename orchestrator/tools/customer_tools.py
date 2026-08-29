@@ -104,7 +104,7 @@ def apply_concession_discount(
         "event_id": event_id,
         "reason": reason,
         "discount_amount_calculated": True,
-        "message": f"✓ {capped_discount}% recovery concession applied. Updated payment link generated.",
+        "message": f"[CONFIRMED] {capped_discount}% recovery concession applied. Updated payment link generated.",
     }
 
 
@@ -146,12 +146,12 @@ def register_promise_to_pay(
         "customer_id": customer_id,
         "event_id": event_id,
         "reminders_paused": True,
-        "message": f"🤝 Promise-to-Pay confirmed for {promised_date}. Automated reminders are now paused.",
+        "message": f"[SCHEDULED] Promise-to-Pay confirmed for {promised_date}. Automated reminders are now paused.",
     }
 
 
 def get_payment_link(
-    customer_name: str = "Ashwin Khowala",
+    customer_name: str = "Aarav Sharma",
     amount: float = 4999.0,
 ) -> Dict[str, Any]:
     """
@@ -167,5 +167,5 @@ def get_payment_link(
         "payment_url": "https://rzp.io/rzp/Qf0zRD2B",
         "customer_name": customer_name,
         "amount_inr": amount,
-        "message": f"💳 Secure Razorpay 1-click payment link generated: https://rzp.io/rzp/Qf0zRD2B (Payable: ₹{amount:,.2f})",
+        "message": f"Secure Razorpay 1-click payment link generated: https://rzp.io/rzp/Qf0zRD2B (Payable: ₹{amount:,.2f})",
     }

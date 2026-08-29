@@ -23,7 +23,7 @@ def test_contact_frequency_cap_escalation():
 
     assert result["guardrail_result"] == "ESCALATE"
     assert result["guardrail_rule_fired"] == "RULE_MAX_CONTACT_FREQUENCY_EXCEEDED"
-    print("✓ Passed: Contact cap guardrail enforced. Escalated to human rather than spamming customer.")
+    print("[PASS] Passed: Contact cap guardrail enforced. Escalated to human rather than spamming customer.")
 
 
 if __name__ == "__main__":

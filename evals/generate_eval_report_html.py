@@ -86,7 +86,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="container">
     
     <header class="header">
-      <div class="badge">🔬 Confident AI & DeepEval Evals</div>
+      <div class="badge">Confident AI & DeepEval Evals</div>
       <h1>LLM Benchmark & Model Selection Report</h1>
       <p class="subtitle">
         Empirical comparison of candidate LLM engines for the Razorpay Revenue Recovery Orchestrator across classification accuracy, financial guardrail safety, inference latency, and cost per 10,000 incidents.
@@ -172,21 +172,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <!-- Architectural Rationale -->
     <div class="grid-3">
       <div class="card">
-        <div class="card-title">💡 Why Not Large 70B+ Models?</div>
+        <div class="card-title">Why Not Large 70B+ Models?</div>
         <p style="font-size:14px; color:var(--text-secondary); line-height:1.6;">
           Our 4-tier behavioral memory layer conditions the prompt with prior payment probability and merchant policy. Heavy reasoning models like GPT-4o / Claude Opus add 15x cost and 800ms latency without yielding higher recovery accuracy on structured payment payloads.
         </p>
       </div>
 
       <div class="card">
-        <div class="card-title">⚡ Why Azure GPT-5.4 Mini Wins</div>
+        <div class="card-title">Why Azure GPT-5.4 Mini Wins</div>
         <p style="font-size:14px; color:var(--text-secondary); line-height:1.6;">
           Hosted on dedicated Azure enterprise quota with native support for JSON schema enforcement. Delivers sub-200ms latency for real-time webhook ingestion and zero free-tier throttling during high-volume spikes.
         </p>
       </div>
 
       <div class="card">
-        <div class="card-title">🛡️ Hybrid Deterministic Gate</div>
+        <div class="card-title">Hybrid Deterministic Gate</div>
         <p style="font-size:14px; color:var(--text-secondary); line-height:1.6;">
           Technical failures (e.g. <code>payment_degraded</code> bank timeouts) bypass the LLM entirely and execute through silent deterministic routing. The LLM is invoked only for intent disambiguation, maximizing speed and cost efficiency.
         </p>
@@ -251,7 +251,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       tr.innerHTML = `
         <td>
           <div style="font-weight:700;">${row.name}</div>
-          ${row.isBest ? '<span class="tag tag-green" style="margin-top:4px;">★ Selected</span>' : ''}
+          ${row.isBest ? '<span class="tag tag-green" style="margin-top:4px;">Selected</span>' : ''}
         </td>
         <td><span class="tag tag-blue">${row.provider}</span></td>
         <td><span style="color:#10b981; font-weight:700;">${row.accuracy.toFixed(1)}%</span></td>
@@ -322,7 +322,7 @@ def generate_report():
     output_path = os.path.join(os.path.dirname(__file__), "model_comparison_report.html")
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(HTML_TEMPLATE)
-    print(f"[✓] Generated interactive benchmark HTML report: {output_path}")
+    print(f"[SUCCESS] Generated interactive benchmark HTML report: {output_path}")
 
 if __name__ == "__main__":
     generate_report()

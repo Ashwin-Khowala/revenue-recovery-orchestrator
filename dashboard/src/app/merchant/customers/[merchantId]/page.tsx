@@ -2,6 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import {
+  MessageSquare,
+  Mail,
+  Phone,
+  Send,
+  Smartphone,
+  CheckCircle2,
+  FileText,
+} from 'lucide-react';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -28,13 +37,22 @@ const RISK_COLOR = (score: number) => {
   return '#22c55e';
 };
 
-const CHANNEL_ICONS: Record<string, string> = {
-  whatsapp: '💬',
-  email: '📧',
-  voice: '📞',
-  telegram: '✈️',
-  sms: '📱',
-};
+function renderChannelIcon(channel: string) {
+  switch (channel) {
+    case 'whatsapp':
+      return <MessageSquare style={{ width: 14, height: 14, color: '#22c55e' }} />;
+    case 'email':
+      return <Mail style={{ width: 14, height: 14, color: '#60a5fa' }} />;
+    case 'voice':
+      return <Phone style={{ width: 14, height: 14, color: '#f59e0b' }} />;
+    case 'telegram':
+      return <Send style={{ width: 14, height: 14, color: '#06b6d4' }} />;
+    case 'sms':
+      return <Smartphone style={{ width: 14, height: 14, color: '#a855f7' }} />;
+    default:
+      return <FileText style={{ width: 14, height: 14, color: '#94a3b8' }} />;
+  }
+}
 
 export default function CustomersPage({ params }: { params: { merchantId: string } }) {
   const merchantId = params?.merchantId || 'merch_01';
@@ -145,8 +163,10 @@ export default function CustomersPage({ params }: { params: { merchantId: string
                   <div style={{ fontSize: 11, color: '#64748b' }}>{c.customer_id}</div>
                 </td>
                 <td style={{ padding: '10px 12px' }}>
-                  <span style={{ fontSize: 16 }}>{CHANNEL_ICONS[c.preferred_channel] || '❓'}</span>
-                  <span style={{ marginLeft: 6, color: '#94a3b8', fontSize: 12 }}>{c.preferred_channel}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    {renderChannelIcon(c.preferred_channel)}
+                    <span style={{ color: '#94a3b8', fontSize: 12 }}>{c.preferred_channel}</span>
+                  </span>
                 </td>
                 <td style={{ padding: '10px 12px', color: '#94a3b8' }}>{c.language}</td>
                 <td style={{ padding: '10px 12px' }}>
@@ -166,12 +186,17 @@ export default function CustomersPage({ params }: { params: { merchantId: string
                 <td style={{ padding: '10px 12px', color: '#22c55e' }}>{c.total_recoveries}</td>
                 <td style={{ padding: '10px 12px', color: '#94a3b8' }}>₹{((c.ltv_inr || 0) / 1000).toFixed(0)}k</td>
                 <td style={{ padding: '10px 12px' }}>
-                  {c.telegram_chat_id
-                    ? <span style={{ color: '#06b6d4', fontSize: 12 }}>✅ Linked</span>
-                    : <span style={{ color: '#475569', fontSize: 12 }}>—</span>}
+                  {c.telegram_chat_id ? (
+                    <span style={{ color: '#06b6d4', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <CheckCircle2 style={{ width: 12, height: 12 }} />
+                      <span>Linked</span>
+                    </span>
+                  ) : (
+                    <span style={{ color: '#475569', fontSize: 12 }}>—</span>
+                  )}
                 </td>
                 <td style={{ padding: '10px 12px' }}>
-                  <Link href={`/merchant/customers/${c.customer_id}`}
+                  <Link href={`/merchant/customers/${merchantId}/${c.customer_id}`}
                     style={{ padding: '4px 12px', background: '#1e40af', color: '#93c5fd', borderRadius: 6, fontSize: 12, textDecoration: 'none', whiteSpace: 'nowrap' }}>
                     View Profile
                   </Link>

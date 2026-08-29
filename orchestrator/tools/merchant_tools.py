@@ -117,7 +117,7 @@ def get_at_risk_incidents(
         logger.debug(f"Incident fetch error: {e}")
 
     sample_incidents = [
-        {"event_id": "evt_0003", "customer_name": "TechMatrix Corp", "phone": "+919876543210", "amount_inr": 145000, "issue": "receivable_overdue", "status": "pending_hitl"},
+        {"event_id": "evt_0003", "customer_name": "TechMatrix Corp", "phone": "+919876500003", "amount_inr": 145000, "issue": "receivable_overdue", "status": "pending_hitl"},
         {"event_id": "evt_0002", "customer_name": "Vikram Solar Infra", "phone": "+919830011223", "amount_inr": 18500, "issue": "mandate_auth_failed", "status": "auto_recovering"},
         {"event_id": "evt_0001", "customer_name": "Reliance Retail B2B", "phone": "+919821099421", "amount_inr": 34500, "issue": "payment_degraded", "status": "recovered"},
     ]
@@ -167,7 +167,7 @@ def approve_high_value_invoice(
         "status": "approved",
         "invoice": invoice_id,
         "amount_approved": 145000,
-        "message": f"✓ High-value invoice for {invoice_id} (₹1,45,000) approved by supervisor. Safe outreach dispatched.",
+        "message": f"[APPROVED] High-value invoice for {invoice_id} (₹1,45,000) approved by supervisor. Safe outreach dispatched.",
     }
 
 
@@ -312,7 +312,7 @@ def trigger_outbound_recovery_action(
             "phone": customer_phone,
             "amount": amount,
             "status": "initiated",
-            "message": f"📞 Outbound AI Voice Assistant is calling {customer_name} at {customer_phone}...",
+            "message": f"Outbound AI Voice Assistant is calling {customer_name} at {customer_phone}...",
         }
     else:
         return {
@@ -322,5 +322,5 @@ def trigger_outbound_recovery_action(
             "amount": amount,
             "status": "dispatched",
             "recovery_link": "https://rzp.io/rzp/Qf0zRD2B",
-            "message": f"✓ 1-Click Razorpay Smart Link dispatched to {customer_name} via {channel.title()}.",
+            "message": f"1-Click Razorpay Smart Link dispatched to {customer_name} via {channel.title()}.",
         }
