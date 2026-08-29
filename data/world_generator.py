@@ -113,7 +113,7 @@ def make_merchant(idx: int, archetype: Dict) -> Dict:
         "name": name,
         "industry": archetype["industry"],
         "email": f"ops@{name.lower().replace(' ', '')}.in",
-        "phone": f"+91{random.randint(9000000000, 9999999999)}",
+        "phone": "+00000000000",  # synthetic null sentinel — never dialable
         "razorpay_merchant_id": f"rzp_merch_{idx:04d}",
         "avg_invoice_size_inr": archetype["avg_invoice_size_inr"],
         "payment_success_rate": archetype["payment_success_rate"],
@@ -161,12 +161,12 @@ def make_customer(idx: int, merchant: Dict) -> Dict:
         "merchant_id": merchant["merchant_id"],
         "name": name,
         "email": f"{email_base}{idx}@example.com",
-        "phone": f"+91{random.randint(9000000000, 9999999999)}",
+        "phone": "+00000000000",  # synthetic null sentinel — never dialable
         "language": language,
         "city": random.choice(CITIES),
         "customer_type": customer_type,
         "telegram_chat_id": None,  # set when they /start the bot
-        "whatsapp_number": f"+91{random.randint(9000000000, 9999999999)}",
+        "whatsapp_number": "+00000000000",  # synthetic null sentinel
         "preferred_channel": preferred_channel,
         "contact_tolerance": random.choices(["low", "medium", "high"], weights=[0.2, 0.55, 0.25])[0],
         "typical_payment_delay_days": delay,

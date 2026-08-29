@@ -1,6 +1,7 @@
 """
-WhatsApp Recovery Channel — Twilio WhatsApp API
-Sends real WhatsApp messages via Twilio sandbox using Account SID + Auth Token.
+WhatsApp Recovery Channel — Simulation Only
+Twilio has been removed. Messages are logged and simulated.
+To re-enable Twilio for production: set ENABLE_REAL_WHATSAPP=true and restore the Twilio client block.
 """
 
 import os
@@ -20,10 +21,10 @@ def send_whatsapp_recovery(
     force_mock: bool = False,
 ) -> Dict[str, Any]:
     """
-    Sends a WhatsApp recovery message via Twilio.
-    Uses Account SID + Auth Token (or API Key + Secret as fallback).
+    Builds and logs a WhatsApp recovery message. Always returns simulation — no real
+    Twilio/HTTP call is made in this build. Channel is used by Telegram bot instead.
     """
-    # Safe phone override in non-production
+    # Safe phone override (belt-and-suspenders for any non-batch codepaths)
     safe_override = os.getenv("SAFE_MODE_PHONE_OVERRIDE")
     env = os.getenv("ENVIRONMENT", "development")
     target_phone = safe_override if (env != "production" and safe_override) else recipient_phone
@@ -32,7 +33,7 @@ def send_whatsapp_recovery(
     if not clean_phone.startswith("+"):
         clean_phone = f"+91{clean_phone}" if len(clean_phone) == 10 else f"+{clean_phone}"
 
-    # Build message
+    # Build message body
     discount_msg = f" (Special offer: ₹{int(discount_applied)} discount!)" if discount_applied > 0 else ""
 
     if root_cause == "mandate_auth_failed":
@@ -56,47 +57,6 @@ def send_whatsapp_recovery(
             f"Resolve it here: {recovery_link}"
         )
 
-    # --- Try Twilio ---
-    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
-    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
-    api_key = os.getenv("TWILIO_API_KEY")
-    api_secret = os.getenv("TWILIO_API_SECRET")
-    from_number = os.getenv("TWILIO_WHATSAPP_NUMBER", "whatsapp:+17372508034")
-
-    can_use_twilio = account_sid and (auth_token or (api_key and api_secret))
-
-    if not force_mock and can_use_twilio:
-        try:
-            from twilio.rest import Client
-
-            # Prefer Auth Token (simpler), fallback to API Key
-            if auth_token:
-                client = Client(account_sid, auth_token)
-            else:
-                client = Client(api_key, api_secret, account_sid)
-
-            to_whatsapp = f"whatsapp:{clean_phone}"
-            msg = client.messages.create(
-                from_=from_number,
-                to=to_whatsapp,
-                body=body,
-            )
-            logger.info("[TWILIO SENT] WhatsApp sent via Twilio: SID=%s to=%s", msg.sid, clean_phone)
-            return {
-                "success": True,
-                "channel": "whatsapp",
-                "provider": "twilio",
-                "message_id": msg.sid,
-                "recipient": clean_phone,
-                "status": "delivered",
-                "body": body,
-                "link": recovery_link,
-            }
-        except Exception as e:
-            logger.warning("Twilio WhatsApp failed: %s", e)
-            # Fall through to simulation
-
-    # --- Simulation fallback ---
     logger.info("[WHATSAPP SIM] To: %s | Body: %s", clean_phone, body[:80])
     return {
         "success": True,

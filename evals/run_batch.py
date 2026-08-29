@@ -14,6 +14,10 @@ from tabulate import tabulate
 
 # Disable remote DB roundtrips during offline batch evaluation for high throughput
 os.environ["DISABLE_AUDIT_DB"] = "true"
+# Hard-block all real outbound channel dispatches during batch eval.
+os.environ["SAFE_MODE_PHONE_OVERRIDE"] = "+00000000000"   # null sentinel — never dialable
+os.environ["ENVIRONMENT"] = "batch_eval"                   # not 'production', ensures override fires
+os.environ["DISABLE_REAL_TELEGRAM"] = "true"               # blocks Telegram proactive sends and HITL alerts
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -38,7 +42,7 @@ def run_orchestrator_on_event(event: Dict[str, Any]) -> Dict[str, Any]:
         "customer_id": event.get("customer_id", "cust_01"),
         "customer_name": event.get("customer_name", "Customer"),
         "customer_email": event.get("customer_email", "cust@example.com"),
-        "customer_phone": event.get("customer_phone", "+919876543210"),
+        "customer_phone": event.get("customer_phone", "+00000000000"),  # null sentinel — never routes to Twilio
         "razorpay_ref": event.get("razorpay_ref"),
         "history": event.get("history", {}),
         "metadata": event.get("metadata", {}),

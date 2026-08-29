@@ -93,6 +93,11 @@ def send_recovery_message(
     
     Called by executor.py when the chosen channel is 'telegram'.
     """
+    # Safety guard: never send real Telegram messages during evals / testing
+    if os.getenv("DISABLE_REAL_TELEGRAM", "false").lower() in ("1", "true", "yes", "batch_eval"):
+        logger.info(f"[TG SIM] DISABLE_REAL_TELEGRAM set. Skipping real send for customer={customer_id}")
+        return False
+
     # 1. Resolve chat_id from customer_id
     chat_id = _resolve_customer_chat_id(customer_id)
     if not chat_id:
@@ -145,6 +150,11 @@ def send_hitl_alert_to_merchant(
     Sends a HITL approval request to all linked merchant Telegram accounts.
     Called by hitl_escalation node.
     """
+    # Safety guard: never send real Telegram messages during evals / testing
+    if os.getenv("DISABLE_REAL_TELEGRAM", "false").lower() in ("1", "true", "yes", "batch_eval"):
+        logger.info(f"[TG SIM] DISABLE_REAL_TELEGRAM set. Skipping HITL alert for merchant={merchant_id}")
+        return False
+
     from orchestrator.memory import get_merchant_telegram_chat_ids
     
     chat_ids = get_merchant_telegram_chat_ids(merchant_id)
@@ -188,25 +198,18 @@ def send_hitl_alert_to_merchant(
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _resolve_customer_chat_id(customer_id: str) -> Optional[str]:
-    """Looks up chat_id from DB first, then falls back to local JSON."""
-    # Try DB
+    """Looks up chat_id from DB only. Returns None if not found.
+    
+    IMPORTANT: The local-file fallback (active_telegram_chats.json) has been
+    intentionally removed. Without a real DB match for this specific customer_id,
+    we must not message whoever happened to talk to the bot last — that would
+    contact a random real person with a synthetic event's recovery message.
+    """
     try:
         from orchestrator.memory import get_customer_telegram_chat_id
         chat_id = get_customer_telegram_chat_id(customer_id)
         if chat_id:
             return str(chat_id)
-    except Exception:
-        pass
-    
-    # Fallback: local file (for dev/demo when there's no customer match yet)
-    try:
-        if os.path.exists(CHATS_FILE):
-            with open(CHATS_FILE, "r", encoding="utf-8") as f:
-                chats = json.load(f)
-            # Return the most recently active chat
-            if chats:
-                latest = max(chats.values(), key=lambda c: c.get("last_active", 0))
-                return str(latest["chat_id"])
     except Exception:
         pass
     
