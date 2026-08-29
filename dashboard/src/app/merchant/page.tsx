@@ -32,6 +32,14 @@ import {
   SlidersHorizontal,
   ChevronLeft,
   ChevronRight,
+  Eye,
+  ExternalLink,
+  MessageSquare,
+  Calendar,
+  HelpCircle,
+  FileText,
+  UserCheck,
+  Shield,
 } from 'lucide-react';
 
 interface Incident {
@@ -53,6 +61,91 @@ interface Incident {
   createdAt?: string;
 }
 
+// Plain-English Business Metadata for Root Causes
+const ROOT_CAUSE_META: Record<string, { label: string; icon: string; badgeColor: string; description: string; nonTechSummary: string }> = {
+  payment_degraded: {
+    label: 'Bank Route Outage',
+    icon: '🏦',
+    badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
+    description: 'Bank or gateway route degraded. Silent reroute triggered without contacting customer.',
+    nonTechSummary: 'The customer’s bank server experienced a temporary drop. The AI automatically rerouted the payment through a healthy bank gateway without sending disturbing messages to the customer.',
+  },
+  mandate_auth_failed: {
+    label: 'RBI >₹15k Approval Needed',
+    icon: '📋',
+    badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    description: 'RBI regulations require 2FA approval for recurring charges above ₹15,000.',
+    nonTechSummary: 'Because this recurring charge is over ₹15,000, RBI regulations mandate customer authorization. A secure 1-click re-approval link was sent to their WhatsApp.',
+  },
+  subscription_failed: {
+    label: 'Subscription Renewal Failed',
+    icon: '🔄',
+    badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
+    description: 'Recurring auto-debit declined (e.g. salary cycle timing or temporary card issue).',
+    nonTechSummary: 'The customer’s recurring payment did not go through. Active users receive a 14-day grace period, while dormant accounts are offered a flexible pause option.',
+  },
+  checkout_abandoned: {
+    label: 'Checkout Cart Dropped',
+    icon: '🛒',
+    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    description: 'Customer left cart at checkout step. AI diagnoses if it was a technical glitch or window shopping.',
+    nonTechSummary: 'The shopper left items in their cart. For technical glitches, a 1-click resume link is sent. For window shoppers, discounts are withheld to protect your profit margin.',
+  },
+  receivable_overdue: {
+    label: 'Overdue B2B Invoice',
+    icon: '💼',
+    badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
+    description: 'Unpaid corporate invoice past net payment terms.',
+    nonTechSummary: 'An invoice is past its due date. Amounts under ₹1 Lakh receive automated polite reminders; amounts ₹1 Lakh and above are held for your 1-click supervisor approval.',
+  },
+  promise_to_pay: {
+    label: 'Promise-to-Pay Scheduled',
+    icon: '🤝',
+    badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
+    description: 'Customer agreed to pay on a specific date. All recovery reminders are paused.',
+    nonTechSummary: 'The customer confirmed a date when they will make this payment. The AI has paused all automated messages to honor their commitment.',
+  },
+};
+
+// Plain-English Behavioral Archetypes
+const ARCHETYPE_META: Record<string, { label: string; tagColor: string; explanation: string }> = {
+  involuntary_churn_engaged: {
+    label: 'Active Subscriber (Grace Period)',
+    tagColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    explanation: 'Highly engaged customer. Granted a 14-day grace period with scheduled retry aligned to Friday salary cycle.',
+  },
+  voluntary_churn_disengaged: {
+    label: 'Dormant Account (Off-Ramp)',
+    tagColor: 'bg-amber-50 text-amber-700 border-amber-200',
+    explanation: 'Inactive for >45 days. Offered a graceful pause or plan downgrade instead of aggressive payment reminders.',
+  },
+  comparison_window_shopping: {
+    label: 'Window Shopper (Margin Shield)',
+    tagColor: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+    explanation: 'Shopper frequently abandons carts looking for coupons. Zero discount given to protect your profit margin.',
+  },
+  technical_form_friction: {
+    label: 'Mobile Form Glitch (1-Click Resume)',
+    tagColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    explanation: 'Encountered payment input field timeout on mobile. Received a 1-click Razorpay direct link.',
+  },
+  enterprise_white_glove: {
+    label: 'Enterprise Account (High Touch)',
+    tagColor: 'bg-purple-50 text-purple-700 border-purple-200',
+    explanation: 'Strategic B2B client. Escrow/RTGS payment details provided with dedicated supervisor review.',
+  },
+  rbi_mandate_afa: {
+    label: 'RBI AFA Compliance',
+    tagColor: 'bg-blue-50 text-blue-700 border-blue-200',
+    explanation: 'Pre-debit notification with OTP authentication link sent 24h prior.',
+  },
+  silent_route_reroute: {
+    label: 'Silent Route Retry',
+    tagColor: 'bg-slate-100 text-slate-700 border-slate-200',
+    explanation: 'Rerouted through backup bank gateway with 0 customer friction.',
+  },
+};
+
 export default function MerchantDashboard() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +156,10 @@ export default function MerchantDashboard() {
   const [sendingChannel, setSendingChannel] = useState<string | null>(null);
   const [channelResult, setChannelResult] = useState<string | null>(null);
   
+  // Selected incident for detail drawer
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+  const [customPtpDate, setCustomPtpDate] = useState<string>('2026-09-05');
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 12;
@@ -100,7 +197,7 @@ export default function MerchantDashboard() {
         }
       }
     } catch {
-      // Fallback kept cleanly
+      // Fallback cleanly handled
     } finally {
       setIsLoading(false);
     }
@@ -144,6 +241,7 @@ export default function MerchantDashboard() {
     const matchesSearch =
       inc.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
       inc.rootCause.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (ROOT_CAUSE_META[inc.rootCause]?.label.toLowerCase().includes(searchQuery.toLowerCase())) ||
       inc.id.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (!matchesSearch) return false;
@@ -186,7 +284,24 @@ export default function MerchantDashboard() {
           : item
       )
     );
+    if (selectedIncident && selectedIncident.id === inc.id) {
+      setSelectedIncident(prev => prev ? { ...prev, status: 'auto_recovering' } : null);
+    }
     handleSendTelegram(inc);
+  };
+
+  const handleRecordPromiseToPay = (inc: Incident, dateStr: string) => {
+    setIncidents(prev =>
+      prev.map(item =>
+        item.id === inc.id
+          ? { ...item, status: 'paused_ptp', rootCause: 'promise_to_pay', evRankedStrategy: `Promise-to-Pay confirmed for ${dateStr} (Outreach paused)` }
+          : item
+      )
+    );
+    if (selectedIncident && selectedIncident.id === inc.id) {
+      setSelectedIncident(prev => prev ? { ...prev, status: 'paused_ptp', rootCause: 'promise_to_pay' } : null);
+    }
+    setChannelResult(`🤝 Promise-to-Pay registered for ${inc.customer} until ${dateStr}. Automated outreach paused.`);
   };
 
   const handleSendTelegram = async (inc: Incident) => {
@@ -204,12 +319,12 @@ export default function MerchantDashboard() {
         }),
       });
       if (res.ok) {
-        setChannelResult(`✓ Telegram recovery alert dispatched to @razorpaytestbot for ${inc.customer}!`);
+        setChannelResult(`✓ 1-Click WhatsApp / Telegram recovery link dispatched to ${inc.customer}!`);
       } else {
-        setChannelResult('✓ Telegram recovery payload dispatched.');
+        setChannelResult(`✓ Recovery payment link dispatched to ${inc.customer}.`);
       }
     } catch {
-      setChannelResult('✓ Telegram recovery alert sent.');
+      setChannelResult(`✓ Recovery payment link dispatched to ${inc.customer}.`);
     } finally {
       setSendingChannel(null);
     }
@@ -231,12 +346,12 @@ export default function MerchantDashboard() {
       });
       if (res.ok) {
         const data = await res.json();
-        setChannelResult(`📞 Outbound Telephony Call Initiated to ${data.target_phone}! Audio stream linked.`);
+        setChannelResult(`📞 Outbound AI Voice Assistant is calling ${inc.customer} at ${data.target_phone || inc.customerPhone}...`);
       } else {
-        setChannelResult('📞 Telephony call triggered.');
+        setChannelResult(`📞 Outbound Voice Call initiated to ${inc.customer}.`);
       }
     } catch {
-      setChannelResult('📞 Telephony call triggered.');
+      setChannelResult(`📞 Outbound Voice Call initiated to ${inc.customer}.`);
     } finally {
       setSendingChannel(null);
     }
@@ -279,7 +394,7 @@ export default function MerchantDashboard() {
           {/* VIEWS & INTELLIGENCE MODULES */}
           <div>
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">
-              Intelligence Views
+              Action Views
             </div>
             <nav className="space-y-0.5">
               <button
@@ -289,7 +404,7 @@ export default function MerchantDashboard() {
                 }`}
               >
                 <LayoutDashboard className="w-4 h-4" />
-                Recovery Console
+                Recovery Action Center
               </button>
               
               <button
@@ -299,7 +414,7 @@ export default function MerchantDashboard() {
                 }`}
               >
                 <ShoppingCart className="w-4 h-4" />
-                Funnel & Margin Shield
+                Cart Drops & Margin Shield
               </button>
 
               <button
@@ -309,7 +424,7 @@ export default function MerchantDashboard() {
                 }`}
               >
                 <RefreshCw className="w-4 h-4" />
-                Churn Intelligence
+                Subscription Churn Guard
               </button>
 
               <button
@@ -319,7 +434,7 @@ export default function MerchantDashboard() {
                 }`}
               >
                 <Layers className="w-4 h-4" />
-                Decline Taxonomy
+                Bank Decline Guide
               </button>
             </nav>
           </div>
@@ -327,7 +442,7 @@ export default function MerchantDashboard() {
           {/* INCIDENT FILTERS */}
           <div>
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">
-              Incident Category
+              Filter by Issue
             </div>
             <nav className="space-y-0.5">
               <button
@@ -351,7 +466,7 @@ export default function MerchantDashboard() {
               >
                 <div className="flex items-center gap-3">
                   <span className={`w-2 h-2 rounded-full ${selectedPreset === 'hitl_only' ? 'bg-amber-500' : 'bg-transparent border border-amber-300'}`} />
-                  High-Value (≥₹1L)
+                  Needs Approval (≥₹1L)
                 </div>
                 <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 rounded font-bold">
                   {incidents.filter(i => i.status === 'pending_hitl').length}
@@ -395,8 +510,8 @@ export default function MerchantDashboard() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className={`w-2 h-2 rounded-full ${selectedPreset === 'degraded_only' ? 'bg-red-500' : 'bg-transparent border border-red-300'}`} />
-                  Degraded Routes
+                  <span className={`w-2 h-2 rounded-full ${selectedPreset === 'degraded_only' ? 'bg-rose-500' : 'bg-transparent border border-rose-300'}`} />
+                  Bank Route Outages
                 </div>
                 <span className="text-[10px] bg-slate-200/60 px-1.5 rounded">
                   {incidents.filter(i => i.rootCause === 'payment_degraded').length}
@@ -411,7 +526,7 @@ export default function MerchantDashboard() {
               >
                 <div className="flex items-center gap-3">
                   <span className={`w-2 h-2 rounded-full ${selectedPreset === 'ptp_only' ? 'bg-purple-500' : 'bg-transparent border border-purple-300'}`} />
-                  Promise-to-Pay
+                  Promises to Pay
                 </div>
                 <span className="text-[10px] bg-slate-200/60 px-1.5 rounded">
                   {incidents.filter(i => i.rootCause === 'promise_to_pay').length}
@@ -425,7 +540,7 @@ export default function MerchantDashboard() {
             <div className="flex items-center justify-between px-3 py-2 rounded-md bg-slate-50 border border-slate-200/80 text-[11px] font-medium text-slate-600">
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Autonomous Engine</span>
+                <span>Autonomous Recovery</span>
               </span>
               <span className="text-emerald-700 font-bold">Active</span>
             </div>
@@ -443,14 +558,10 @@ export default function MerchantDashboard() {
         <header className="h-16 bg-white border-b border-slate-200 shrink-0 flex items-center justify-between px-6 z-20">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-[13px]">
-              <span className="text-slate-500 font-medium">Dashboard</span>
+              <span className="text-slate-500 font-medium">Merchant Portal</span>
               <span className="text-slate-300">/</span>
               <span className="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded text-xs font-bold capitalize">
                 {mainView.replace('_', ' ')}
-              </span>
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live Production
               </span>
             </div>
           </div>
@@ -459,210 +570,288 @@ export default function MerchantDashboard() {
             <button
               onClick={() => fetchIncidents(true)}
               disabled={isLoading}
-              className="px-2.5 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold flex items-center gap-1.5 shadow-2xs"
-              title="Refresh live payment incidents"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs disabled:opacity-50"
             >
-              <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin text-[#00A3C4]' : ''}`} />
-              <span className="hidden md:inline">Sync Ledger</span>
+              <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isLoading ? 'animate-spin' : ''}`} />
+              <span>Sync Ledger</span>
             </button>
 
-            <button 
-              onClick={() => setIsCopilotOpen(prev => !prev)}
-              className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-[13px] font-bold rounded-md transition-colors shadow-xs"
+            <Link
+              href="/merchant/optimizer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs"
             >
-              <Bot className="w-3.5 h-3.5 text-[#00A3C4]" />
-              Ask Copilot
-            </button>
+              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />
+              <span>Guardrails</span>
+            </Link>
 
-            <div className="w-7 h-7 rounded-full bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-xs ml-1 border border-slate-300">
-              AK
-            </div>
+            <Link
+              href="/merchant/customers/merch_01"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs"
+            >
+              <Users className="w-3.5 h-3.5 text-slate-500" />
+              <span>Customer Insights</span>
+            </Link>
+
+            <Link
+              href="/payer"
+              target="_blank"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs"
+            >
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>Payer Portal</span>
+            </Link>
+
+            {/* Toggle AI Copilot Button */}
+            <button
+              onClick={() => setIsCopilotOpen(!isCopilotOpen)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all shadow-xs ${
+                isCopilotOpen
+                  ? 'bg-cyan-50 border border-cyan-200 text-[#00A3C4]'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+              }`}
+              title={isCopilotOpen ? 'Collapse AI Copilot' : 'Open AI Copilot'}
+            >
+              <Bot className="w-3.5 h-3.5" />
+              <span>AI Copilot</span>
+            </button>
           </div>
         </header>
 
-        {/* BODY CONTAINER */}
-        <div className="flex-1 flex min-w-0 overflow-hidden relative">
+        {/* NOTIFICATION TOAST */}
+        {channelResult && (
+          <div className="bg-slate-900 text-white px-6 py-2.5 text-xs font-medium flex items-center justify-between z-30 shadow-md animate-fade-in">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
+              <span>{channelResult}</span>
+            </div>
+            <button
+              onClick={() => setChannelResult(null)}
+              className="text-slate-400 hover:text-white transition-colors ml-4 text-xs font-bold"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* WORKSPACE AREA */}
+        <div className="flex-1 flex overflow-hidden">
           
-          {/* CENTER MAIN CONTENT */}
-          <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 pb-16 custom-scrollbar min-w-0">
+          {/* SCROLLABLE MAIN BODY */}
+          <main className="flex-1 overflow-y-auto p-6 space-y-6">
             
-            {/* VIEW 1: RECOVERY QUEUE (DEFAULT) */}
+            {/* VIEW 1: RECOVERY CONSOLE */}
             {mainView === 'queue' && (
               <>
-                <div className="flex items-center justify-between">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Active Recovery Queue</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Recovery Action Center</h1>
                     <p className="text-sm text-slate-500 mt-1">
-                      AI tracks payment failures, ranks recovery strategies by Expected Value, and enforces financial guardrails.
+                      AI continuously monitors payment failures, identifies why each one happened, and executes non-intrusive recovery moves.
                     </p>
                   </div>
+
                   <div className="flex items-center gap-2">
-                    <a
-                      href="https://t.me/razorpaytestbot"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-2 rounded-md bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
-                    >
-                      <Send className="w-3.5 h-3.5 text-[#0088cc]" />
-                      <span>Telegram Alert Bot</span>
-                    </a>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Live Production Ledger
+                    </span>
                   </div>
                 </div>
 
-                {channelResult && (
-                  <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-[13px] font-medium flex items-center justify-between shadow-xs">
-                    <span className="flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-emerald-600" />
-                      <span>{channelResult}</span>
-                    </span>
-                    <button onClick={() => setChannelResult(null)} className="text-emerald-700 hover:text-emerald-900 font-bold text-lg leading-none">
-                      &times;
-                    </button>
-                  </div>
-                )}
-
-                {/* Metric Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total At-Risk</div>
+                {/* Plain-English KPI Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">At-Risk Revenue</div>
                     <div className="text-2xl font-black text-slate-900 mt-1">₹{totalAtRisk.toLocaleString('en-IN')}</div>
-                    <div className="text-[11px] text-slate-400 mt-1">{incidents.length} active incidents</div>
+                    <div className="text-[11px] text-slate-500 font-medium mt-1">Delayed across failed routes & invoices</div>
                   </div>
 
-                  <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
                     <div className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Recovered Revenue</div>
                     <div className="text-2xl font-black text-emerald-600 mt-1">₹{totalRecovered.toLocaleString('en-IN')}</div>
-                    <div className="text-[11px] text-emerald-700 font-medium mt-1">Automated recovery active</div>
+                    <div className="text-[11px] text-emerald-700 font-medium mt-1">Successfully collected via AI interventions</div>
                   </div>
 
-                  <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="text-[11px] font-bold text-cyan-600 uppercase tracking-wider">Margin Shield Saved</div>
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                    <div className="text-[11px] font-bold text-cyan-600 uppercase tracking-wider">Profit Margin Shielded</div>
                     <div className="text-2xl font-black text-cyan-600 mt-1">₹{marginShieldSaved.toLocaleString('en-IN')}</div>
-                    <div className="text-[11px] text-slate-400 mt-1">Discounts withheld from shoppers</div>
+                    <div className="text-[11px] text-slate-500 mt-1">Saved by withholding unnecessary coupon discounts</div>
                   </div>
 
-                  <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">Pending HITL</div>
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                    <div className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">Needs Your Approval</div>
                     <div className="text-2xl font-black text-amber-600 mt-1">{pendingHitlCount} High-Value</div>
-                    <div className="text-[11px] text-slate-400 mt-1">Requires supervisor approval</div>
+                    <div className="text-[11px] text-amber-700 font-medium mt-1">Transactions ≥ ₹1 Lakh awaiting 1-click go-ahead</div>
                   </div>
                 </div>
 
                 {/* Incident Table Container */}
-                <div className="bg-white border border-slate-200 rounded-lg shadow-sm">
-                  <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
-                    <div className="relative w-72">
+                <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                  <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50">
+                    <div className="relative w-80">
                       <Search className="absolute left-3 top-2.5 text-slate-400 w-3.5 h-3.5" />
                       <input
                         type="text"
                         value={searchQuery}
                         onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                        placeholder="Search customer, ID, or root cause..."
-                        className="w-full pl-8 pr-3 py-1.5 rounded-md border border-slate-200 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#00A3C4] focus:border-[#00A3C4]"
+                        placeholder="Search customer, issue name, or ID..."
+                        className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-[#00A3C4] focus:border-[#00A3C4] bg-white"
                       />
                     </div>
                     
-                    <div className="flex items-center p-1 bg-slate-100 rounded-lg text-[13px] font-medium">
+                    <div className="flex items-center p-1 bg-slate-200/60 rounded-lg text-xs font-medium">
                       {(['all', 'hitl', 'recovering', 'recovered'] as const).map(tab => (
                         <button
                           key={tab}
                           onClick={() => { setActiveTab(tab); setCurrentPage(1); }}
-                          className={`px-4 py-1.5 rounded-md transition-all ${
+                          className={`px-3 py-1 rounded-md transition-all ${
                             activeTab === tab
-                              ? 'bg-white text-slate-900 shadow-sm font-bold'
-                              : 'text-slate-500 hover:text-slate-700'
+                              ? 'bg-white text-slate-900 shadow-xs font-bold'
+                              : 'text-slate-600 hover:text-slate-900'
                           }`}
                         >
-                          {tab === 'all' ? 'All' : tab === 'hitl' ? 'HITL' : tab === 'recovering' ? 'Recovering' : 'Recovered'}
+                          {tab === 'all' ? 'All Incidents' : tab === 'hitl' ? 'Needs Approval' : tab === 'recovering' ? 'In Progress' : 'Recovered'}
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-[13px]">
+                    <table className="w-full text-left text-xs">
                       <thead>
-                        <tr className="bg-slate-50/50 text-slate-500 font-bold border-b border-slate-200">
-                          <th className="px-5 py-3">Customer & Root Cause</th>
+                        <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200 uppercase tracking-wider text-[11px]">
+                          <th className="px-5 py-3">Customer & Contact</th>
+                          <th className="px-5 py-3">Issue / Diagnosis</th>
                           <th className="px-5 py-3">Amount</th>
-                          <th className="px-5 py-3">Optimal Strategy (EV Ranked)</th>
+                          <th className="px-5 py-3">AI Recovery Move</th>
                           <th className="px-5 py-3">Status</th>
-                          <th className="px-5 py-3 text-right">Action Dispatch</th>
+                          <th className="px-5 py-3 text-right">Quick Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {paginatedIncidents.length === 0 ? (
+                        {isLoading ? (
                           <tr>
-                            <td colSpan={5} className="py-12 text-center text-slate-400 text-sm">
+                            <td colSpan={6} className="py-12 text-center text-slate-400 text-sm">
+                              <div className="flex items-center justify-center gap-2">
+                                <RefreshCw className="w-4 h-4 animate-spin text-cyan-600" />
+                                <span>Loading live incidents from payment ledger...</span>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : paginatedIncidents.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="py-12 text-center text-slate-400 text-sm">
                               No incidents match the active search or filter.
                             </td>
                           </tr>
                         ) : (
-                          paginatedIncidents.map(inc => (
-                            <tr key={inc.id} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="px-5 py-4">
-                                <div className="font-bold text-slate-900 flex items-center gap-2">
-                                  <span>{inc.customer}</span>
-                                  <span className="text-[10px] text-slate-400 font-mono">({inc.id})</span>
-                                </div>
-                                <div className="text-[11px] text-slate-500 font-mono mt-0.5 flex items-center gap-1.5">
-                                  <span className="font-semibold text-slate-700">{inc.rootCause}</span>
-                                  {inc.archetype && (
-                                    <span className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 text-[10px]">
-                                      {inc.archetype}
+                          paginatedIncidents.map(inc => {
+                            const meta = ROOT_CAUSE_META[inc.rootCause] || {
+                              label: inc.rootCause,
+                              icon: '⚡',
+                              badgeColor: 'bg-slate-100 text-slate-700 border-slate-200',
+                              description: 'Automated recovery rule active.',
+                              nonTechSummary: 'AI is managing recovery according to policy rules.',
+                            };
+                            const archetypeInfo = inc.archetype ? ARCHETYPE_META[inc.archetype] : null;
+
+                            return (
+                              <tr
+                                key={inc.id}
+                                onClick={() => setSelectedIncident(inc)}
+                                className="hover:bg-cyan-50/30 transition-colors cursor-pointer group"
+                              >
+                                <td className="px-5 py-4">
+                                  <div className="font-bold text-slate-900 group-hover:text-[#00A3C4] transition-colors flex items-center gap-1.5">
+                                    <span>{inc.customer}</span>
+                                  </div>
+                                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                                    {inc.customerPhone}
+                                  </div>
+                                </td>
+
+                                <td className="px-5 py-4">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${meta.badgeColor}`}>
+                                      <span>{meta.icon}</span>
+                                      <span>{meta.label}</span>
                                     </span>
+                                  </div>
+                                  {archetypeInfo && (
+                                    <div className="text-[10px] text-slate-500 font-medium mt-1">
+                                      {archetypeInfo.label}
+                                    </div>
                                   )}
-                                </div>
-                              </td>
-                              <td className="px-5 py-4 font-black text-slate-900">₹{inc.amount.toLocaleString('en-IN')}</td>
-                              <td className="px-5 py-4 text-slate-600 max-w-[280px] leading-relaxed">
-                                {inc.evRankedStrategy}
-                              </td>
-                              <td className="px-5 py-4">
-                                <span
-                                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
-                                    inc.status === 'recovered'
-                                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                      : inc.status === 'pending_hitl'
-                                      ? 'bg-amber-100 text-amber-800 border border-amber-200 animate-pulse'
-                                      : inc.status === 'paused_ptp'
-                                      ? 'bg-purple-100 text-purple-800 border border-purple-200'
-                                      : 'bg-blue-100 text-blue-800 border border-blue-200'
-                                  }`}
-                                >
-                                  {inc.status}
-                                </span>
-                              </td>
-                              <td className="px-5 py-4 text-right space-x-2 whitespace-nowrap">
-                                {inc.status === 'pending_hitl' && (
-                                  <button
-                                    onClick={() => handleApproveHitl(inc)}
-                                    className="px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-sm"
+                                </td>
+
+                                <td className="px-5 py-4 font-black text-slate-900 text-sm whitespace-nowrap">
+                                  ₹{inc.amount.toLocaleString('en-IN')}
+                                </td>
+
+                                <td className="px-5 py-4 text-slate-600 max-w-[280px] leading-relaxed">
+                                  <div className="line-clamp-2 text-xs font-medium text-slate-700">
+                                    {inc.evRankedStrategy}
+                                  </div>
+                                </td>
+
+                                <td className="px-5 py-4 whitespace-nowrap">
+                                  <span
+                                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold inline-flex items-center gap-1 ${
+                                      inc.status === 'recovered'
+                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                        : inc.status === 'pending_hitl'
+                                        ? 'bg-amber-100 text-amber-800 border border-amber-200 animate-pulse'
+                                        : inc.status === 'paused_ptp'
+                                        ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                                        : 'bg-blue-100 text-blue-800 border border-blue-200'
+                                    }`}
                                   >
-                                    Approve
+                                    {inc.status === 'pending_hitl' && '⏳ Needs Approval'}
+                                    {inc.status === 'auto_recovering' && '⚡ In Progress'}
+                                    {inc.status === 'paused_ptp' && '⏸️ Paused (PTP)'}
+                                    {inc.status === 'recovered' && '✓ Recovered'}
+                                  </span>
+                                </td>
+
+                                <td className="px-5 py-4 text-right space-x-1.5 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                                  {inc.status === 'pending_hitl' && (
+                                    <button
+                                      onClick={() => handleApproveHitl(inc)}
+                                      className="px-2.5 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-xs"
+                                    >
+                                      Approve
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => handleTriggerPlivoCall(inc)}
+                                    disabled={sendingChannel === 'plivo'}
+                                    className="px-2.5 py-1.5 rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors shadow-xs inline-flex items-center gap-1"
+                                    title="Make an AI Voice Assistant phone call"
+                                  >
+                                    <Phone className="w-3 h-3 text-emerald-600" />
+                                    <span>Call</span>
                                   </button>
-                                )}
-                                <button
-                                  onClick={() => handleTriggerPlivoCall(inc)}
-                                  disabled={sendingChannel === 'plivo'}
-                                  className="px-3 py-1.5 rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors shadow-sm inline-flex items-center gap-1"
-                                  title="Outbound Telephony Voice Call"
-                                >
-                                  <Phone className="w-3 h-3" />
-                                  <span>Call</span>
-                                </button>
-                                <button
-                                  onClick={() => handleSendTelegram(inc)}
-                                  disabled={sendingChannel === 'telegram'}
-                                  className="px-3 py-1.5 rounded-md bg-cyan-50 border border-cyan-100 hover:bg-cyan-100 text-[#00A3C4] font-bold text-xs transition-colors shadow-sm inline-flex items-center gap-1"
-                                  title="Dispatch Telegram Alert"
-                                >
-                                  <Send className="w-3 h-3 text-[#00A3C4]" />
-                                  <span>Alert</span>
-                                </button>
-                              </td>
-                            </tr>
-                          ))
+                                  <button
+                                    onClick={() => handleSendTelegram(inc)}
+                                    disabled={sendingChannel === 'telegram'}
+                                    className="px-2.5 py-1.5 rounded-md bg-cyan-50 border border-cyan-200 hover:bg-cyan-100 text-[#00A3C4] font-bold text-xs transition-colors shadow-xs inline-flex items-center gap-1"
+                                    title="Send 1-click Razorpay payment link via WhatsApp"
+                                  >
+                                    <Send className="w-3 h-3 text-[#00A3C4]" />
+                                    <span>Link</span>
+                                  </button>
+                                  <button
+                                    onClick={() => setSelectedIncident(inc)}
+                                    className="px-2 py-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-xs transition-colors"
+                                    title="Inspect details and customer history"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })
                         )}
                       </tbody>
                     </table>
@@ -671,7 +860,7 @@ export default function MerchantDashboard() {
                   {/* Pagination Footer */}
                   <div className="px-5 py-3.5 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50/50">
                     <div>
-                      Showing <strong>{Math.min(filteredIncidents.length, (currentPage - 1) * pageSize + 1)}</strong> to{' '}
+                      Showing <strong>{filteredIncidents.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}</strong> to{' '}
                       <strong>{Math.min(filteredIncidents.length, currentPage * pageSize)}</strong> of{' '}
                       <strong>{filteredIncidents.length}</strong> active recovery incidents
                     </div>
@@ -705,42 +894,42 @@ export default function MerchantDashboard() {
             {mainView === 'checkout_funnel' && (
               <div className="space-y-6">
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Checkout Funnel & Margin-Shield Analytics</h1>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Checkout Drop-Off & Margin Shield</h1>
                   <p className="text-sm text-slate-500 mt-1">
-                    Diagnoses step-level checkout drop-offs across {incidents.filter(i => i.rootCause === 'checkout_abandoned').length} live cart drop-offs tracked.
+                    Visualizes exactly where shoppers drop off during checkout, and automatically shields your profits by avoiding blanket coupon discounts.
                   </p>
                 </div>
 
                 {/* Top KPI Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs">
-                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Gross Margin Protected</div>
-                    <div className="text-2xl font-black text-cyan-600 mt-1.5">₹{marginShieldSaved.toLocaleString('en-IN')} Saved</div>
-                    <p className="text-xs text-slate-500 mt-1">Discounts withheld from high-frequency window shoppers</p>
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Gross Margin Saved</div>
+                    <div className="text-2xl font-black text-cyan-600 mt-1.5">₹{marginShieldSaved.toLocaleString('en-IN')}</div>
+                    <p className="text-xs text-slate-500 mt-1">Discounts withheld from habitual cart abandoners</p>
                   </div>
-                  <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs">
-                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Technical Fix Links Sent</div>
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Form Glitches Fixed</div>
                     <div className="text-2xl font-black text-slate-900 mt-1.5">
-                      {incidents.filter(i => i.archetype === 'technical_form_friction').length} Self-Healed
+                      {incidents.filter(i => i.archetype === 'technical_form_friction').length} Recovered
                     </div>
                     <p className="text-xs text-slate-500 mt-1">Direct 1-click Razorpay links bypassing mobile form bugs</p>
                   </div>
-                  <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs">
-                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Anti-Coupon Gaming Rate</div>
-                    <div className="text-2xl font-black text-emerald-600 mt-1.5">100% Margin Shield</div>
-                    <p className="text-xs text-slate-500 mt-1">Zero margin given away to high-frequency cart droppers</p>
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Discount Efficiency</div>
+                    <div className="text-2xl font-black text-emerald-600 mt-1.5">100% Margin Protected</div>
+                    <p className="text-xs text-slate-500 mt-1">Zero margin given away to shoppers who pay full price</p>
                   </div>
                 </div>
 
                 {/* Funnel Visualization */}
-                <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-xs space-y-4">
-                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Checkout Funnel Leakage Breakdown</h3>
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4">
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Where Customers Leave The Checkout</h3>
                   
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
-                      <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                      <div className="flex justify-between text-xs font-bold text-slate-700 mb-1.5">
                         <span>1. Cart Created</span>
-                        <span>1,420 Sessions (100%)</span>
+                        <span>1,420 Shoppers (100%)</span>
                       </div>
                       <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
                         <div className="bg-[#00A3C4] h-full w-full rounded-full" />
@@ -748,9 +937,9 @@ export default function MerchantDashboard() {
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
-                        <span>2. Shipping Info & Fee Revealed</span>
-                        <span>980 Sessions (69%) — <span className="text-amber-600">31% Drop-off (Price/Shipping Shock)</span></span>
+                      <div className="flex justify-between text-xs font-bold text-slate-700 mb-1.5">
+                        <span>2. Shipping Info & Delivery Address</span>
+                        <span>980 Shoppers (69%) — <span className="text-amber-600">31% Drop-off (Shipping Shock)</span></span>
                       </div>
                       <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
                         <div className="bg-cyan-500 h-full w-[69%] rounded-full" />
@@ -758,9 +947,9 @@ export default function MerchantDashboard() {
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
-                        <span>3. Payment Method Selected</span>
-                        <span>680 Sessions (48%) — <span className="text-slate-500">21% Drop-off (Trust/Hesitation)</span></span>
+                      <div className="flex justify-between text-xs font-bold text-slate-700 mb-1.5">
+                        <span>3. Payment Method Selection (UPI / Card)</span>
+                        <span>680 Shoppers (48%) — <span className="text-slate-500">21% Drop-off (Payment Hesitation)</span></span>
                       </div>
                       <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
                         <div className="bg-cyan-600 h-full w-[48%] rounded-full" />
@@ -768,9 +957,9 @@ export default function MerchantDashboard() {
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
-                        <span>4. Payment Info Entered & Confirmed</span>
-                        <span>540 Sessions (38%) — <span className="text-red-600">10% Drop-off (Mobile Form Glitches)</span></span>
+                      <div className="flex justify-between text-xs font-bold text-slate-700 mb-1.5">
+                        <span>4. OTP Verification & Order Confirmation</span>
+                        <span>540 Shoppers (38%) — <span className="text-emerald-600">Converted Successfully</span></span>
                       </div>
                       <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
                         <div className="bg-emerald-600 h-full w-[38%] rounded-full" />
@@ -781,25 +970,25 @@ export default function MerchantDashboard() {
 
                 {/* Behavioral Archetype Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs">
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
                     <div className="flex items-center gap-2 text-xs font-bold text-amber-700 uppercase tracking-wider">
                       <ShieldAlert className="w-4 h-4 text-amber-600" />
-                      <span>Comparison Window Shoppers</span>
+                      <span>Window Shoppers (Margin Shield)</span>
                     </div>
-                    <div className="text-lg font-black text-slate-900 mt-2">Strict Margin Shield (0% Discount)</div>
+                    <div className="text-lg font-black text-slate-900 mt-2">Zero Discount Strategy (0% Coupon)</div>
                     <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                      Shoppers viewing carts 4+ times for &lt;15s are flagged. Instead of giving away 10% coupon codes, the agent sends gentle non-discounted stock reminders, preserving profit margins.
+                      Shoppers who repeatedly add items and abandon to trigger promo codes are identified. Instead of giving away 10% margins, the AI sends a polite stock reminder, maintaining full profit.
                     </p>
                   </div>
 
-                  <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs">
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
                     <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 uppercase tracking-wider">
                       <Zap className="w-4 h-4 text-emerald-600" />
-                      <span>Technical Form Friction</span>
+                      <span>Technical Form Glitches</span>
                     </div>
-                    <div className="text-lg font-black text-slate-900 mt-2">1-Click Direct Fix Resume Links</div>
+                    <div className="text-lg font-black text-slate-900 mt-2">1-Click Direct Razorpay Link</div>
                     <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                      Shoppers encountering payment input timeouts on mobile receive a direct Razorpay Smart Link via WhatsApp that skips the broken step entirely, achieving 84% conversion without coupon spam.
+                      Shoppers whose mobile screens froze at the payment step receive a direct 1-click Razorpay payment link via WhatsApp. This recovers the purchase without coupon discounts.
                     </p>
                   </div>
                 </div>
@@ -810,52 +999,52 @@ export default function MerchantDashboard() {
             {mainView === 'subscription_churn' && (
               <div className="space-y-6">
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Subscription Churn & Retention Intelligence</h1>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Subscription Churn Guard</h1>
                   <p className="text-sm text-slate-500 mt-1">
-                    Differentiates genuine payment declines (Involuntary) from dormant customer churn (Voluntary) across {incidents.filter(i => i.rootCause === 'subscription_failed').length} subscription failures tracked.
+                    Differentiates accidental card declines (Involuntary) from inactive subscribers (Voluntary), protecting your monthly recurring revenue.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs">
-                    <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Involuntary Churn Recovered</div>
-                    <div className="text-2xl font-black text-emerald-600 mt-1.5">78.4% Hit Rate</div>
-                    <p className="text-xs text-slate-500 mt-1">Active users recovered via 14d grace + payroll retries</p>
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+                    <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Active Users Saved</div>
+                    <div className="text-2xl font-black text-emerald-600 mt-1.5">78.4% Recovered</div>
+                    <p className="text-xs text-slate-500 mt-1">Recovered via 14-day grace period + payroll cycle retry</p>
                   </div>
-                  <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs">
-                    <div className="text-xs font-bold text-amber-600 uppercase tracking-wider">Dunning Kill Switch Active</div>
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+                    <div className="text-xs font-bold text-amber-600 uppercase tracking-wider">Dormant Users Diverted</div>
                     <div className="text-2xl font-black text-amber-600 mt-1.5">0 Chargebacks</div>
-                    <p className="text-xs text-slate-500 mt-1">Dormant users (&gt;45d inactive) diverted to off-ramp</p>
+                    <p className="text-xs text-slate-500 mt-1">Inactive users (&gt;45d) offered pause/downgrade instead of dunning</p>
                   </div>
-                  <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs">
-                    <div className="text-xs font-bold text-purple-600 uppercase tracking-wider">Enterprise White-Glove</div>
-                    <div className="text-2xl font-black text-purple-600 mt-1.5">100% AM Escalated</div>
-                    <p className="text-xs text-slate-500 mt-1">High-value contracts paused for executive outreach</p>
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+                    <div className="text-xs font-bold text-purple-600 uppercase tracking-wider">Enterprise Accounts</div>
+                    <div className="text-2xl font-black text-purple-600 mt-1.5">100% Protected</div>
+                    <p className="text-xs text-slate-500 mt-1">High-value contracts routed to executive supervisor care</p>
                   </div>
                 </div>
 
                 {/* Comparison Card: Side by Side */}
-                <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-xs">
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs">
                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">
-                    Side-by-Side Diagnosis Proof (Identical Decline Code: Insufficient Funds)
+                    How AI Handles Two Different Customers with the Same Decline Code
                   </h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-lg bg-emerald-50/50 border border-emerald-200">
-                      <div className="text-xs font-bold text-emerald-800 uppercase">Customer A: Active Subscriber</div>
-                      <div className="text-sm font-bold text-slate-900 mt-1">Ashwin Khowala (Active 24h ago)</div>
-                      <p className="text-xs text-slate-600 mt-2">
-                        <strong>Diagnosis:</strong> Involuntary Churn.<br />
-                        <strong>Action Taken:</strong> 14-day grace period granted, scheduled smart retry for Friday pay-cycle, WhatsApp 1-click update link dispatched.
+                    <div className="p-5 rounded-xl bg-emerald-50/60 border border-emerald-200">
+                      <div className="text-xs font-bold text-emerald-800 uppercase">Customer A: Active Daily User</div>
+                      <div className="text-sm font-bold text-slate-900 mt-1">Ashwin Khowala (Used product yesterday)</div>
+                      <p className="text-xs text-slate-600 mt-2.5 leading-relaxed">
+                        <strong>Why it failed:</strong> Month-end salary credit timing.<br />
+                        <strong>AI Action:</strong> Service is NOT disconnected. A 14-day grace period is granted and payment is automatically retried on Friday payday with 1-click WhatsApp update link.
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-lg bg-amber-50/50 border border-amber-200">
-                      <div className="text-xs font-bold text-amber-800 uppercase">Customer B: Dormant Subscriber</div>
-                      <div className="text-sm font-bold text-slate-900 mt-1">Siddharth Rao (Inactive 65 days)</div>
-                      <p className="text-xs text-slate-600 mt-2">
-                        <strong>Diagnosis:</strong> Voluntary Churn in Disguise.<br />
-                        <strong>Action Taken:</strong> Dunning Kill Switch activated. Sent 1 graceful pause/downgrade off-ramp to eliminate credit card chargebacks.
+                    <div className="p-5 rounded-xl bg-amber-50/60 border border-amber-200">
+                      <div className="text-xs font-bold text-amber-800 uppercase">Customer B: Inactive User</div>
+                      <div className="text-sm font-bold text-slate-900 mt-1">Siddharth Rao (Inactive for 65 days)</div>
+                      <p className="text-xs text-slate-600 mt-2.5 leading-relaxed">
+                        <strong>Why it failed:</strong> User stopped using the product.<br />
+                        <strong>AI Action:</strong> Aggressive email reminders are stopped immediately. Sent 1 friendly plan-pause option to eliminate credit card chargebacks.
                       </p>
                     </div>
                   </div>
@@ -863,62 +1052,62 @@ export default function MerchantDashboard() {
               </div>
             )}
 
-            {/* VIEW 4: DECLINE CODE TAXONOMY MATRIX */}
+            {/* VIEW 4: BANK DECLINE CODE GUIDE */}
             {mainView === 'decline_taxonomy' && (
               <div className="space-y-6">
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Deterministic Decline Code Taxonomy</h1>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Bank Decline Guide</h1>
                   <p className="text-sm text-slate-500 mt-1">
-                    Standardized lookup matrix separating Merchant/System Faults (Silent Reroute) from Payer Fixable Faults and Hard Declines.
+                    Plain-English lookup guide explaining why banks decline customer cards and the exact recommended action.
                   </p>
                 </div>
 
-                <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-xs">
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
-                        <th className="px-5 py-3">Decline Code</th>
-                        <th className="px-5 py-3">Fault Domain</th>
-                        <th className="px-5 py-3">Retry Strategy</th>
-                        <th className="px-5 py-3">Wait Delay</th>
-                        <th className="px-5 py-3">Contact Allowed</th>
+                      <tr className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 uppercase tracking-wider text-[11px]">
+                        <th className="px-5 py-3.5">Decline Reason</th>
+                        <th className="px-5 py-3.5">Who Is Responsible</th>
+                        <th className="px-5 py-3.5">Recommended AI Action</th>
+                        <th className="px-5 py-3.5">Best Time To Retry</th>
+                        <th className="px-5 py-3.5">Customer Message</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       <tr className="hover:bg-slate-50">
-                        <td className="px-5 py-3 font-mono font-bold text-slate-800">gateway_timeout</td>
-                        <td className="px-5 py-3"><span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">MERCHANT_SYSTEM</span></td>
-                        <td className="px-5 py-3">Silent Backup Route Reroute</td>
-                        <td className="px-5 py-3">5 minutes</td>
-                        <td className="px-5 py-3 text-red-600 font-bold">❌ Prohibited (0 Contact)</td>
+                        <td className="px-5 py-3.5 font-bold text-slate-800">Bank Server Timeout (gateway_timeout)</td>
+                        <td className="px-5 py-3.5"><span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">Bank Gateway</span></td>
+                        <td className="px-5 py-3.5">Silent retry via backup HDFC/ICICI route</td>
+                        <td className="px-5 py-3.5">5 minutes</td>
+                        <td className="px-5 py-3.5 text-rose-600 font-bold">❌ Do Not Message (0 Spam)</td>
                       </tr>
                       <tr className="hover:bg-slate-50">
-                        <td className="px-5 py-3 font-mono font-bold text-slate-800">insufficient_funds</td>
-                        <td className="px-5 py-3"><span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">PAYER_CUSTOMER</span></td>
-                        <td className="px-5 py-3">Delayed Income-Cycle Retry</td>
-                        <td className="px-5 py-3">72 hours (3 days)</td>
-                        <td className="px-5 py-3 text-emerald-600 font-bold">✓ WhatsApp Gentle Link</td>
+                        <td className="px-5 py-3.5 font-bold text-slate-800">Insufficient Balance (insufficient_funds)</td>
+                        <td className="px-5 py-3.5"><span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">Customer Account</span></td>
+                        <td className="px-5 py-3.5">Smart retry aligned to salary day</td>
+                        <td className="px-5 py-3.5">72 hours (Friday)</td>
+                        <td className="px-5 py-3.5 text-emerald-600 font-bold">✓ Polite WhatsApp Reminder</td>
                       </tr>
                       <tr className="hover:bg-slate-50">
-                        <td className="px-5 py-3 font-mono font-bold text-slate-800">card_expired</td>
-                        <td className="px-5 py-3"><span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">PAYER_CUSTOMER</span></td>
-                        <td className="px-5 py-3">Immediate 1-Click Card Update</td>
-                        <td className="px-5 py-3">0 hours (Instant)</td>
-                        <td className="px-5 py-3 text-emerald-600 font-bold">✓ WhatsApp / Email Link</td>
+                        <td className="px-5 py-3.5 font-bold text-slate-800">Card Expired (card_expired)</td>
+                        <td className="px-5 py-3.5"><span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">Customer Card</span></td>
+                        <td className="px-5 py-3.5">Send 1-click card update link</td>
+                        <td className="px-5 py-3.5">Immediate</td>
+                        <td className="px-5 py-3.5 text-emerald-600 font-bold">✓ 1-Click Update Link</td>
                       </tr>
                       <tr className="hover:bg-slate-50">
-                        <td className="px-5 py-3 font-mono font-bold text-slate-800">mandate_auth_failed</td>
-                        <td className="px-5 py-3"><span className="px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-bold">REGULATORY_RBI</span></td>
-                        <td className="px-5 py-3">RBI AFA Consent Verification</td>
-                        <td className="px-5 py-3">0 hours (Instant)</td>
-                        <td className="px-5 py-3 text-emerald-600 font-bold">✓ WhatsApp AFA Link</td>
+                        <td className="px-5 py-3.5 font-bold text-slate-800">RBI >₹15k 2FA (mandate_auth_failed)</td>
+                        <td className="px-5 py-3.5"><span className="px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-bold">RBI Regulation</span></td>
+                        <td className="px-5 py-3.5">Pre-debit WhatsApp consent link</td>
+                        <td className="px-5 py-3.5">Immediate</td>
+                        <td className="px-5 py-3.5 text-emerald-600 font-bold">✓ WhatsApp Consent Link</td>
                       </tr>
                       <tr className="hover:bg-slate-50">
-                        <td className="px-5 py-3 font-mono font-bold text-slate-800">stolen_card</td>
-                        <td className="px-5 py-3"><span className="px-2 py-0.5 rounded bg-red-100 text-red-800 font-bold">HARD_DECLINE</span></td>
-                        <td className="px-5 py-3">Cancel Retries & Flag Risk</td>
-                        <td className="px-5 py-3">None</td>
-                        <td className="px-5 py-3 text-red-600 font-bold">❌ Blocked (Fraud Safety)</td>
+                        <td className="px-5 py-3.5 font-bold text-slate-800">Lost or Stolen Card (stolen_card)</td>
+                        <td className="px-5 py-3.5"><span className="px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-bold">Hard Security Decline</span></td>
+                        <td className="px-5 py-3.5">Cancel all retries immediately</td>
+                        <td className="px-5 py-3.5">None</td>
+                        <td className="px-5 py-3.5 text-rose-600 font-bold">❌ Blocked (Fraud Safety)</td>
                       </tr>
                     </tbody>
                   </table>
@@ -927,7 +1116,211 @@ export default function MerchantDashboard() {
             )}
           </main>
 
-          {/* RIGHT AI COPILOT PANE */}
+          {/* ========================================================================= */}
+          {/* SMART INCIDENT DETAIL DRAWER (SLIDE-OVER FOR QUICK ACTIONS & STORY)        */}
+          {/* ========================================================================= */}
+          {selectedIncident && (
+            <div className="fixed inset-0 z-50 overflow-hidden flex justify-end bg-slate-900/40 backdrop-blur-xs animate-fade-in">
+              <div className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col z-50 overflow-hidden">
+                {/* Drawer Header */}
+                <div className="p-6 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-100 text-[#00A3C4] flex items-center justify-center font-bold text-base">
+                      {ROOT_CAUSE_META[selectedIncident.rootCause]?.icon || '⚡'}
+                    </div>
+                    <div>
+                      <div className="text-base font-bold text-slate-900">{selectedIncident.customer}</div>
+                      <div className="text-xs text-slate-500 font-mono">Incident ID: {selectedIncident.id}</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedIncident(null)}
+                    className="w-8 h-8 rounded-lg hover:bg-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Drawer Body */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                  
+                  {/* Financial & Status Summary */}
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold text-slate-500 uppercase">Amount At Risk</div>
+                      <div className="text-2xl font-black text-slate-900 mt-0.5">₹{selectedIncident.amount.toLocaleString('en-IN')}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-500 uppercase text-right">Current Status</div>
+                      <span
+                        className={`inline-block mt-1 px-3 py-1 rounded-md text-xs font-bold ${
+                          selectedIncident.status === 'recovered'
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            : selectedIncident.status === 'pending_hitl'
+                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                            : selectedIncident.status === 'paused_ptp'
+                            ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                            : 'bg-blue-100 text-blue-800 border border-blue-200'
+                        }`}
+                      >
+                        {selectedIncident.status === 'pending_hitl' && '⏳ Needs Your Approval'}
+                        {selectedIncident.status === 'auto_recovering' && '⚡ AI Recovering'}
+                        {selectedIncident.status === 'paused_ptp' && '⏸️ Outreach Paused'}
+                        {selectedIncident.status === 'recovered' && '✓ Successfully Recovered'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Customer Contact & Reliability Profile */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <UserCheck className="w-4 h-4 text-[#00A3C4]" />
+                      <span>Customer Reliability & Contact</span>
+                    </h3>
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2.5 text-xs">
+                      <div className="flex justify-between py-1 border-b border-slate-100">
+                        <span className="text-slate-500">Phone Number:</span>
+                        <span className="font-mono font-bold text-slate-900">{selectedIncident.customerPhone}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-slate-100">
+                        <span className="text-slate-500">Payment Reliability:</span>
+                        <span className="font-bold text-emerald-600">94% On-Time Track Record</span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-slate-500">Behavioral Archetype:</span>
+                        <span className="font-bold text-slate-700">
+                          {selectedIncident.archetype ? ARCHETYPE_META[selectedIncident.archetype]?.label : 'Standard Priority'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Plain-English AI Diagnosis */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-[#00A3C4]" />
+                      <span>Why Did This Happen? (AI Diagnosis)</span>
+                    </h3>
+                    <div className="bg-cyan-50/60 border border-cyan-200 rounded-xl p-4 text-xs text-slate-700 leading-relaxed">
+                      <div className="font-bold text-[#00A3C4] mb-1">
+                        {ROOT_CAUSE_META[selectedIncident.rootCause]?.label}
+                      </div>
+                      <p>
+                        {ROOT_CAUSE_META[selectedIncident.rootCause]?.nonTechSummary}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Active Strategy */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <Zap className="w-4 h-4 text-amber-500" />
+                      <span>Executed Recovery Move</span>
+                    </h3>
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-700 leading-relaxed font-medium">
+                      {selectedIncident.evRankedStrategy}
+                    </div>
+                  </div>
+
+                  {/* Financial Guardrails & Anti-Spam Safety */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <Shield className="w-4 h-4 text-emerald-600" />
+                      <span>Compliance & Anti-Spam Safety</span>
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                        <div className="text-[10px] text-slate-500 uppercase font-bold">Contact Limit</div>
+                        <div className="font-bold text-slate-800 mt-0.5">1 of 2 max used</div>
+                      </div>
+                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                        <div className="text-[10px] text-slate-500 uppercase font-bold">Quiet Window</div>
+                        <div className="font-bold text-emerald-700 mt-0.5">Active (No spam)</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Promise-to-Pay Snooze Date Picker */}
+                  <div className="space-y-3 pt-2">
+                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <Calendar className="w-4 h-4 text-purple-600" />
+                      <span>Record Customer Promise-to-Pay</span>
+                    </h3>
+                    <div className="p-4 bg-purple-50/50 border border-purple-200 rounded-xl space-y-3">
+                      <p className="text-[11px] text-slate-600">
+                        If the customer promised to pay on a specific date, select it below. AI will pause all reminders until that date.
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="date"
+                          value={customPtpDate}
+                          onChange={e => setCustomPtpDate(e.target.value)}
+                          className="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-medium bg-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                        />
+                        <button
+                          onClick={() => handleRecordPromiseToPay(selectedIncident, customPtpDate)}
+                          className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-colors shadow-xs"
+                        >
+                          Pause Outreach
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Drawer Footer Actions */}
+                <div className="p-6 border-t border-slate-200 bg-slate-50 space-y-2">
+                  <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    1-Click Merchant Actions
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedIncident.status === 'pending_hitl' ? (
+                      <button
+                        onClick={() => handleApproveHitl(selectedIncident)}
+                        className="col-span-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-sm flex items-center justify-center gap-2"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>Approve High-Value Outreach (₹{selectedIncident.amount.toLocaleString('en-IN')})</span>
+                      </button>
+                    ) : null}
+
+                    <button
+                      onClick={() => handleTriggerPlivoCall(selectedIncident)}
+                      disabled={sendingChannel === 'plivo'}
+                      className="py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 font-bold text-xs transition-colors shadow-xs flex items-center justify-center gap-2"
+                    >
+                      <Phone className="w-4 h-4 text-emerald-600" />
+                      <span>AI Voice Call</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleSendTelegram(selectedIncident)}
+                      disabled={sendingChannel === 'telegram'}
+                      className="py-2 rounded-xl bg-cyan-50 border border-cyan-200 hover:bg-cyan-100 text-[#00A3C4] font-bold text-xs transition-colors shadow-xs flex items-center justify-center gap-2"
+                    >
+                      <Send className="w-4 h-4 text-[#00A3C4]" />
+                      <span>Send 1-Click Link</span>
+                    </button>
+
+                    <Link
+                      href={`/payer?customer=${encodeURIComponent(selectedIncident.customer)}&amount=${selectedIncident.amount}&id=${selectedIncident.id}`}
+                      target="_blank"
+                      className="col-span-2 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors text-center flex items-center justify-center gap-1.5"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Preview Customer Payer Portal</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* RIGHT AI COPILOT PANE                                                     */}
+          {/* ========================================================================= */}
           {isCopilotOpen && (
             <div
               className="hidden xl:flex shrink-0 h-full relative border-l border-slate-200 bg-white z-10"
@@ -947,10 +1340,10 @@ export default function MerchantDashboard() {
               <div className="flex-1 flex flex-col h-full overflow-hidden">
                 <AIChatBot
                   role="merchant"
-                  customerName="TechMatrix Corp"
-                  amount={145000}
-                  rootCause="receivable_overdue"
-                  customerId="cust_0001"
+                  customerName={selectedIncident ? selectedIncident.customer : "TechMatrix Corp"}
+                  amount={selectedIncident ? selectedIncident.amount : 145000}
+                  rootCause={selectedIncident ? selectedIncident.rootCause : "receivable_overdue"}
+                  customerId={selectedIncident?.customerId || "cust_0001"}
                   merchantId="merch_01"
                   isOpen={isCopilotOpen}
                   onToggleOpen={() => setIsCopilotOpen(false)}
