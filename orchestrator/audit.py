@@ -141,6 +141,8 @@ def log_audit_entry(
         except Exception as e:
             logger.warning(f"Could not send trace to Langfuse: {e}")
 
+    return entry
+
 def verify_audit_chain(entries: List[Dict[str, Any]]) -> bool:
     """
     Verifies the SHA-256 chain integrity of an ordered list of audit entries.
