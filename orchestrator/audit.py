@@ -141,9 +141,6 @@ def log_audit_entry(
         except Exception as e:
             logger.warning(f"Could not send trace to Langfuse: {e}")
 
-    return entry
-
-
 def verify_audit_chain(entries: List[Dict[str, Any]]) -> bool:
     """
     Verifies the SHA-256 chain integrity of an ordered list of audit entries.
@@ -168,3 +165,48 @@ def verify_audit_chain(entries: List[Dict[str, Any]]) -> bool:
             return False
         prev_hash = stored_hash or expected_hash
     return True
+
+
+def trace_conversational_turn(
+    channel: str,
+    session_id: str,
+    user_message: str,
+    agent_reply: str,
+    role: str = "payer",
+    metadata: Optional[Dict[str, Any]] = None,
+    tools_called: Optional[List[Dict[str, Any]]] = None,
+) -> None:
+    """
+    Traces interactive chatbot, Telegram, or voice turns to Langfuse Cloud.
+    Groups turns by session_id/chat_id.
+    """
+    lf = _get_langfuse_client()
+    if not lf:
+        return
+
+    try:
+        trace_id_hex = hashlib.md5(f"{channel}_{session_id}".encode()).hexdigest()
+        meta = {
+            "channel": channel,
+            "session_id": str(session_id),
+            "role": role,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "service": "revenue_recovery_conversational",
+        }
+        if metadata:
+            meta.update(metadata)
+        if tools_called:
+            meta["tools_called"] = tools_called
+
+        lf.create_event(
+            trace_context={"trace_id": trace_id_hex},
+            name=f"{channel}_interaction",
+            input={"user_message": user_message, "role": role},
+            output={"agent_reply": agent_reply},
+            metadata=meta,
+            status_message=f"{channel.capitalize()} response delivered",
+        )
+        lf.flush()
+    except Exception as e:
+        logger.warning(f"Could not send conversational trace to Langfuse: {e}")
+

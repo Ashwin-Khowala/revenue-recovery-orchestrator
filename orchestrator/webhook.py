@@ -1028,6 +1028,28 @@ async def gemini_live_websocket(websocket: WebSocket):
                     live_session._append_history("user", user_speech)
                     live_session._append_history("agent", result.get("voice_reply", ""))
 
+            # Trace conversational turn to Langfuse Cloud
+            if result:
+                try:
+                    from orchestrator.audit import trace_conversational_turn
+                    trace_conversational_turn(
+                        channel="ai_copilot_websocket",
+                        session_id=customer_id or "copilot_session",
+                        user_message=user_speech,
+                        agent_reply=result.get("voice_reply") or result.get("text") or "",
+                        role=role,
+                        metadata={
+                            "customer_name": customer_name,
+                            "amount": amount,
+                            "root_cause": root_cause,
+                            "merchant_id": merchant_id,
+                            "session_reconnected": getattr(session, "_reconnected", False) if session else False,
+                        },
+                        tools_called=result.get("tools_called"),
+                    )
+                except Exception as trace_err:
+                    logger.debug(f"Copilot trace error: {trace_err}")
+
             await websocket.send_text(json.dumps(result))
 
     except WebSocketDisconnect:

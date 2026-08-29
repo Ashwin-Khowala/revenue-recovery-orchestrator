@@ -549,6 +549,21 @@ def poll_telegram_updates():
                             logger.info(f"[TG IN] From {chat_id}: {user_text[:60]}")
                             reply_text, keyboard = _generate_agent_reply(user_text, chat_id)
                             send_tg_message(chat_id, reply_text, keyboard)
+                            
+                            # Trace interaction to Langfuse Cloud
+                            try:
+                                from orchestrator.audit import trace_conversational_turn
+                                role = USER_ROLES.get(chat_id, "payer")
+                                trace_conversational_turn(
+                                    channel="telegram",
+                                    session_id=chat_id,
+                                    user_message=user_text,
+                                    agent_reply=reply_text,
+                                    role=role,
+                                    metadata={"user_name": user_name, "chat_id": chat_id, "interaction_type": "text_message"},
+                                )
+                            except Exception as trace_err:
+                                logger.debug(f"Telegram trace error: {trace_err}")
 
                     # Callback query (button press)
                     elif "callback_query" in update:
@@ -575,6 +590,21 @@ def poll_telegram_updates():
                             logger.info(f"[TG CB] From {chat_id}: {cb_data}")
                             reply_text, keyboard = _generate_agent_reply(cb_data, chat_id)
                             send_tg_message(chat_id, reply_text, keyboard)
+
+                            # Trace callback interaction to Langfuse Cloud
+                            try:
+                                from orchestrator.audit import trace_conversational_turn
+                                role = USER_ROLES.get(chat_id, "payer")
+                                trace_conversational_turn(
+                                    channel="telegram",
+                                    session_id=chat_id,
+                                    user_message=f"[Button Press] {cb_data}",
+                                    agent_reply=reply_text,
+                                    role=role,
+                                    metadata={"user_name": user_name, "chat_id": chat_id, "interaction_type": "callback_query"},
+                                )
+                            except Exception as trace_err:
+                                logger.debug(f"Telegram trace error: {trace_err}")
 
             time.sleep(0.5)
         except Exception as e:
