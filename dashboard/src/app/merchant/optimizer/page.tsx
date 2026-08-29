@@ -25,7 +25,9 @@ import {
   Legend,
 } from 'recharts';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { apiUrl, getApiBaseUrl } from '@/lib/api';
+
+const API = getApiBaseUrl();
 
 interface PortfolioSummary {
   merchant_id: string;

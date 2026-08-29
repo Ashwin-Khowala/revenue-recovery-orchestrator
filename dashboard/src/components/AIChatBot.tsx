@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { apiUrl, getWsUrl } from '@/lib/api';
 import {
   Sparkles,
   Bot,
@@ -218,7 +219,7 @@ export default function AIChatBot({
     }
 
     try {
-      const wsUrl = 'ws://localhost:8000/ws/gemini-live';
+      const wsUrl = getWsUrl('/ws/gemini-live');
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
@@ -425,7 +426,7 @@ export default function AIChatBot({
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:8000/api/orchestrator/voice-agent-turn', {
+      const res = await fetch(apiUrl('/api/orchestrator/voice-agent-turn'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -574,7 +575,7 @@ export default function AIChatBot({
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 4500);
 
-      const res = await fetch('http://localhost:8000/api/orchestrator/voice-agent-turn', {
+      const res = await fetch(apiUrl('/api/orchestrator/voice-agent-turn'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

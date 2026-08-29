@@ -18,7 +18,9 @@ import {
   FileText,
 } from 'lucide-react';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { getApiBaseUrl } from '@/lib/api';
+
+const API = getApiBaseUrl();
 
 interface RiskIndicator {
   type: string;

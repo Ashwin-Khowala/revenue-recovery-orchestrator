@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import AIChatBot from '@/components/AIChatBot';
+import { apiUrl } from '@/lib/api';
 import {
   Zap,
   LayoutDashboard,
@@ -205,7 +206,7 @@ export default function MerchantDashboard() {
     const textToRun = overrideText || b2bSimulatorText;
     setIsSimulatingB2B(true);
     try {
-      const res = await fetch('http://localhost:8000/api/orchestrator/b2b-simulate-reply', {
+      const res = await fetch(apiUrl('/api/orchestrator/b2b-simulate-reply'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -309,7 +310,7 @@ export default function MerchantDashboard() {
           setIncidents(data.incidents);
         }
       } else {
-        const backendRes = await fetch('http://localhost:8000/api/orchestrator/incidents?limit=100');
+        const backendRes = await fetch(apiUrl('/api/orchestrator/incidents?limit=100'));
         if (backendRes.ok) {
           const data = await backendRes.json();
           if (data.incidents && data.incidents.length > 0) {
@@ -320,7 +321,7 @@ export default function MerchantDashboard() {
 
       // 2. Fetch live B2B Accounts Receivable from Supabase database
       try {
-        const b2bRes = await fetch('http://localhost:8000/api/orchestrator/b2b-receivables');
+        const b2bRes = await fetch(apiUrl('/api/orchestrator/b2b-receivables'));
         if (b2bRes.ok) {
           const b2bData = await b2bRes.json();
           if (b2bData.invoices && b2bData.invoices.length > 0) {
@@ -449,7 +450,7 @@ export default function MerchantDashboard() {
     setSendingChannel('telegram');
     setChannelResult(null);
     try {
-      const res = await fetch('http://localhost:8000/api/orchestrator/send-telegram', {
+      const res = await fetch(apiUrl('/api/orchestrator/send-telegram'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -475,7 +476,7 @@ export default function MerchantDashboard() {
     setSendingChannel('plivo');
     setChannelResult(null);
     try {
-      const res = await fetch('http://localhost:8000/api/orchestrator/plivo/make-call', {
+      const res = await fetch(apiUrl('/api/orchestrator/plivo/make-call'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

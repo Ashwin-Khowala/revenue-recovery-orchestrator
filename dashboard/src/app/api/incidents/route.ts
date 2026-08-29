@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getApiBaseUrl } from '@/lib/api';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -8,7 +9,8 @@ export async function GET(request: Request) {
 
   // Try calling the FastAPI orchestrator backend
   try {
-    const backendUrl = `http://localhost:8000/api/orchestrator/incidents?limit=${limit}${merchantId ? `&merchant_id=${merchantId}` : ''}${rootCause ? `&root_cause=${rootCause}` : ''}`;
+    const base = getApiBaseUrl();
+    const backendUrl = `${base}/api/orchestrator/incidents?limit=${limit}${merchantId ? `&merchant_id=${merchantId}` : ''}${rootCause ? `&root_cause=${rootCause}` : ''}`;
     const res = await fetch(backendUrl, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
