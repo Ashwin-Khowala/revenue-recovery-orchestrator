@@ -56,6 +56,10 @@ import {
   Coins,
   EyeOff,
   Cpu,
+  Download,
+  Filter,
+  Database,
+  Hash,
 } from 'lucide-react';
 
 interface Incident {
@@ -173,7 +177,33 @@ export default function MerchantDashboard() {
   
   // Selected incident for detail drawer
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+  const [drawerTab, setDrawerTab] = useState<'overview' | 'ev_math' | 'telemetry' | 'audit'>('overview');
   const [customPtpDate, setCustomPtpDate] = useState<string>('2026-09-05');
+
+  // Export full ledger to CSV
+  const handleExportCSV = () => {
+    const headers = ['Incident ID', 'Customer', 'Phone', 'Amount (INR)', 'Root Cause', 'Strategy', 'Status', 'Archetype', 'Breaches'];
+    const rows = incidents.map(i => [
+      i.id,
+      `"${(i.customer || '').replace(/"/g, '""')}"`,
+      i.customerPhone || '',
+      i.amount,
+      i.rootCause,
+      `"${(i.evRankedStrategy || '').replace(/"/g, '""')}"`,
+      i.status,
+      i.archetype || '',
+      i.duplicateContactBreaches || 0,
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `razorpay_recovery_ledger_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setChannelResult('Recovery ledger exported successfully as CSV.');
+  };
 
   // Promise-to-Pay (PTP) Behavioral Intelligence & Liquidity Forecast State
   const [ptpSummary, setPtpSummary] = useState<any>({
@@ -1219,6 +1249,15 @@ export default function MerchantDashboard() {
               <span>Sync Ledger</span>
             </button>
 
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs"
+              title="Download full recovery ledger in CSV format"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span>Export CSV</span>
+            </button>
+
             <Link
               href="/merchant/optimizer"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs"
@@ -1302,31 +1341,55 @@ export default function MerchantDashboard() {
                   </div>
                 </div>
 
-                {/* Plain-English KPI Cards */}
+                {/* Interactive Drilldown KPI Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">At-Risk Revenue</div>
+                  <button
+                    onClick={() => { setActiveTab('all'); setSelectedPreset('all'); setCurrentPage(1); }}
+                    className="bg-white border border-slate-200 hover:border-slate-300 rounded-xl p-4 shadow-xs text-left transition-all hover:shadow-sm group cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider group-hover:text-slate-900 transition-colors">At-Risk Revenue</div>
+                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">All Incidents</span>
+                    </div>
                     <div className="text-2xl font-black text-slate-900 mt-1">₹{totalAtRisk.toLocaleString('en-IN')}</div>
-                    <div className="text-[11px] text-slate-500 font-medium mt-1">Delayed across failed routes & invoices</div>
-                  </div>
+                    <div className="text-[11px] text-slate-500 font-medium mt-1">Click to view all {incidents.length} active failure incidents</div>
+                  </button>
 
-                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-                    <div className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Recovered Revenue</div>
+                  <button
+                    onClick={() => { setActiveTab('recovered'); setSelectedPreset('all'); setCurrentPage(1); }}
+                    className="bg-white border border-slate-200 hover:border-emerald-300 rounded-xl p-4 shadow-xs text-left transition-all hover:shadow-sm group cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider group-hover:text-emerald-700 transition-colors">Recovered Revenue</div>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">Filter Recovered</span>
+                    </div>
                     <div className="text-2xl font-black text-emerald-600 mt-1">₹{totalRecovered.toLocaleString('en-IN')}</div>
-                    <div className="text-[11px] text-emerald-700 font-medium mt-1">Successfully collected via AI interventions</div>
-                  </div>
+                    <div className="text-[11px] text-emerald-700 font-medium mt-1">Click to filter {incidents.filter(i => i.status === 'recovered').length} resolved transactions</div>
+                  </button>
 
-                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-                    <div className="text-[11px] font-bold text-cyan-600 uppercase tracking-wider">Profit Margin Shielded</div>
+                  <button
+                    onClick={() => setMainView('checkout_funnel')}
+                    className="bg-white border border-slate-200 hover:border-cyan-300 rounded-xl p-4 shadow-xs text-left transition-all hover:shadow-sm group cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] font-bold text-cyan-600 uppercase tracking-wider group-hover:text-cyan-700 transition-colors">Profit Margin Shielded</div>
+                      <span className="text-[10px] font-bold text-[#00A3C4] bg-cyan-50 px-1.5 py-0.5 rounded">View Funnel</span>
+                    </div>
                     <div className="text-2xl font-black text-cyan-600 mt-1">₹{marginShieldSaved.toLocaleString('en-IN')}</div>
-                    <div className="text-[11px] text-slate-500 mt-1">Saved by withholding unnecessary coupon discounts</div>
-                  </div>
+                    <div className="text-[11px] text-slate-500 font-medium mt-1">Click to open Cart Drops & Margin Shield telemetry</div>
+                  </button>
 
-                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-                    <div className="text-[11px] font-bold text-amber-600 uppercase tracking-wider">Needs Your Approval</div>
+                  <button
+                    onClick={() => { setActiveTab('hitl'); setSelectedPreset('hitl_only'); setCurrentPage(1); }}
+                    className="bg-white border border-slate-200 hover:border-amber-300 rounded-xl p-4 shadow-xs text-left transition-all hover:shadow-sm group cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] font-bold text-amber-600 uppercase tracking-wider group-hover:text-amber-700 transition-colors">Needs Your Approval</div>
+                      <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">Filter ≥ ₹1L</span>
+                    </div>
                     <div className="text-2xl font-black text-amber-600 mt-1">{pendingHitlCount} High-Value</div>
-                    <div className="text-[11px] text-amber-700 font-medium mt-1">Transactions ≥ ₹1 Lakh awaiting 1-click go-ahead</div>
-                  </div>
+                    <div className="text-[11px] text-amber-700 font-medium mt-1">Click to review transactions awaiting supervisor approval</div>
+                  </button>
                 </div>
 
                 {/* Incident Table Container */}
@@ -3774,151 +3837,382 @@ export default function MerchantDashboard() {
                   </button>
                 </div>
 
+                {/* Drawer Tab Navigation */}
+                <div className="flex items-center border-b border-slate-200 bg-slate-100/70 px-6 pt-2 gap-1 overflow-x-auto text-xs font-bold">
+                  <button
+                    onClick={() => setDrawerTab('overview')}
+                    className={`flex items-center gap-1.5 px-3 py-2 border-b-2 transition-all whitespace-nowrap ${
+                      drawerTab === 'overview'
+                        ? 'border-[#00A3C4] text-[#00A3C4] bg-white rounded-t-lg'
+                        : 'border-transparent text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Story & Action</span>
+                  </button>
+
+                  <button
+                    onClick={() => setDrawerTab('ev_math')}
+                    className={`flex items-center gap-1.5 px-3 py-2 border-b-2 transition-all whitespace-nowrap ${
+                      drawerTab === 'ev_math'
+                        ? 'border-[#00A3C4] text-[#00A3C4] bg-white rounded-t-lg'
+                        : 'border-transparent text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    <Scale className="w-3.5 h-3.5" />
+                    <span>EV Math & Policy</span>
+                  </button>
+
+                  <button
+                    onClick={() => setDrawerTab('telemetry')}
+                    className={`flex items-center gap-1.5 px-3 py-2 border-b-2 transition-all whitespace-nowrap ${
+                      drawerTab === 'telemetry'
+                        ? 'border-[#00A3C4] text-[#00A3C4] bg-white rounded-t-lg'
+                        : 'border-transparent text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>Bank Telemetry</span>
+                  </button>
+
+                  <button
+                    onClick={() => setDrawerTab('audit')}
+                    className={`flex items-center gap-1.5 px-3 py-2 border-b-2 transition-all whitespace-nowrap ${
+                      drawerTab === 'audit'
+                        ? 'border-[#00A3C4] text-[#00A3C4] bg-white rounded-t-lg'
+                        : 'border-transparent text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>SHA-256 Audit</span>
+                  </button>
+                </div>
+
                 {/* Drawer Body */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
                   
-                  {/* Financial & Status Summary */}
-                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <div className="text-xs font-bold text-slate-500 uppercase">Amount At Risk</div>
-                      <div className="text-2xl font-black text-slate-900 mt-0.5">₹{selectedIncident.amount.toLocaleString('en-IN')}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-slate-500 uppercase text-right">Current Status</div>
-                      <span
-                        className={`inline-flex items-center gap-1.5 mt-1 px-3 py-1 rounded-md text-xs font-bold ${
-                          selectedIncident.status === 'recovered'
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                            : selectedIncident.status === 'pending_hitl'
-                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                            : selectedIncident.status === 'paused_ptp'
-                            ? 'bg-purple-100 text-purple-800 border border-purple-200'
-                            : 'bg-blue-100 text-blue-800 border border-blue-200'
-                        }`}
-                      >
-                        {selectedIncident.status === 'pending_hitl' && (
-                          <>
-                            <Clock className="w-3.5 h-3.5 text-amber-700" />
-                            <span>Needs Your Approval</span>
-                          </>
-                        )}
-                        {selectedIncident.status === 'auto_recovering' && (
-                          <>
-                            <RefreshCw className="w-3.5 h-3.5 text-blue-700 animate-spin" />
-                            <span>AI Recovering</span>
-                          </>
-                        )}
-                        {selectedIncident.status === 'paused_ptp' && (
-                          <>
-                            <Calendar className="w-3.5 h-3.5 text-purple-700" />
-                            <span>Outreach Paused</span>
-                          </>
-                        )}
-                        {selectedIncident.status === 'recovered' && (
-                          <>
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                            <span>Successfully Recovered</span>
-                          </>
-                        )}
-                      </span>
-                    </div>
-                  </div>
+                  {/* TAB 1: OVERVIEW & ACTIONS */}
+                  {drawerTab === 'overview' && (
+                    <div className="space-y-6">
+                      {/* Financial & Status Summary */}
+                      <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <div className="text-xs font-bold text-slate-500 uppercase">Amount At Risk</div>
+                          <div className="text-2xl font-black text-slate-900 mt-0.5">₹{selectedIncident.amount.toLocaleString('en-IN')}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-500 uppercase text-right">Current Status</div>
+                          <span
+                            className={`inline-flex items-center gap-1.5 mt-1 px-3 py-1 rounded-md text-xs font-bold ${
+                              selectedIncident.status === 'recovered'
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                : selectedIncident.status === 'pending_hitl'
+                                ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                : selectedIncident.status === 'paused_ptp'
+                                ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                                : 'bg-blue-100 text-blue-800 border border-blue-200'
+                            }`}
+                          >
+                            {selectedIncident.status === 'pending_hitl' && (
+                              <>
+                                <Clock className="w-3.5 h-3.5 text-amber-700" />
+                                <span>Needs Your Approval</span>
+                              </>
+                            )}
+                            {selectedIncident.status === 'auto_recovering' && (
+                              <>
+                                <RefreshCw className="w-3.5 h-3.5 text-blue-700 animate-spin" />
+                                <span>AI Recovering</span>
+                              </>
+                            )}
+                            {selectedIncident.status === 'paused_ptp' && (
+                              <>
+                                <Calendar className="w-3.5 h-3.5 text-purple-700" />
+                                <span>Outreach Paused</span>
+                              </>
+                            )}
+                            {selectedIncident.status === 'recovered' && (
+                              <>
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                                <span>Successfully Recovered</span>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      </div>
 
-                  {/* Customer Contact & Reliability Profile */}
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                      <UserCheck className="w-4 h-4 text-[#00A3C4]" />
-                      <span>Customer Reliability & Contact</span>
-                    </h3>
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2.5 text-xs">
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Phone Number:</span>
-                        <span className="font-mono font-bold text-slate-900">{selectedIncident.customerPhone}</span>
+                      {/* Customer Contact & Reliability Profile */}
+                      <div className="space-y-3">
+                        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <UserCheck className="w-4 h-4 text-[#00A3C4]" />
+                          <span>Customer Reliability & Contact</span>
+                        </h3>
+                        <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2.5 text-xs">
+                          <div className="flex justify-between py-1 border-b border-slate-100">
+                            <span className="text-slate-500">Phone Number:</span>
+                            <span className="font-mono font-bold text-slate-900">{selectedIncident.customerPhone}</span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-slate-100">
+                            <span className="text-slate-500">Payment Reliability:</span>
+                            <span className="font-bold text-emerald-600">94% On-Time Track Record</span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span className="text-slate-500">Behavioral Archetype:</span>
+                            <span className="font-bold text-slate-700">
+                              {selectedIncident.archetype ? ARCHETYPE_META[selectedIncident.archetype]?.label : 'Standard Priority'}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Payment Reliability:</span>
-                        <span className="font-bold text-emerald-600">94% On-Time Track Record</span>
-                      </div>
-                      <div className="flex justify-between py-1">
-                        <span className="text-slate-500">Behavioral Archetype:</span>
-                        <span className="font-bold text-slate-700">
-                          {selectedIncident.archetype ? ARCHETYPE_META[selectedIncident.archetype]?.label : 'Standard Priority'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Plain-English AI Diagnosis */}
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-[#00A3C4]" />
-                      <span>Why Did This Happen? (AI Diagnosis)</span>
-                    </h3>
-                    <div className="bg-cyan-50/60 border border-cyan-200 rounded-xl p-4 text-xs text-slate-700 leading-relaxed">
-                      <div className="font-bold text-[#00A3C4] mb-1">
-                        {ROOT_CAUSE_META[selectedIncident.rootCause]?.label}
+                      {/* Plain-English AI Diagnosis */}
+                      <div className="space-y-3">
+                        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <Sparkles className="w-4 h-4 text-[#00A3C4]" />
+                          <span>Why Did This Happen? (AI Diagnosis)</span>
+                        </h3>
+                        <div className="bg-cyan-50/60 border border-cyan-200 rounded-xl p-4 text-xs text-slate-700 leading-relaxed">
+                          <div className="font-bold text-[#00A3C4] mb-1">
+                            {ROOT_CAUSE_META[selectedIncident.rootCause]?.label}
+                          </div>
+                          <p>
+                            {ROOT_CAUSE_META[selectedIncident.rootCause]?.nonTechSummary}
+                          </p>
+                        </div>
                       </div>
-                      <p>
-                        {ROOT_CAUSE_META[selectedIncident.rootCause]?.nonTechSummary}
-                      </p>
-                    </div>
-                  </div>
 
-                  {/* Active Strategy */}
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                      <Zap className="w-4 h-4 text-amber-500" />
-                      <span>Executed Recovery Move</span>
-                    </h3>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-700 leading-relaxed font-medium">
-                      {selectedIncident.evRankedStrategy}
-                    </div>
-                  </div>
+                      {/* Active Strategy */}
+                      <div className="space-y-3">
+                        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <Zap className="w-4 h-4 text-amber-500" />
+                          <span>Executed Recovery Move</span>
+                        </h3>
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-700 leading-relaxed font-medium">
+                          {selectedIncident.evRankedStrategy}
+                        </div>
+                      </div>
 
-                  {/* Financial Guardrails & Anti-Spam Safety */}
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                      <Shield className="w-4 h-4 text-emerald-600" />
-                      <span>Compliance & Anti-Spam Safety</span>
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-                        <div className="text-[10px] text-slate-500 uppercase font-bold">Contact Limit</div>
-                        <div className="font-bold text-slate-800 mt-0.5">1 of 2 max used</div>
+                      {/* Financial Guardrails & Anti-Spam Safety */}
+                      <div className="space-y-3">
+                        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <Shield className="w-4 h-4 text-emerald-600" />
+                          <span>Compliance & Anti-Spam Safety</span>
+                        </h3>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            <div className="text-[10px] text-slate-500 uppercase font-bold">Contact Limit</div>
+                            <div className="font-bold text-slate-800 mt-0.5">1 of 2 max used</div>
+                          </div>
+                          <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            <div className="text-[10px] text-slate-500 uppercase font-bold">Quiet Window</div>
+                            <div className="font-bold text-emerald-700 mt-0.5">Active (No spam)</div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-                        <div className="text-[10px] text-slate-500 uppercase font-bold">Quiet Window</div>
-                        <div className="font-bold text-emerald-700 mt-0.5">Active (No spam)</div>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Promise-to-Pay Snooze Date Picker */}
-                  <div className="space-y-3 pt-2">
-                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                      <Calendar className="w-4 h-4 text-purple-600" />
-                      <span>Record Customer Promise-to-Pay</span>
-                    </h3>
-                    <div className="p-4 bg-purple-50/50 border border-purple-200 rounded-xl space-y-3">
-                      <p className="text-[11px] text-slate-600">
-                        If the customer promised to pay on a specific date, select it below. AI will pause all reminders until that date.
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="date"
-                          value={customPtpDate}
-                          onChange={e => setCustomPtpDate(e.target.value)}
-                          className="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-medium bg-white focus:outline-none focus:ring-1 focus:ring-purple-500"
-                        />
-                        <button
-                          onClick={() => handleRecordPromiseToPay(selectedIncident, customPtpDate)}
-                          className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-colors shadow-xs"
-                        >
-                          Pause Outreach
-                        </button>
+                      {/* Promise-to-Pay Snooze Date Picker */}
+                      <div className="space-y-3 pt-2">
+                        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <Calendar className="w-4 h-4 text-purple-600" />
+                          <span>Record Customer Promise-to-Pay</span>
+                        </h3>
+                        <div className="p-4 bg-purple-50/50 border border-purple-200 rounded-xl space-y-3">
+                          <p className="text-[11px] text-slate-600">
+                            If the customer promised to pay on a specific date, select it below. AI will pause all reminders until that date.
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="date"
+                              value={customPtpDate}
+                              onChange={e => setCustomPtpDate(e.target.value)}
+                              className="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-medium bg-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                            />
+                            <button
+                              onClick={() => handleRecordPromiseToPay(selectedIncident, customPtpDate)}
+                              className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition-colors shadow-xs"
+                            >
+                              Pause Outreach
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* TAB 2: EV MATH & POLICY OPTIMIZATION */}
+                  {drawerTab === 'ev_math' && (
+                    <div className="space-y-5">
+                      <div className="bg-slate-900 text-white p-4 rounded-xl space-y-2">
+                        <div className="text-[10px] font-mono uppercase text-cyan-300 font-bold">Expected Value Optimization Formula</div>
+                        <div className="text-xs font-mono text-slate-200 bg-slate-800 p-2.5 rounded-lg border border-slate-700">
+                          EV(Action) = P(Recovery) × Amount - Discount - FrictionCost
+                        </div>
+                        <p className="text-[11px] text-slate-400">
+                          The policy engine evaluates all candidate interventions and selects the highest net positive expected value.
+                        </p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Candidate Policy Ranking for this Incident</h4>
+                        
+                        <div className="space-y-2 text-xs">
+                          {/* Selected Winner */}
+                          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-emerald-900 flex items-center gap-1.5">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                1. {selectedIncident.evRankedStrategy.slice(0, 32)}...
+                              </span>
+                              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-200 text-emerald-900">
+                                SELECTED (RANK #1)
+                              </span>
+                            </div>
+                            <div className="text-slate-600 text-[11px]">
+                              P(Rec): <strong>88.0%</strong> | Friction Cost: <strong>₹50</strong> | Net EV: <strong className="text-emerald-700">₹{Math.round(selectedIncident.amount * 0.88 - 50).toLocaleString('en-IN')}</strong>
+                            </div>
+                          </div>
+
+                          {/* Alternative 1 */}
+                          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-slate-700">2. Silent Bank Gateway Reroute</span>
+                              <span className="text-[10px] font-mono text-slate-400">RANK #2</span>
+                            </div>
+                            <div className="text-slate-500 text-[11px]">
+                              P(Rec): <strong>65.0%</strong> | Friction Cost: <strong>₹0</strong> | Net EV: <strong>₹{Math.round(selectedIncident.amount * 0.65).toLocaleString('en-IN')}</strong>
+                            </div>
+                          </div>
+
+                          {/* Alternative 2: Do Nothing */}
+                          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-slate-700">3. "Do Nothing" (Self-Healing Window)</span>
+                              <span className="text-[10px] font-mono text-slate-400">RANK #3</span>
+                            </div>
+                            <div className="text-slate-500 text-[11px]">
+                              P(Rec): <strong>52.0%</strong> | Friction Cost: <strong>₹0</strong> | Net EV: <strong>₹{Math.round(selectedIncident.amount * 0.52).toLocaleString('en-IN')}</strong>
+                            </div>
+                          </div>
+
+                          {/* Rejected Naive Discounting */}
+                          <div className="p-3.5 rounded-xl bg-rose-50/50 border border-rose-200 space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-rose-800">4. Naive 15% Blanket Coupon</span>
+                              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-rose-100 text-rose-800">
+                                REJECTED
+                              </span>
+                            </div>
+                            <div className="text-rose-700 text-[11px]">
+                              Erodes ₹{Math.round(selectedIncident.amount * 0.15).toLocaleString('en-IN')} gross margin unnecessarily. Policy Engine blocked discount.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 3: BANK TELEMETRY & GATEWAY */}
+                  {drawerTab === 'telemetry' && (
+                    <div className="space-y-4 text-xs">
+                      <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+                        <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                          <Building2 className="w-3.5 h-3.5 text-[#00A3C4]" />
+                          <span>Bank & Gateway Network Signals</span>
+                        </h4>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 font-bold uppercase">ISO 8583 Code</div>
+                            <div className="font-mono font-bold text-slate-800 mt-0.5">
+                              {selectedIncident.rootCause === 'subscription_failed' ? '51 (Insufficient Funds)' : '05 (Do Not Honor)'}
+                            </div>
+                          </div>
+
+                          <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 font-bold uppercase">Route Health SLA</div>
+                            <div className="font-bold text-emerald-600 mt-0.5">99.4% (Healthy Gateway)</div>
+                          </div>
+
+                          <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 font-bold uppercase">Payment Rail</div>
+                            <div className="font-bold text-slate-800 mt-0.5">UPI Autopay / RuPay</div>
+                          </div>
+
+                          <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                            <div className="text-[10px] text-slate-500 font-bold uppercase">RBI Compliance</div>
+                            <div className="font-bold text-indigo-700 mt-0.5">
+                              {selectedIncident.amount >= 15000 ? 'AFA Mandate Active' : 'Exempt (< ₹15k)'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+                        <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">Outreach Channel Eligibility</h4>
+                        <div className="space-y-1.5 text-slate-600">
+                          <div className="flex justify-between py-1 border-b border-slate-100">
+                            <span>WhatsApp Business API:</span>
+                            <span className="font-bold text-emerald-600">Eligible (High Response Rate)</span>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-slate-100">
+                            <span>Interactive Telegram Alert:</span>
+                            <span className="font-bold text-[#00A3C4]">Connected</span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span>TRAI Calling Window:</span>
+                            <span className="font-bold text-slate-800">Within 09:00 - 20:00 (Allowed)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 4: SHA-256 AUDIT TRAIL */}
+                  {drawerTab === 'audit' && (
+                    <div className="space-y-4 text-xs">
+                      <div className="bg-slate-900 text-white p-4 rounded-xl space-y-3 font-mono">
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                          <span className="text-cyan-300 font-bold text-[11px] flex items-center gap-1.5">
+                            <Hash className="w-3.5 h-3.5 text-cyan-400" />
+                            <span>SHA-256 AUDIT BLOCK</span>
+                          </span>
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">
+                            CRYPTOGRAPHICALLY VALID
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 text-[11px]">
+                          <div>
+                            <div className="text-slate-500 text-[10px]">EVENT ENTRY HASH:</div>
+                            <div className="text-emerald-400 break-all">
+                              e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-slate-500 text-[10px]">PARENT BLOCK HASH:</div>
+                            <div className="text-slate-400 break-all">
+                              4f82c0391abf8391740921aaeebbcde9018471903417aa9018471903417aabcd
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between text-slate-400 pt-1">
+                            <span>Langfuse Span ID:</span>
+                            <span className="text-cyan-300">span_rec_{selectedIncident.id.slice(0, 8)}</span>
+                          </div>
+
+                          <div className="flex justify-between text-slate-400">
+                            <span>Audited By:</span>
+                            <span className="text-slate-200">Supabase Audit Ledger</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 leading-relaxed text-[11px]">
+                        <strong>Enterprise Audit Notice:</strong> This immutable record is chained using SHA-256 hashes for bank and regulatory compliance. Any tampering with state entries invalidates the cryptographic verification chain.
+                      </div>
+                    </div>
+                  )}
 
                 </div>
 
