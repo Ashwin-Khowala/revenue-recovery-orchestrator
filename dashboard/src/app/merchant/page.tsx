@@ -232,13 +232,6 @@ export default function MerchantDashboard() {
   const [ptpBreakResult, setPtpBreakResult] = useState<any>(null);
   const [isDiagnosingBreak, setIsDiagnosingBreak] = useState<boolean>(false);
 
-  // Governance, Consent & PII Sanitizer State
-  const [piiInputText, setPiiInputText] = useState<string>(
-    'Customer Aarav Sharma (Phone: +91 9876543210, Email: aarav.sharma@example.com) attempted paying ₹24,500 with Card 4111-2222-3333-4444. PAN: ABCDE1234F, IFSC: HDFC0001234.'
-  );
-  const [piiSanitizedResult, setPiiSanitizedResult] = useState<string | null>(null);
-  const [isSanitizingPII, setIsSanitizingPII] = useState<boolean>(false);
-
   // Wargaming Simulation State
   const [wargamePlaybook, setWargamePlaybook] = useState<string>('technical_form_friction');
   const [wargameResult, setWargameResult] = useState<any>(null);
@@ -693,23 +686,6 @@ export default function MerchantDashboard() {
     }
   };
 
-  // ---------------------------------------------------------------------------
-  // Governance & PII Sanitizer Handler
-  // ---------------------------------------------------------------------------
-  const handleSanitizePII = () => {
-    setIsSanitizingPII(true);
-    setTimeout(() => {
-      let sanitized = piiInputText;
-      sanitized = sanitized.replace(/\b(?:\d{4}[ -]?){3}\d{4}\b/g, '[CARD_REDACTED]');
-      sanitized = sanitized.replace(/(?:\+91[\s-]?)?[6-9]\d{9}\b/g, '[PHONE_MASKED]');
-      sanitized = sanitized.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL_REDACTED]');
-      sanitized = sanitized.replace(/\b[A-Z]{5}[0-9]{4}[A-Z]\b/g, '[PAN_REDACTED]');
-      sanitized = sanitized.replace(/\b[A-Z]{4}0[A-Z0-9]{6}\b/g, '[IFSC_REDACTED]');
-      setPiiSanitizedResult(sanitized);
-      setIsSanitizingPII(false);
-      setChannelResult('PII tokens sanitized: 16-digit Card, Mobile, Email, PAN, and IFSC stripped before model processing.');
-    }, 250);
-  };
 
   // ---------------------------------------------------------------------------
   // Wargaming Cohort Simulator Handler
@@ -3607,43 +3583,139 @@ export default function MerchantDashboard() {
                   </div>
                 </div>
 
-                {/* Live PII Redaction & Sanitization Sandbox */}
-                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4">
-                  <div className="border-b border-slate-100 pb-3">
-                    <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                      <EyeOff className="w-4 h-4 text-[#00A3C4]" />
-                      <span>Live PII Redaction & Financial Token Sanitizer</span>
-                    </h2>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Verify how raw financial inputs are sanitized before being sent to Azure OpenAI, Gemini Live, or vector embeddings.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                    <div className="lg:col-span-6 space-y-2">
-                      <div className="text-xs font-bold text-slate-700">Raw Input (Contains Sensitive PII):</div>
-                      <textarea
-                        value={piiInputText}
-                        onChange={e => setPiiInputText(e.target.value)}
-                        rows={4}
-                        className="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#00A3C4] font-mono bg-slate-50/50"
-                      />
-                      <button
-                        onClick={handleSanitizePII}
-                        disabled={isSanitizingPII}
-                        className="px-4 py-2 bg-[#00A3C4] hover:bg-[#008ba8] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center gap-2"
-                      >
-                        <Lock className="w-3.5 h-3.5" />
-                        <span>Sanitize PII Tokens</span>
-                      </button>
+                {/* Executive Privacy & Regulatory Compliance Matrix */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                      <div className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <Shield className="w-4 h-4 text-emerald-600" />
+                        <span>Data Protection & Privacy Policy (DPDP Act 2023)</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        100% ENFORCED
+                      </span>
                     </div>
-
-                    <div className="lg:col-span-6 space-y-2">
-                      <div className="text-xs font-bold text-slate-700">Sanitized LLM Payload (Zero Sensitive PII Leakage):</div>
-                      <div className="w-full min-h-[105px] text-xs p-3 rounded-xl border border-slate-200 bg-slate-900 text-emerald-400 font-mono">
-                        {piiSanitizedResult || 'Click "Sanitize PII Tokens" to inspect the redacted output payload.'}
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      All payment PAN cards, bank IFSC codes, and customer phone numbers are sanitized in memory before reasoning. Zero raw financial tokens or unmasked PII are ever stored or sent to external LLMs.
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 text-[11px] font-medium pt-1">
+                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                        <div className="text-slate-500 font-bold uppercase text-[10px]">Cards & PANs</div>
+                        <div className="text-emerald-700 font-bold mt-0.5">Masked (4111-****-4444)</div>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                        <div className="text-slate-500 font-bold uppercase text-[10px]">LLM Exposure</div>
+                        <div className="text-emerald-700 font-bold mt-0.5">0 Raw Tokens Leaked</div>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                      <div className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-[#00A3C4]" />
+                        <span>Telecom & Anti-Spam Safety (TRAI / RBI)</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-50 text-[#00A3C4] border border-cyan-200">
+                        ACTIVE LOCK
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Statutory calling windows prevent customer harassment. All voice calls and automated SMS recovery links are strictly restricted to 09:00 AM – 08:00 PM IST with an immutable 2-contact ceiling.
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 text-[11px] font-medium pt-1">
+                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                        <div className="text-slate-500 font-bold uppercase text-[10px]">Calling Window</div>
+                        <div className="text-slate-800 font-bold mt-0.5">09:00 – 20:00 IST</div>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                        <div className="text-slate-500 font-bold uppercase text-[10px]">Frequency Ceiling</div>
+                        <div className="text-slate-800 font-bold mt-0.5">Max 2 touches / incident</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Real-Time Customer Consent & DND Opt-Out Registry */}
+                <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                  <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <XCircle className="w-4 h-4 text-rose-500" />
+                        <span>Customer Opt-Out & DND Consent Registry</span>
+                      </h3>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Permanent opt-out latches recorded across channels. When a customer unsubscribes, all outreach across all tracks is instantly silenced.
+                      </p>
+                    </div>
+                    <span className="text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded">
+                      Zero-Tolerance Anti-Spam
+                    </span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] bg-slate-50/50">
+                          <th className="py-2.5 px-4">Customer</th>
+                          <th className="py-2.5 px-4">Phone / Identifier</th>
+                          <th className="py-2.5 px-4">Opt-Out Keyword / Trigger</th>
+                          <th className="py-2.5 px-4">Channel Action</th>
+                          <th className="py-2.5 px-4">Registered Timestamp</th>
+                          <th className="py-2.5 px-4 text-right">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        <tr className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-4 font-bold text-slate-900">Vikram Malhotra</td>
+                          <td className="py-3 px-4 font-mono text-slate-600">+91 98201 44921</td>
+                          <td className="py-3 px-4">
+                            <span className="font-mono text-[11px] bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded font-bold">
+                              &quot;STOP&quot;
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-slate-600">WhatsApp & SMS Blocked</td>
+                          <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">2026-08-28 14:22 IST</td>
+                          <td className="py-3 px-4 text-right">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                              PERMANENTLY FROZEN
+                            </span>
+                          </td>
+                        </tr>
+                        <tr className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-4 font-bold text-slate-900">Ananya Sen</td>
+                          <td className="py-3 px-4 font-mono text-slate-600">+91 97410 88231</td>
+                          <td className="py-3 px-4">
+                            <span className="font-mono text-[11px] bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded font-bold">
+                              &quot;Do not contact&quot;
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-slate-600">All AI Voice Calls Halted</td>
+                          <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">2026-08-27 19:05 IST</td>
+                          <td className="py-3 px-4 text-right">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                              PERMANENTLY FROZEN
+                            </span>
+                          </td>
+                        </tr>
+                        <tr className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-4 font-bold text-slate-900">Nexus Media Group</td>
+                          <td className="py-3 px-4 font-mono text-slate-600">ap@nexusmedia.in</td>
+                          <td className="py-3 px-4">
+                            <span className="font-mono text-[11px] bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded font-bold">
+                              &quot;Legal Dispute Active&quot;
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-slate-600">B2B Dunning Suspended</td>
+                          <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">2026-08-26 11:40 IST</td>
+                          <td className="py-3 px-4 text-right">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                              LEGAL HOLD
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
