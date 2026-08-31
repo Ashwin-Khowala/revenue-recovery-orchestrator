@@ -232,6 +232,7 @@ class TelegramDispatchRequest(BaseModel):
 
 
 @app.post("/api/orchestrator/send-telegram")
+@app.post("/api/orchestrator/actions/telegram")
 async def send_telegram_endpoint(req: TelegramDispatchRequest):
     """
     Sends an instant revenue recovery alert with interactive Razorpay payment link via Telegram.
@@ -242,10 +243,53 @@ async def send_telegram_endpoint(req: TelegramDispatchRequest):
         customer_name=req.customer_name,
         amount=req.amount,
         recovery_link=link,
-        root_cause=req.root_cause,
+        root_cause=req.root_cause or "subscription_failed",
         recipient_chat_id=req.chat_id,
     )
     return result
+
+
+class ActionDispatchRequest(BaseModel):
+    incident_id: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_name: str
+    amount: float
+    strategy: Optional[str] = None
+
+
+@app.post("/api/orchestrator/actions/whatsapp")
+async def send_whatsapp_action(req: ActionDispatchRequest):
+    """
+    Dispatches a WhatsApp recovery payment link with 1-click Razorpay checkout.
+    """
+    from orchestrator.channels.whatsapp import send_whatsapp_recovery
+    link = f"https://rzp.io/i/{req.customer_name.lower().replace(' ', '')[:6]}_{int(req.amount)}"
+    phone = req.customer_phone or os.getenv("SAFE_MODE_PHONE_OVERRIDE") or "+919820144102"
+    result = send_whatsapp_recovery(
+        recipient_phone=phone,
+        customer_name=req.customer_name,
+        amount=req.amount,
+        recovery_link=link,
+        root_cause="subscription_failed",
+    )
+    return result
+
+
+@app.post("/api/orchestrator/actions/voice")
+async def send_voice_action(req: ActionDispatchRequest):
+    """
+    Schedules an autonomous AI Voice Call recovery attempt.
+    """
+    from orchestrator.channels.voice import generate_voice_recovery
+    phone = req.customer_phone or os.getenv("SAFE_MODE_PHONE_OVERRIDE") or "+919820144102"
+    result = generate_voice_recovery(
+        customer_name=req.customer_name,
+        amount=req.amount,
+        root_cause="subscription_failed",
+        recipient_phone=phone,
+    )
+    return result
+
 
 
 def _enrich_incident(event: dict) -> dict:
@@ -337,6 +381,7 @@ def _enrich_incident(event: dict) -> dict:
 
 
 @app.get("/api/orchestrator/incidents")
+@app.get("/api/incidents")
 async def get_incidents_endpoint(
     limit: int = 100,
     merchant_id: Optional[str] = None,
@@ -1370,6 +1415,7 @@ async def get_b2b_receivables_endpoint(merchant_id: str = "merch_01"):
 
 
 @app.post("/api/orchestrator/b2b-simulate-reply")
+@app.post("/api/orchestrator/b2b/parse-reply")
 async def simulate_b2b_reply_endpoint(req: B2BSimulateReplyRequest):
     """
     Executes semantic Mem0-style intent extraction on incoming AP email replies.

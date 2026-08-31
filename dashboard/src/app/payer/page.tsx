@@ -25,15 +25,28 @@ function PayerPortalContent() {
   const paramCustomer = searchParams?.get('customer') || searchParams?.get('name');
   const paramAmount = searchParams?.get('amount') ? Number(searchParams.get('amount')) : null;
 
-  const [customerName, setCustomerName] = useState(paramCustomer || 'Ashwin Khowala');
-  const [originalAmount, setOriginalAmount] = useState(paramAmount || 4999);
-  const [amount, setAmount] = useState(paramAmount || 4999);
+  const [customerName, setCustomerName] = useState(paramCustomer || 'Customer');
+  const [originalAmount, setOriginalAmount] = useState(paramAmount || 0);
+  const [amount, setAmount] = useState(paramAmount || 0);
 
   useEffect(() => {
     if (paramCustomer) setCustomerName(paramCustomer);
     if (paramAmount) {
       setOriginalAmount(paramAmount);
       setAmount(paramAmount);
+    } else if (!paramCustomer && !paramAmount) {
+      // Fetch dynamic database incident
+      fetch('/api/incidents?limit=1')
+        .then(res => res.json())
+        .then(data => {
+          const list = Array.isArray(data) ? data : data?.incidents;
+          if (list && list.length > 0) {
+            setCustomerName(list[0].customer || 'Customer');
+            setOriginalAmount(list[0].amount || 24500);
+            setAmount(list[0].amount || 24500);
+          }
+        })
+        .catch(() => {});
     }
   }, [paramCustomer, paramAmount]);
 

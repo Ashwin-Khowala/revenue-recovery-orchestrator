@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getApiBaseUrl } from '@/lib/api';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const limit = searchParams.get('limit') || '100';

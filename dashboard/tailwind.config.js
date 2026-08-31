@@ -4,16 +4,32 @@ module.exports = {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/lib/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/types/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
       colors: {
-        background: '#F8FAFC',
+        background: '#FAFAFA',
+        // "Salt and Pepper" Design System Palette
+        salt: {
+          50: '#FAFAFA',
+          100: '#F5F5F5',
+          200: '#EBEBEB',
+          300: '#D4D4D4', // Primary Salt Light Border / Surface
+          400: '#B3B3B3', // Salt Mid / Secondary Muted Text
+          500: '#8C8C8C',
+        },
+        pepper: {
+          DEFAULT: '#2B2B2B', // Primary Pepper Charcoal
+          dark: '#1F1F1F',
+          light: '#3D3D3D',
+        },
         surface: {
           DEFAULT: '#FFFFFF',
-          muted: '#F1F5F9',
-          border: '#E2E8F0',
-          hover: '#F8FAFC',
+          muted: '#FAFAFA',
+          border: '#D4D4D4',
+          hover: '#F5F5F5',
         },
         razorpay: {
           DEFAULT: '#0066FF',
@@ -21,17 +37,10 @@ module.exports = {
           light: '#2563EB',
           navy: '#0C2340',
         },
-        financial: {
-          profit: '#059669',
-          risk: '#D97706',
-          loss: '#DC2626',
-          neutral: '#64748B',
-          purple: '#7C3AED',
-        }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['JetBrains Mono', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       },
     },
   },

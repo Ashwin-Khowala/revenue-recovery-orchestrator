@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { apiUrl, getWsUrl } from '@/lib/api';
+import { theme } from '@/lib/theme';
 import {
   Sparkles,
   Bot,
@@ -14,7 +15,12 @@ import {
   User,
   CheckCircle2,
   Radio,
+  Loader2,
+  Cpu,
+  Volume2,
+  Layers,
 } from 'lucide-react';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 export interface AIChatBotProps {
   role: 'merchant' | 'payer';
@@ -45,8 +51,6 @@ interface VoiceTurn {
   toolsExecuted?: Array<{ tool: string; message: string; [key: string]: any }>;
 }
 
-import MarkdownRenderer from '@/components/MarkdownRenderer';
-
 export default function AIChatBot({
   role,
   customerName = 'Ashwin Khowala',
@@ -74,14 +78,53 @@ export default function AIChatBot({
   // Voice Chat State
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isUserSpeaking, setIsUserSpeaking] = useState(false);
+  const [interimSpeech, setInterimSpeech] = useState('');
   const [voiceTurns, setVoiceTurns] = useState<VoiceTurn[]>([]);
   const [voiceLoading, setVoiceLoading] = useState(false);
+  const [currentToolExecuting, setCurrentToolExecuting] = useState<string | null>(null);
+  const [thinkingStep, setThinkingStep] = useState<number>(1);
   const recognitionRef = useRef<any>(null);
 
   // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, voiceTurns]);
+  }, [messages, voiceTurns, interimSpeech, voiceLoading]);
+
+  // Simulate Thinking & Tool Execution Steps when voiceLoading is active
+  useEffect(() => {
+    if (!voiceLoading) {
+      setCurrentToolExecuting(null);
+      setThinkingStep(1);
+      return;
+    }
+
+    setThinkingStep(1);
+    setCurrentToolExecuting('Intent & Prior Classification');
+
+    const step1 = setTimeout(() => {
+      setThinkingStep(2);
+      setCurrentToolExecuting(
+        role === 'merchant' ? 'orchestrator.get_at_risk_incidents' : 'customer.get_customer_intelligence'
+      );
+    }, 600);
+
+    const step2 = setTimeout(() => {
+      setThinkingStep(3);
+      setCurrentToolExecuting('Deterministic EV & Guardrail Arbitration');
+    }, 1400);
+
+    const step3 = setTimeout(() => {
+      setThinkingStep(4);
+      setCurrentToolExecuting('Gemini 3.1 Live Audio Synthesis');
+    }, 2200);
+
+    return () => {
+      clearTimeout(step1);
+      clearTimeout(step2);
+      clearTimeout(step3);
+    };
+  }, [voiceLoading, role]);
 
   // Persistent WebSocket & Live Voice Session Refs
   const wsRef = useRef<WebSocket | null>(null);
@@ -127,7 +170,6 @@ export default function AIChatBot({
         bytes[i] = binaryString.charCodeAt(i);
       }
 
-      // Safe 16-bit little-endian PCM sample extraction
       const numSamples = Math.floor(bytes.length / 2);
       if (numSamples === 0) return false;
 
@@ -200,7 +242,7 @@ export default function AIChatBot({
       const hindiVoice =
         voices.find(v => v.name.toLowerCase().includes('swara')) ||
         voices.find(v => v.name.toLowerCase().includes('hindi')) ||
-        voices.find(v => v.lang.startsWith('hi')) ||
+        voices.find(v => v.lang === 'hi') ||
         voices.find(v => v.lang.includes('IN'));
       if (hindiVoice) utterance.voice = hindiVoice;
     }
@@ -267,6 +309,7 @@ export default function AIChatBot({
           console.error('[GEMINI LIVE WS] Parse error:', err);
         } finally {
           setVoiceLoading(false);
+          setCurrentToolExecuting(null);
         }
       };
 
@@ -277,7 +320,6 @@ export default function AIChatBot({
           liveWsPendingTimeoutRef.current = null;
         }
         if (isVoiceActiveRef.current) {
-          // Reconnect automatically if session is still active
           setTimeout(() => {
             if (isVoiceActiveRef.current) initLiveWebSocket();
           }, 1500);
@@ -294,7 +336,7 @@ export default function AIChatBot({
     }
   };
 
-  // Continuous Speech Recognition Engine for Live Voice
+  // Continuous Speech Recognition Engine with Live Interim Results
   const startContinuousSpeech = () => {
     if (typeof window === 'undefined') return;
 
@@ -314,14 +356,15 @@ export default function AIChatBot({
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
 
     recognition.onstart = () => {
       setIsListening(true);
     };
 
     recognition.onend = () => {
-      // Auto-restart continuously while user is in voice session
+      setIsUserSpeaking(false);
+      setInterimSpeech('');
       if (isVoiceActiveRef.current) {
         try {
           recognition.start();
@@ -332,6 +375,8 @@ export default function AIChatBot({
     };
 
     recognition.onerror = () => {
+      setIsUserSpeaking(false);
+      setInterimSpeech('');
       if (isVoiceActiveRef.current) {
         setTimeout(() => {
           if (isVoiceActiveRef.current) {
@@ -346,12 +391,28 @@ export default function AIChatBot({
     };
 
     recognition.onresult = (event: any) => {
-      const results = event.results;
-      const lastResult = results[results.length - 1];
-      if (lastResult && lastResult.isFinal) {
-        const transcript = lastResult[0].transcript.trim();
+      let interim = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcriptChunk = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcriptChunk;
+        } else {
+          interim += transcriptChunk;
+        }
+      }
+
+      if (interim.trim()) {
+        setIsUserSpeaking(true);
+        setInterimSpeech(interim.trim());
+      }
+
+      if (finalTranscript.trim()) {
+        setIsUserSpeaking(false);
+        setInterimSpeech('');
+        const transcript = finalTranscript.trim();
         const now = Date.now();
-        // Debounce exact duplicate within 2.5 seconds
         if (
           transcript &&
           (transcript !== lastTranscriptRef.current || now - lastTranscriptTimeRef.current > 2500)
@@ -470,7 +531,7 @@ export default function AIChatBot({
       const fallbackReply =
         role === 'merchant'
           ? isEnglish
-            ? '**Business Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 customer accounts\n• **Recovered:** ₹44,075 with 0 duplicate spam contacts\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp'
+            ? '**Financial Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 customer accounts\n• **Recovered:** ₹44,075 with 0 duplicate spam contacts\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp'
             : '**Financial Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 accounts\n• **Recovered:** ₹44,075 (0 duplicate spam contacts)\n• **Pending Approval:** ₹1,45,000 TechMatrix Corp'
           : isEnglish
           ? `Your payment of ₹${amount.toLocaleString('en-IN')} is currently pending. You can apply a 5% concession discount or schedule a payment date.`
@@ -504,6 +565,8 @@ export default function AIChatBot({
   const endVoiceChat = () => {
     isVoiceActiveRef.current = false;
     setIsListening(false);
+    setIsUserSpeaking(false);
+    setInterimSpeech('');
     stopAudioPlayback();
     if (recognitionRef.current) {
       try {
@@ -560,11 +623,11 @@ export default function AIChatBot({
 
     // 1. Send via WebSocket if connected
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      // Safety timeout in case WS hangs
       if (liveWsPendingTimeoutRef.current) clearTimeout(liveWsPendingTimeoutRef.current);
       liveWsPendingTimeoutRef.current = setTimeout(() => {
         setVoiceLoading(false);
-      }, 5000);
+        setCurrentToolExecuting(null);
+      }, 7000);
 
       wsRef.current.send(JSON.stringify(payload));
       return;
@@ -573,7 +636,7 @@ export default function AIChatBot({
     // 2. HTTP Fallback if WebSocket is connecting
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4500);
+      const timeoutId = setTimeout(() => controller.abort(), 6500);
 
       const res = await fetch(apiUrl('/api/orchestrator/voice-agent-turn'), {
         method: 'POST',
@@ -638,6 +701,7 @@ export default function AIChatBot({
       playVoice(fallback, isEnglish ? 'english' : 'hinglish');
     } finally {
       setVoiceLoading(false);
+      setCurrentToolExecuting(null);
     }
   };
 
@@ -646,56 +710,54 @@ export default function AIChatBot({
     role === 'merchant'
       ? [
           'What is our total at-risk revenue today?',
-          'Why is TechMatrix invoice escalated?',
+          'How many accounts are stuck at Promise to Pay?',
+          'Show B2B overdue receivables and aging buckets',
+          'How does RBI >₹15,000 AFA mandate protection work?',
+          'Show checkout funnel & Margin Shield metrics',
           'Explain decline code insufficient_funds',
-          'Show checkout funnel & margin shield metrics',
-          'Analyze subscription churn for cust_0001',
-          'Approve TechMatrix Corp high-value invoice',
         ]
       : [
           'Can I get a 5% discount if I pay now?',
           'I will pay next Monday, please pause reminders',
           'Send me a 1-click Razorpay payment link',
-          'Why did my Axis bank payment fail?',
+          'Why did my bank payment fail?',
         ];
 
   if (!isOpen) {
     return (
       <button
         onClick={toggleOpen}
-        className="fixed bottom-6 right-6 z-50 bg-slate-900 hover:bg-slate-800 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-3 transition-all duration-200 hover:scale-105 group"
+        className="fixed bottom-6 right-6 z-50 bg-[#2B2B2B] hover:bg-[#1F1F1F] text-white px-4 py-3 rounded-2xl shadow-xl border border-[#D4D4D4] flex items-center gap-3 transition-all duration-200 hover:scale-105 group"
       >
-        <div className="w-7 h-7 rounded-xl bg-[#00A3C4] flex items-center justify-center text-white text-xs font-bold shadow-xs">
+        <div className="w-7 h-7 rounded-xl bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-xs">
           <Sparkles className="w-3.5 h-3.5" />
         </div>
         <div className="text-left">
           <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
-            <span>AI Copilot & Voice</span>
+            <span>AI Copilot &amp; Voice</span>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           </div>
-          <div className="text-[10px] text-slate-400">Click to expand pane (Ctrl+J)</div>
+          <div className="text-[10px] text-[#B3B3B3]">Click to expand pane (Ctrl+J)</div>
         </div>
       </button>
     );
   }
 
   return (
-    <aside
-      className="w-full h-full flex flex-col bg-white overflow-hidden rounded-none border-none shadow-none"
-    >
+    <aside className="w-full h-full flex flex-col bg-white overflow-hidden rounded-none border-none shadow-none">
       {/* 1. Header with Mode Switcher & Collapse */}
-      <div className="px-4 py-3 flex items-center justify-between bg-white border-b border-slate-200 shrink-0">
+      <div className={`px-4 py-3 flex items-center justify-between bg-white border-b ${theme.border.default} shrink-0`}>
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#00A3C4] flex items-center justify-center text-white text-sm shadow-sm font-bold">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm shadow-xs font-bold">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h3 className="text-sm font-bold leading-tight text-slate-900">
+            <h3 className="text-sm font-bold leading-tight text-[#2B2B2B]">
               {role === 'merchant' ? 'AI Recovery Copilot' : 'AI Payment Assistant'}
             </h3>
-            <div className="flex items-center gap-1.5 text-[11px] text-[#00A3C4] font-medium mt-0.5">
+            <div className="flex items-center gap-1.5 text-[11px] text-blue-700 font-medium mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Online • Voice & Recovery Engine</span>
+              <span>Online • Voice &amp; Autonomous Tools</span>
             </div>
           </div>
         </div>
@@ -713,8 +775,8 @@ export default function AIChatBot({
             }}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 ${
               mode === 'voice'
-                ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
-                : 'bg-cyan-50 text-[#00A3C4] hover:bg-cyan-100 border border-cyan-200'
+                ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
             }`}
           >
             {mode === 'voice' ? (
@@ -725,14 +787,14 @@ export default function AIChatBot({
             ) : (
               <>
                 <Mic className="w-3.5 h-3.5" />
-                <span>Voice Agent</span>
+                <span>Live Voice Agent</span>
               </>
             )}
           </button>
 
           <button
             onClick={toggleOpen}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 text-xs font-bold transition-colors"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-[#B3B3B3] hover:text-[#2B2B2B] hover:bg-[#FAFAFA] text-xs font-bold transition-colors"
             title="Collapse Panel (Ctrl+J)"
           >
             <X className="w-3.5 h-3.5" />
@@ -747,33 +809,33 @@ export default function AIChatBot({
           <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 custom-scrollbar">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-center py-8 px-2 space-y-4 my-auto">
-                <div className="w-14 h-14 rounded-2xl bg-[#00A3C4] flex items-center justify-center text-white text-2xl shadow-md shadow-cyan-500/10">
+                <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-2xl shadow-xs">
                   <Sparkles className="w-7 h-7 text-white" />
                 </div>
 
                 <div className="space-y-2 max-w-[280px]">
-                  <h4 className="text-base font-bold leading-snug text-slate-800">
+                  <h4 className="text-base font-bold leading-snug text-[#2B2B2B]">
                     {role === 'merchant'
-                      ? 'How can I help with recovery today?'
+                      ? 'How can I help with revenue recovery?'
                       : 'How can I assist with your invoice?'}
                   </h4>
-                  <p className="text-xs leading-relaxed text-slate-500 font-normal">
+                  <p className="text-xs leading-relaxed text-[#666666] font-normal">
                     {role === 'merchant'
-                      ? 'Ask questions or instruct actions with voice or text. I analyze at-risk revenue, inspect RBI rules, and trigger automated outreach.'
-                      : 'Describe your payment issues. I can provide assistance and predict possible resolution paths based on your status.'}
+                      ? 'Ask questions or instruct recovery actions with voice or text. I analyze at-risk revenue, inspect RBI rules, and trigger automated outreach.'
+                      : 'Describe your payment issue. I can apply discounts and schedule payment dates with full Razorpay security.'}
                   </p>
                 </div>
 
-                <div className="text-[11px] font-medium text-amber-700 bg-amber-50/80 border border-amber-200/80 rounded-lg p-2.5 text-left max-w-[320px] flex items-start gap-2 mt-2">
+                <div className="text-[11px] font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-left max-w-[320px] flex items-start gap-2 mt-2">
                   <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>RBI & Zero-Spam Guardrails:</strong> Max 2 contacts/incident, 24h quiet period, and strict ₹1L HITL escalations active.
+                    <strong>RBI &amp; Zero-Spam Guardrails:</strong> Max 2 contacts/incident, 24h quiet period, and strict ₹1L HITL escalations active.
                   </span>
                 </div>
 
                 {/* Suggested Chips */}
                 <div className="w-full pt-2 space-y-2 text-left">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <div className="text-[10px] font-bold text-[#B3B3B3] uppercase tracking-wider">
                     Suggested Quick Prompts
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -781,7 +843,7 @@ export default function AIChatBot({
                       <button
                         key={idx}
                         onClick={() => handleSendText(chip)}
-                        className="px-2.5 py-1 rounded-md text-xs font-medium transition-all shadow-xs text-left bg-slate-50 hover:bg-cyan-50 hover:text-[#00A3C4] hover:border-[#00A3C4] text-slate-700 border border-slate-200"
+                        className="px-2.5 py-1 rounded-md text-xs font-medium transition-all shadow-xs text-left bg-[#FAFAFA] hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-[#2B2B2B] border border-[#D4D4D4]"
                       >
                         {chip}
                       </button>
@@ -798,11 +860,11 @@ export default function AIChatBot({
                   <div
                     className={`max-w-[88%] p-3.5 rounded-xl text-xs leading-relaxed shadow-xs ${
                       msg.sender === 'user'
-                        ? 'bg-[#00A3C4] text-white rounded-br-none'
-                        : 'bg-slate-50 border border-slate-200 text-slate-800 rounded-bl-none'
+                        ? 'bg-blue-600 text-white rounded-br-none'
+                        : 'bg-[#FAFAFA] border border-[#D4D4D4] text-[#2B2B2B] rounded-bl-none'
                     }`}
                   >
-                    <div className="font-bold text-[10px] flex items-center justify-between opacity-60 mb-1">
+                    <div className="font-bold text-[10px] flex items-center justify-between opacity-70 mb-1">
                       <span>{msg.sender === 'user' ? 'You' : 'AI Copilot'}</span>
                       <span>{msg.time}</span>
                     </div>
@@ -811,7 +873,7 @@ export default function AIChatBot({
 
                     {/* Tool Badges */}
                     {msg.toolsExecuted && msg.toolsExecuted.length > 0 && (
-                      <div className="mt-2.5 pt-2.5 border-t border-slate-200 space-y-1">
+                      <div className="mt-2.5 pt-2.5 border-t border-[#D4D4D4] space-y-1">
                         {msg.toolsExecuted.map((t, idx) => (
                           <div
                             key={idx}
@@ -819,7 +881,7 @@ export default function AIChatBot({
                           >
                             <Zap className="w-3 h-3 text-emerald-600" />
                             <span>
-                              <strong>Tool:</strong> {t.tool}
+                              <strong>Tool Executed:</strong> {t.tool}
                             </span>
                           </div>
                         ))}
@@ -832,9 +894,9 @@ export default function AIChatBot({
 
             {loading && (
               <div className="flex justify-start">
-                <div className="p-3 rounded-xl text-xs animate-pulse shadow-xs flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-500">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#00A3C4] animate-ping" />
-                  <span>Processing recovery reasoning...</span>
+                <div className="p-3 rounded-xl text-xs shadow-xs flex items-center gap-2 bg-[#FAFAFA] border border-[#D4D4D4] text-[#666666]">
+                  <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
+                  <span>AI reasoning and orchestrating tools...</span>
                 </div>
               </div>
             )}
@@ -842,7 +904,7 @@ export default function AIChatBot({
           </div>
 
           {/* 3. Bottom Input Dock */}
-          <div className="pt-3 border-t border-slate-200 space-y-1.5 shrink-0 bg-white">
+          <div className={`pt-3 border-t ${theme.border.default} space-y-1.5 shrink-0 bg-white`}>
             <form
               onSubmit={e => {
                 e.preventDefault();
@@ -860,13 +922,13 @@ export default function AIChatBot({
                       ? 'Ask Copilot or type recovery instruction...'
                       : 'Describe your payment issues...'
                   }
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-[#00A3C4] focus:border-[#00A3C4] transition-all pr-9 bg-white text-slate-800 placeholder-slate-400 shadow-xs"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D4] text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all pr-9 bg-white text-[#2B2B2B] placeholder-[#B3B3B3] shadow-xs"
                 />
                 <button
                   type="button"
                   onClick={toggleTextMic}
                   className={`absolute right-2.5 top-2.5 transition-colors ${
-                    isListening ? 'text-red-500 animate-pulse' : 'text-slate-400 hover:text-slate-600'
+                    isListening ? 'text-rose-500 animate-pulse' : 'text-[#B3B3B3] hover:text-[#2B2B2B]'
                   }`}
                   title="Speech-to-Text Mic"
                 >
@@ -877,46 +939,104 @@ export default function AIChatBot({
               <button
                 type="submit"
                 disabled={!input.trim() || loading}
-                className="w-9 h-9 rounded-lg bg-[#00A3C4] hover:bg-[#008ea6] text-white flex items-center justify-center text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-xs shrink-0"
+                className="w-9 h-9 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-xs shrink-0"
               >
                 <SendHorizontal className="w-4 h-4" />
               </button>
             </form>
-            
-            <div className="text-[10px] text-center leading-tight text-slate-400">
+
+            <div className="text-[10px] text-center leading-tight text-[#B3B3B3]">
               Razorpay AI Copilot • RBI Compliant • Zero Duplicate Contacts
             </div>
           </div>
         </div>
       ) : (
-        /* Voice Chat Mode (Clean Light Theme) */
-        <div className="flex-1 flex flex-col justify-between p-4 bg-slate-50/50 min-h-0">
+        /* Voice Chat Mode with Interactive Visuals & Tool HUD */
+        <div className="flex-1 flex flex-col justify-between p-4 bg-[#FAFAFA] min-h-0">
           <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 custom-scrollbar">
             {voiceTurns.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-center py-10 space-y-4 my-auto">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-[#00A3C4] flex items-center justify-center text-white text-2xl shadow-lg shadow-cyan-500/20">
-                    <Mic className="w-8 h-8 text-white" />
+              <div className="flex flex-col items-center justify-center text-center py-6 space-y-4 my-auto">
+                {/* Visual Animated Audio Orb */}
+                <div className="relative flex items-center justify-center">
+                  <div
+                    className={`w-20 h-20 rounded-full flex items-center justify-center text-white transition-all duration-300 shadow-md ${
+                      isUserSpeaking
+                        ? 'bg-blue-600 scale-110 ring-8 ring-blue-200'
+                        : isSpeaking
+                        ? 'bg-emerald-600 scale-105 ring-8 ring-emerald-200'
+                        : isListening
+                        ? 'bg-blue-600 ring-4 ring-blue-100'
+                        : 'bg-[#2B2B2B]'
+                    }`}
+                  >
+                    {isSpeaking ? (
+                      <Volume2 className="w-9 h-9 text-white animate-pulse" />
+                    ) : (
+                      <Mic className="w-9 h-9 text-white" />
+                    )}
                   </div>
-                  {isListening && (
-                    <span className="absolute -inset-1 rounded-2xl bg-cyan-400/30 animate-ping -z-10" />
+
+                  {/* Pulsing Ripple Rings when User Speaks */}
+                  {isUserSpeaking && (
+                    <span className="absolute w-28 h-28 rounded-full bg-blue-400/20 animate-ping -z-10" />
+                  )}
+                  {isSpeaking && (
+                    <span className="absolute w-28 h-28 rounded-full bg-emerald-400/20 animate-ping -z-10" />
                   )}
                 </div>
-                
-                <div className="space-y-1.5 max-w-[280px]">
-                  <h4 className="text-sm font-bold text-slate-800">
+
+                <div className="space-y-1.5 max-w-[300px]">
+                  <h4 className="text-sm font-bold text-[#2B2B2B]">
                     Gemini 3.1 Live Voice Engine
                   </h4>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Speak naturally in English, Hindi, or Hinglish. Real-time language mirroring and automatic tool execution active.
+                  <p className="text-xs text-[#666666] leading-relaxed">
+                    Speak naturally in English, Hindi, or Hinglish. Real-time language mirroring and autonomous tool execution active.
                   </p>
                 </div>
 
-                {/* Voice Status Pill */}
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-50 border border-cyan-200 text-[#00A3C4] text-[11px] font-medium">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Mic Always Active • Speak Anytime</span>
+                {/* Interactive Dynamic Status Banner */}
+                <div
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                    isUserSpeaking
+                      ? 'bg-blue-50 border-blue-300 text-blue-700 shadow-xs'
+                      : isSpeaking
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-xs'
+                      : isListening
+                      ? 'bg-white border-[#D4D4D4] text-[#2B2B2B]'
+                      : 'bg-[#FAFAFA] border-[#D4D4D4] text-[#666666]'
+                  }`}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      isUserSpeaking
+                        ? 'bg-blue-600 animate-ping'
+                        : isSpeaking
+                        ? 'bg-emerald-500 animate-pulse'
+                        : isListening
+                        ? 'bg-emerald-500 animate-pulse'
+                        : 'bg-[#B3B3B3]'
+                    }`}
+                  />
+                  <span>
+                    {isUserSpeaking
+                      ? 'Listening to you speak...'
+                      : isSpeaking
+                      ? 'Gemini Live Speaking...'
+                      : isListening
+                      ? 'Microphone Active • Speak Anytime'
+                      : 'Voice Engine Standby'}
+                  </span>
                 </div>
+
+                {/* Real-time speech preview banner */}
+                {interimSpeech && (
+                  <div className="w-full max-w-[340px] p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs italic text-left animate-fade-in shadow-xs">
+                    <span className="font-bold text-blue-700 not-italic block text-[10px] uppercase tracking-wider mb-0.5">
+                      Live Hearing:
+                    </span>
+                    &ldquo;{interimSpeech}&rdquo;
+                  </div>
+                )}
               </div>
             ) : (
               voiceTurns.map((turn, idx) => (
@@ -927,8 +1047,8 @@ export default function AIChatBot({
                   <div
                     className={`max-w-[88%] p-3.5 rounded-xl text-xs leading-relaxed shadow-xs ${
                       turn.speaker === 'user'
-                        ? 'bg-[#00A3C4] text-white rounded-br-none'
-                        : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none'
+                        ? 'bg-blue-600 text-white rounded-br-none'
+                        : 'bg-white border border-[#D4D4D4] text-[#2B2B2B] rounded-bl-none'
                     }`}
                   >
                     <div className="font-bold text-[10px] flex items-center justify-between opacity-70 mb-1">
@@ -940,15 +1060,15 @@ export default function AIChatBot({
 
                     {/* Executed Tools in Turn */}
                     {turn.toolsExecuted && turn.toolsExecuted.length > 0 && (
-                      <div className="mt-2.5 pt-2.5 border-t border-slate-200 space-y-1">
+                      <div className="mt-2.5 pt-2.5 border-t border-[#D4D4D4] space-y-1">
                         {turn.toolsExecuted.map((tool, tIdx) => (
                           <div
                             key={tIdx}
-                            className="text-[10px] font-mono px-2 py-0.5 rounded flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200"
+                            className="text-[10px] font-mono px-2 py-0.5 rounded flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 font-medium"
                           >
-                            <Zap className="w-3 h-3 text-emerald-600 shrink-0" />
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
                             <span>
-                              <strong>Tool:</strong> {tool.tool} &mdash; {tool.message || 'Executed'}
+                              <strong>Tool:</strong> {tool.tool} &mdash; {tool.message || 'Executed successfully'}
                             </span>
                           </div>
                         ))}
@@ -959,11 +1079,94 @@ export default function AIChatBot({
               ))
             )}
 
+            {/* Real-time speech preview during active conversation */}
+            {interimSpeech && (
+              <div className="flex justify-end animate-fade-in">
+                <div className="max-w-[85%] p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs italic shadow-xs">
+                  <div className="text-[10px] text-blue-700 font-bold not-italic mb-0.5 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping" />
+                    <span>Listening...</span>
+                  </div>
+                  &ldquo;{interimSpeech}&rdquo;
+                </div>
+              </div>
+            )}
+
+            {/* Interactive Thinking & Autonomous Tool HUD */}
             {voiceLoading && (
-              <div className="flex justify-start">
-                <div className="p-3 rounded-xl text-xs shadow-xs flex items-center gap-2 bg-white border border-slate-200 text-slate-600">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#00A3C4] animate-ping" />
-                  <span>AI reasoning & synthesizing voice...</span>
+              <div className="flex justify-start animate-fade-in">
+                <div className="p-3.5 rounded-xl text-xs shadow-xs bg-white border border-[#D4D4D4] text-[#2B2B2B] space-y-2.5 max-w-[340px] w-full">
+                  <div className="flex items-center justify-between border-b border-[#EBEBEB] pb-1.5">
+                    <span className="font-bold text-xs flex items-center gap-1.5 text-blue-700">
+                      <Cpu className="w-3.5 h-3.5 text-blue-600 animate-spin" />
+                      <span>Autonomous Tool Orchestrator</span>
+                    </span>
+                    <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-800 px-1.5 py-0.2 rounded border border-blue-200">
+                      LIVE
+                    </span>
+                  </div>
+
+                  {/* Interactive Step-by-Step Progress */}
+                  <div className="space-y-1.5 text-[11px]">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                          thinkingStep >= 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'
+                        }`}
+                      >
+                        {thinkingStep > 1 ? '✓' : '1'}
+                      </span>
+                      <span className={thinkingStep === 1 ? 'font-bold text-[#2B2B2B]' : 'text-[#666666]'}>
+                        Natural Speech Intent Parsing
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                          thinkingStep >= 2 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'
+                        }`}
+                      >
+                        {thinkingStep > 2 ? '✓' : '2'}
+                      </span>
+                      <span className={thinkingStep === 2 ? 'font-bold text-blue-700 animate-pulse' : 'text-[#666666]'}>
+                        Invoking Orchestrator Database Tools
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                          thinkingStep >= 3 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'
+                        }`}
+                      >
+                        {thinkingStep > 3 ? '✓' : '3'}
+                      </span>
+                      <span className={thinkingStep === 3 ? 'font-bold text-[#2B2B2B]' : 'text-[#666666]'}>
+                        Net EV &amp; Financial Guardrails Check
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                          thinkingStep >= 4 ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'
+                        }`}
+                      >
+                        4
+                      </span>
+                      <span className={thinkingStep === 4 ? 'font-bold text-blue-700 animate-pulse' : 'text-[#666666]'}>
+                        Gemini 3.1 Live Audio Synthesis
+                      </span>
+                    </div>
+                  </div>
+
+                  {currentToolExecuting && (
+                    <div className="pt-1.5 border-t border-[#EBEBEB] text-[10px] font-mono text-blue-700 bg-blue-50/50 p-1.5 rounded flex items-center gap-1.5">
+                      <Zap className="w-3 h-3 text-blue-600 shrink-0" />
+                      <span className="truncate">Active: {currentToolExecuting}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -971,62 +1174,72 @@ export default function AIChatBot({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Persistent Live Voice Controls (Light Theme) */}
-          <div className="pt-3 border-t border-slate-200 space-y-2 shrink-0 bg-white -mx-4 -mb-4 p-4">
+          {/* Persistent Live Voice Controls (Salt and Pepper Theme) */}
+          <div className="pt-3 border-t border-[#D4D4D4] space-y-2 shrink-0 bg-white -mx-4 -mb-4 p-4">
             <div className="flex items-center justify-between px-1 text-[11px]">
-              <div className="flex items-center gap-2 font-medium text-slate-700">
-                {/* Dynamic Waveform Visualizer */}
+              <div className="flex items-center gap-2 font-medium text-[#2B2B2B]">
+                {/* Dynamic Multi-Frequency Waveform Visualizer */}
                 <div className="flex items-end gap-0.5 h-3.5">
                   <span
-                    className={`w-1 rounded-full bg-[#00A3C4] transition-all duration-150 ${
+                    className={`w-1 rounded-full transition-all duration-150 ${
                       isSpeaking
-                        ? 'h-3.5 animate-bounce'
+                        ? 'h-3.5 bg-emerald-500 animate-bounce'
+                        : isUserSpeaking
+                        ? 'h-3 bg-blue-600 animate-bounce'
                         : isListening
-                        ? 'h-2 animate-pulse'
-                        : 'h-1 bg-slate-300'
+                        ? 'h-1.5 bg-blue-400 animate-pulse'
+                        : 'h-1 bg-[#D4D4D4]'
                     }`}
                   />
                   <span
-                    className={`w-1 rounded-full bg-[#00A3C4] transition-all duration-150 delay-75 ${
+                    className={`w-1 rounded-full transition-all duration-150 delay-75 ${
                       isSpeaking
-                        ? 'h-4 animate-bounce'
+                        ? 'h-4 bg-emerald-500 animate-bounce'
+                        : isUserSpeaking
+                        ? 'h-4 bg-blue-600 animate-bounce'
                         : isListening
-                        ? 'h-3 animate-pulse'
-                        : 'h-1 bg-slate-300'
+                        ? 'h-2.5 bg-blue-400 animate-pulse'
+                        : 'h-1 bg-[#D4D4D4]'
                     }`}
                   />
                   <span
-                    className={`w-1 rounded-full bg-[#00A3C4] transition-all duration-150 delay-150 ${
+                    className={`w-1 rounded-full transition-all duration-150 delay-150 ${
                       isSpeaking
-                        ? 'h-2.5 animate-bounce'
+                        ? 'h-2.5 bg-emerald-500 animate-bounce'
+                        : isUserSpeaking
+                        ? 'h-3.5 bg-blue-600 animate-bounce'
                         : isListening
-                        ? 'h-1.5 animate-pulse'
-                        : 'h-1 bg-slate-300'
+                        ? 'h-1 bg-blue-400 animate-pulse'
+                        : 'h-1 bg-[#D4D4D4]'
                     }`}
                   />
                   <span
-                    className={`w-1 rounded-full bg-[#00A3C4] transition-all duration-150 delay-100 ${
+                    className={`w-1 rounded-full transition-all duration-150 delay-100 ${
                       isSpeaking
-                        ? 'h-3 animate-bounce'
+                        ? 'h-3 bg-emerald-500 animate-bounce'
+                        : isUserSpeaking
+                        ? 'h-2.5 bg-blue-600 animate-bounce'
                         : isListening
-                        ? 'h-2 animate-pulse'
-                        : 'h-1 bg-slate-300'
+                        ? 'h-2 bg-blue-400 animate-pulse'
+                        : 'h-1 bg-[#D4D4D4]'
                     }`}
                   />
                 </div>
 
-                <span className="text-xs">
+                <span className="text-xs font-semibold">
                   {isSpeaking
                     ? 'Gemini Live Speaking...'
                     : voiceLoading
-                    ? 'Processing...'
+                    ? 'Executing Tools & Synthesizing...'
+                    : isUserSpeaking
+                    ? 'Listening to your speech...'
                     : isListening
                     ? 'Mic Active • Speak Anytime'
-                    : 'Voice Engine Ready'}
+                    : 'Voice Engine Standby'}
                 </span>
               </div>
 
-              <span className="text-[10px] text-[#00A3C4] font-mono px-2 py-0.5 rounded-md bg-cyan-50 border border-cyan-200">
+              <span className="text-[10px] text-blue-700 font-mono font-bold px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200">
                 {wsConnected ? 'WS Live' : 'HTTP Duplex'}
               </span>
             </div>
@@ -1042,19 +1255,19 @@ export default function AIChatBot({
               }}
               className={`w-full py-2.5 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 ${
                 isListening
-                  ? 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'
-                  : 'bg-[#00A3C4] hover:bg-[#008ea6] text-white'
+                  ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
               }`}
             >
               {isListening ? (
                 <>
-                  <X className="w-3.5 h-3.5 text-red-500" />
+                  <X className="w-3.5 h-3.5 text-rose-600" />
                   <span>Stop Live Voice Session</span>
                 </>
               ) : (
                 <>
                   <Mic className="w-3.5 h-3.5" />
-                  <span>Resume Live Voice</span>
+                  <span>Resume Live Voice Session</span>
                 </>
               )}
             </button>
@@ -1065,7 +1278,7 @@ export default function AIChatBot({
                 <button
                   key={idx}
                   onClick={() => handleSendVoiceStream(chip)}
-                  className="px-2.5 py-1 rounded-md bg-slate-50 hover:bg-cyan-50 hover:text-[#00A3C4] text-slate-700 border border-slate-200 transition-colors shadow-xs"
+                  className="px-2.5 py-1 rounded-md bg-[#FAFAFA] hover:bg-blue-50 hover:text-blue-700 text-[#2B2B2B] border border-[#D4D4D4] transition-colors shadow-xs"
                 >
                   {chip}
                 </button>

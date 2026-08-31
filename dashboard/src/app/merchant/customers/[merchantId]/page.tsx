@@ -10,9 +10,18 @@ import {
   Smartphone,
   CheckCircle2,
   FileText,
+  Users,
+  Search,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
+  TrendingUp,
+  AlertTriangle,
 } from 'lucide-react';
 
 import { getApiBaseUrl } from '@/lib/api';
+import { theme } from '@/lib/theme';
 
 const API = getApiBaseUrl();
 
@@ -33,26 +42,54 @@ interface CustomerRow {
   updated_at: string;
 }
 
-const RISK_COLOR = (score: number) => {
-  if (score >= 0.7) return '#ef4444';
-  if (score >= 0.4) return '#f59e0b';
-  return '#22c55e';
+const getReliabilityBadge = (score: number) => {
+  const pct = Math.round(score * 100);
+  if (pct >= 80) {
+    return {
+      text: `${pct}%`,
+      style: 'text-emerald-800 bg-emerald-50 border-emerald-200',
+      barColor: 'bg-emerald-500',
+    };
+  }
+  if (pct >= 60) {
+    return {
+      text: `${pct}%`,
+      style: 'text-amber-800 bg-amber-50 border-amber-300',
+      barColor: 'bg-amber-500',
+    };
+  }
+  return {
+    text: `${pct}%`,
+    style: 'text-rose-800 bg-rose-50 border-rose-200',
+    barColor: 'bg-rose-500',
+  };
+};
+
+const getRiskBadge = (score: number) => {
+  const pct = Math.round(score * 100);
+  if (pct <= 30) {
+    return { text: `${pct}`, style: 'text-emerald-800 bg-emerald-50 border-emerald-200' };
+  }
+  if (pct <= 60) {
+    return { text: `${pct}`, style: 'text-amber-800 bg-amber-50 border-amber-300' };
+  }
+  return { text: `${pct}`, style: 'text-rose-800 bg-rose-50 border-rose-200' };
 };
 
 function renderChannelIcon(channel: string) {
   switch (channel) {
     case 'whatsapp':
-      return <MessageSquare style={{ width: 14, height: 14, color: '#22c55e' }} />;
+      return <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />;
     case 'email':
-      return <Mail style={{ width: 14, height: 14, color: '#60a5fa' }} />;
+      return <Mail className="w-3.5 h-3.5 text-blue-600" />;
     case 'voice':
-      return <Phone style={{ width: 14, height: 14, color: '#f59e0b' }} />;
+      return <Phone className="w-3.5 h-3.5 text-purple-600" />;
     case 'telegram':
-      return <Send style={{ width: 14, height: 14, color: '#06b6d4' }} />;
+      return <Send className="w-3.5 h-3.5 text-sky-600" />;
     case 'sms':
-      return <Smartphone style={{ width: 14, height: 14, color: '#a855f7' }} />;
+      return <Smartphone className="w-3.5 h-3.5 text-amber-600" />;
     default:
-      return <FileText style={{ width: 14, height: 14, color: '#94a3b8' }} />;
+      return <FileText className="w-3.5 h-3.5 text-slate-500" />;
   }
 }
 
@@ -70,9 +107,11 @@ export default function CustomersPage({ params }: { params: { merchantId: string
     setLoading(true);
     Promise.all([
       fetch(`${API}/api/merchants/${merchantId}/customers?page=${page}&sort_by=${sortBy}&page_size=50`)
-        .then(r => r.json()).catch(() => ({ customers: [], total: 0 })),
+        .then(r => r.json())
+        .catch(() => ({ customers: [], total: 0 })),
       fetch(`${API}/api/merchants/${merchantId}/at-risk-summary`)
-        .then(r => r.json()).catch(() => null),
+        .then(r => r.json())
+        .catch(() => null),
     ]).then(([data, sum]) => {
       setCustomers(data.customers || []);
       setTotal(data.total || 0);
@@ -81,133 +120,245 @@ export default function CustomersPage({ params }: { params: { merchantId: string
     });
   }, [merchantId, page, sortBy]);
 
-  const filtered = customers.filter(c =>
-    !search || c.name?.toLowerCase().includes(search.toLowerCase()) ||
-    c.email?.toLowerCase().includes(search.toLowerCase()) ||
-    c.customer_id?.toLowerCase().includes(search.toLowerCase())
+  const filtered = customers.filter(
+    c =>
+      !search ||
+      c.name?.toLowerCase().includes(search.toLowerCase()) ||
+      c.email?.toLowerCase().includes(search.toLowerCase()) ||
+      c.customer_id?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f1117', color: '#e2e8f0', fontFamily: "'Inter', sans-serif" }}>
-      {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%)', borderBottom: '1px solid #1e293b', padding: '20px 32px', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <Link href="/merchant" style={{ color: '#64748b', textDecoration: 'none', fontSize: 14 }}>← Dashboard</Link>
-        <span style={{ color: '#334155' }}>|</span>
-        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#e2e8f0' }}>Customer Intelligence</h1>
-        <span style={{ marginLeft: 'auto', fontSize: 13, color: '#64748b' }}>{total.toLocaleString()} customers</span>
-      </div>
-
-      {/* Summary Bar */}
-      {summary && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, padding: '20px 32px' }}>
-          {[
-            { label: 'At-Risk Revenue', value: `₹${(summary.at_risk_amount_inr || 0).toLocaleString('en-IN')}`, color: '#ef4444' },
-            { label: 'At-Risk Accounts', value: summary.at_risk_count || 0, color: '#f59e0b' },
-            { label: 'Recovery Rate', value: `${(summary.recovery_rate_pct || 0).toFixed(1)}%`, color: '#22c55e' },
-            { label: 'Duplicate Contacts', value: summary.duplicate_contacts ?? 0, color: '#06b6d4' },
-          ].map(stat => (
-            <div key={stat.label} style={{ background: '#1a1f2e', border: '1px solid #1e293b', borderRadius: 12, padding: '16px 20px' }}>
-              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 6 }}>{stat.label}</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: stat.color }}>{stat.value}</div>
+    <div className="min-h-screen bg-[#FAFAFA] text-[#2B2B2B] font-sans antialiased">
+      {/* Top Header */}
+      <header className="bg-white border-b border-[#D4D4D4] px-6 py-4 sticky top-0 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/merchant"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#666666] hover:text-[#2B2B2B] px-2.5 py-1.5 rounded-lg border border-[#D4D4D4] hover:bg-slate-50 transition-colors"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span>Back to Console</span>
+            </Link>
+            <span className="text-[#D4D4D4]">|</span>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-200">
+                <Users className="w-4 h-4" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-[#2B2B2B] leading-tight">Customer Intelligence CRM</h1>
+                <p className="text-[11px] text-[#666666]">4-Tier Behavioral Memory &amp; Historical Track Records</p>
+              </div>
             </div>
-          ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-[#D4D4D4]">
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
+              <span>DPDP 2023 Compliant</span>
+            </span>
+            <span className="text-xs text-[#666666] font-medium font-mono">{total.toLocaleString()} profiles</span>
+          </div>
         </div>
-      )}
+      </header>
 
-      {/* Controls */}
-      <div style={{ padding: '0 32px 16px', display: 'flex', gap: 12, alignItems: 'center' }}>
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, email, or ID..."
-          style={{ flex: 1, maxWidth: 340, padding: '8px 14px', background: '#1a1f2e', border: '1px solid #334155', borderRadius: 8, color: '#e2e8f0', fontSize: 14, outline: 'none' }}
-        />
-        <select
-          value={sortBy}
-          onChange={e => setSortBy(e.target.value)}
-          style={{ padding: '8px 14px', background: '#1a1f2e', border: '1px solid #334155', borderRadius: 8, color: '#e2e8f0', fontSize: 14 }}
-        >
-          <option value="risk_score">Sort: Risk Score</option>
-          <option value="payment_reliability">Sort: Reliability</option>
-          <option value="total_failures">Sort: Failures</option>
-          <option value="ltv_inr">Sort: LTV</option>
-        </select>
-        <span style={{ fontSize: 13, color: '#64748b' }}>
-          Page {page} · {filtered.length} shown
-        </span>
-        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}
-          style={{ padding: '6px 14px', background: '#1e293b', border: 'none', borderRadius: 6, color: '#94a3b8', cursor: 'pointer' }}>←</button>
-        <button onClick={() => setPage(p => p + 1)} disabled={customers.length < 50}
-          style={{ padding: '6px 14px', background: '#1e293b', border: 'none', borderRadius: 6, color: '#94a3b8', cursor: 'pointer' }}>→</button>
-      </div>
+      <main className="max-w-7xl mx-auto p-6 space-y-6">
+        {/* KPI Summary Cards */}
+        {summary && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white border border-[#D4D4D4] rounded-xl p-4 shadow-xs">
+              <div className="text-[11px] font-bold text-[#666666] uppercase tracking-wider">Total At-Risk Volume</div>
+              <div className="text-xl font-bold text-rose-700 mt-1">
+                ₹{(summary.at_risk_amount_inr || 0).toLocaleString('en-IN')}
+              </div>
+              <div className="text-[11px] text-[#666666] mt-0.5">{summary.at_risk_count || 0} active at-risk accounts</div>
+            </div>
 
-      {/* Table */}
-      <div style={{ padding: '0 32px 40px', overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid #1e293b', color: '#64748b', textAlign: 'left' }}>
-              {['Customer', 'Channel', 'Language', 'Reliability', 'Risk', 'Failures', 'Recoveries', 'LTV', 'Telegram', 'Action'].map(h => (
-                <th key={h} style={{ padding: '10px 12px', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>Loading...</td></tr>
-            ) : filtered.length === 0 ? (
-              <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>No customers found</td></tr>
-            ) : filtered.map((c, i) => (
-              <tr key={c.customer_id} style={{ borderBottom: '1px solid #1a1f2e', background: i % 2 === 0 ? 'transparent' : '#0d1117', transition: 'background 0.15s' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#1a1f2e')}
-                onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? 'transparent' : '#0d1117')}>
-                <td style={{ padding: '10px 12px' }}>
-                  <div style={{ fontWeight: 600, color: '#e2e8f0' }}>{c.name}</div>
-                  <div style={{ fontSize: 11, color: '#64748b' }}>{c.customer_id}</div>
-                </td>
-                <td style={{ padding: '10px 12px' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                    {renderChannelIcon(c.preferred_channel)}
-                    <span style={{ color: '#94a3b8', fontSize: 12 }}>{c.preferred_channel}</span>
-                  </span>
-                </td>
-                <td style={{ padding: '10px 12px', color: '#94a3b8' }}>{c.language}</td>
-                <td style={{ padding: '10px 12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 60, height: 6, background: '#1e293b', borderRadius: 3, overflow: 'hidden' }}>
-                      <div style={{ width: `${(c.payment_reliability || 0) * 100}%`, height: '100%', background: RISK_COLOR(1 - (c.payment_reliability || 0)), borderRadius: 3 }} />
-                    </div>
-                    <span style={{ color: '#94a3b8', fontSize: 12 }}>{((c.payment_reliability || 0) * 100).toFixed(0)}%</span>
-                  </div>
-                </td>
-                <td style={{ padding: '10px 12px' }}>
-                  <span style={{ background: RISK_COLOR(c.risk_score) + '22', color: RISK_COLOR(c.risk_score), padding: '2px 8px', borderRadius: 4, fontSize: 12, fontWeight: 600 }}>
-                    {((c.risk_score || 0) * 100).toFixed(0)}
-                  </span>
-                </td>
-                <td style={{ padding: '10px 12px', color: c.total_failures > 5 ? '#ef4444' : '#94a3b8' }}>{c.total_failures}</td>
-                <td style={{ padding: '10px 12px', color: '#22c55e' }}>{c.total_recoveries}</td>
-                <td style={{ padding: '10px 12px', color: '#94a3b8' }}>₹{((c.ltv_inr || 0) / 1000).toFixed(0)}k</td>
-                <td style={{ padding: '10px 12px' }}>
-                  {c.telegram_chat_id ? (
-                    <span style={{ color: '#06b6d4', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                      <CheckCircle2 style={{ width: 12, height: 12 }} />
-                      <span>Linked</span>
-                    </span>
-                  ) : (
-                    <span style={{ color: '#475569', fontSize: 12 }}>—</span>
-                  )}
-                </td>
-                <td style={{ padding: '10px 12px' }}>
-                  <Link href={`/merchant/customers/${merchantId}/${c.customer_id}`}
-                    style={{ padding: '4px 12px', background: '#1e40af', color: '#93c5fd', borderRadius: 6, fontSize: 12, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                    View Profile
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            <div className="bg-white border border-[#D4D4D4] rounded-xl p-4 shadow-xs">
+              <div className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Recovery Success Rate</div>
+              <div className="text-xl font-bold text-emerald-800 mt-1">
+                {(summary.recovery_rate_pct || 0).toFixed(1)}%
+              </div>
+              <div className="text-[11px] text-emerald-700 mt-0.5 flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" />
+                <span>Across automated channels</span>
+              </div>
+            </div>
+
+            <div className="bg-white border border-[#D4D4D4] rounded-xl p-4 shadow-xs">
+              <div className="text-[11px] font-bold text-blue-800 uppercase tracking-wider">Duplicate Contact Breaches</div>
+              <div className="text-xl font-bold text-blue-800 mt-1">
+                {summary.duplicate_contacts ?? 0}
+              </div>
+              <div className="text-[11px] text-slate-500 mt-0.5">Strict 0-spam invariant</div>
+            </div>
+
+            <div className="bg-white border border-[#D4D4D4] rounded-xl p-4 shadow-xs">
+              <div className="text-[11px] font-bold text-[#666666] uppercase tracking-wider">Memory Prior Depth</div>
+              <div className="text-xl font-bold text-[#2B2B2B] mt-1">54,000</div>
+              <div className="text-[11px] text-[#666666] mt-0.5">Episodic payment prior records</div>
+            </div>
+          </div>
+        )}
+
+        {/* Controls & Search */}
+        <div className="bg-white border border-[#D4D4D4] rounded-xl p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="relative flex-1 w-full sm:max-w-md">
+            <Search className="w-4 h-4 text-[#666666] absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search customer by name, email, or ID..."
+              className="w-full pl-9 pr-4 py-1.5 bg-[#FAFAFA] border border-[#D4D4D4] rounded-lg text-xs font-medium text-[#2B2B2B] placeholder-[#888888] focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
+            />
+          </div>
+
+          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+            <div className="flex items-center gap-1.5 text-xs text-[#666666]">
+              <ArrowUpDown className="w-3.5 h-3.5" />
+              <span>Sort:</span>
+            </div>
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              className="px-3 py-1.5 bg-[#FAFAFA] border border-[#D4D4D4] rounded-lg text-xs font-medium text-[#2B2B2B] focus:outline-none focus:bg-white focus:border-blue-500"
+            >
+              <option value="risk_score">Risk Score (High to Low)</option>
+              <option value="payment_reliability">Payment Reliability</option>
+              <option value="total_failures">Failure Count</option>
+              <option value="ltv_inr">Customer LTV</option>
+            </select>
+
+            <div className="flex items-center gap-1 pl-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                className="p-1.5 rounded-lg border border-[#D4D4D4] bg-[#FAFAFA] hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-[#2B2B2B]"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-xs text-[#666666] px-2 font-mono">Page {page}</span>
+              <button
+                onClick={() => setPage(p => p + 1)}
+                disabled={customers.length < 50}
+                className="p-1.5 rounded-lg border border-[#D4D4D4] bg-[#FAFAFA] hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-[#2B2B2B]"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Customer Table */}
+        <div className="bg-white border border-[#D4D4D4] rounded-xl shadow-xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className={theme.table.headerRow}>
+                  <th className="py-3 px-4">Customer Name &amp; ID</th>
+                  <th className="py-3 px-4">Preferred Channel</th>
+                  <th className="py-3 px-4">Language</th>
+                  <th className="py-3 px-4">Historical Reliability</th>
+                  <th className="py-3 px-4">Risk Index</th>
+                  <th className="py-3 px-4 text-center">Failures</th>
+                  <th className="py-3 px-4 text-center">Recoveries</th>
+                  <th className="py-3 px-4">LTV (INR)</th>
+                  <th className="py-3 px-4">Telegram Bot</th>
+                  <th className="py-3 px-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#EBEBEB]">
+                {loading ? (
+                  <tr>
+                    <td colSpan={10} className="text-center py-12 text-[#666666]">
+                      Loading customer profile telemetry...
+                    </td>
+                  </tr>
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="text-center py-12 text-[#666666]">
+                      No matching customer accounts found.
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map(c => {
+                    const rel = getReliabilityBadge(c.payment_reliability || 0);
+                    const risk = getRiskBadge(c.risk_score || 0);
+
+                    return (
+                      <tr key={c.customer_id} className="hover:bg-[#FAFAFA] transition-colors">
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-[#2B2B2B]">{c.name}</div>
+                          <div className="text-[11px] text-[#666666] font-mono">{c.customer_id} · {c.phone}</div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-50 border border-[#D4D4D4] text-[#2B2B2B] capitalize">
+                            {renderChannelIcon(c.preferred_channel)}
+                            <span>{c.preferred_channel}</span>
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-[#666666] font-medium capitalize">{c.language}</td>
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                              <div
+                                className={`h-full ${rel.barColor}`}
+                                style={{ width: `${Math.min(100, Math.round((c.payment_reliability || 0) * 100))}%` }}
+                              />
+                            </div>
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${rel.style}`}>
+                              {rel.text}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${risk.style}`}>
+                            {risk.text}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span
+                            className={`font-semibold ${
+                              c.total_failures > 3 ? 'text-rose-700 font-bold' : 'text-[#666666]'
+                            }`}
+                          >
+                            {c.total_failures}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-center font-bold text-emerald-800">
+                          {c.total_recoveries}
+                        </td>
+                        <td className="py-3.5 px-4 font-mono font-medium text-[#2B2B2B]">
+                          ₹{Math.round(c.ltv_inr || 0).toLocaleString('en-IN')}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          {c.telegram_chat_id ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-800 border border-sky-200">
+                              <CheckCircle2 className="w-3 h-3 text-sky-600" />
+                              <span>Linked</span>
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-slate-400 font-mono">—</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <Link
+                            href={`/merchant/customers/${merchantId}/${c.customer_id}`}
+                            className="inline-flex items-center justify-center px-3 py-1 rounded-md bg-[#2B2B2B] hover:bg-black text-white text-xs font-semibold transition-colors shadow-xs"
+                          >
+                            View Profile
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

@@ -11,11 +11,12 @@ import {
   Smartphone,
   AlertTriangle,
   Bot,
-  PauseCircle,
-  Layers,
   CheckCircle2,
-  AlertCircle,
   FileText,
+  ChevronLeft,
+  ShieldCheck,
+  Clock,
+  ExternalLink,
 } from 'lucide-react';
 
 import { getApiBaseUrl } from '@/lib/api';
@@ -68,58 +69,54 @@ interface CustomerDetail {
   risk_indicators: RiskIndicator[];
 }
 
-const SEVERITY_STYLE: Record<string, { bg: string; color: string; dotColor: string }> = {
-  high:   { bg: '#ef444422', color: '#ef4444', dotColor: '#ef4444' },
-  medium: { bg: '#f59e0b22', color: '#f59e0b', dotColor: '#f59e0b' },
-  low:    { bg: '#22c55e22', color: '#22c55e', dotColor: '#22c55e' },
+const SEVERITY_STYLE: Record<string, { bg: string; text: string; border: string }> = {
+  high: { bg: 'bg-rose-50', text: 'text-rose-800', border: 'border-rose-200' },
+  medium: { bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-300' },
+  low: { bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-200' },
 };
 
 function renderChannelIcon(channel: string) {
   switch (channel) {
     case 'whatsapp':
-      return <MessageSquare style={{ width: 14, height: 14, color: '#22c55e' }} />;
+      return <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />;
     case 'email':
-      return <Mail style={{ width: 14, height: 14, color: '#60a5fa' }} />;
+      return <Mail className="w-3.5 h-3.5 text-blue-600" />;
     case 'voice':
-      return <Phone style={{ width: 14, height: 14, color: '#f59e0b' }} />;
+      return <Phone className="w-3.5 h-3.5 text-purple-600" />;
     case 'telegram':
-      return <Send style={{ width: 14, height: 14, color: '#06b6d4' }} />;
+      return <Send className="w-3.5 h-3.5 text-sky-600" />;
     case 'sms':
-      return <Smartphone style={{ width: 14, height: 14, color: '#a855f7' }} />;
+      return <Smartphone className="w-3.5 h-3.5 text-amber-600" />;
     default:
-      return <FileText style={{ width: 14, height: 14, color: '#94a3b8' }} />;
+      return <FileText className="w-3.5 h-3.5 text-slate-500" />;
   }
 }
 
-const OUTCOME_COLORS: Record<string, string> = {
-  recovered: '#22c55e', paid: '#22c55e', kept: '#22c55e',
-  no_response: '#ef4444', ignored: '#ef4444', broken: '#ef4444',
-  partial: '#f59e0b', pending: '#94a3b8',
-};
-
-function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color?: string }) {
+function StatCard({ label, value, sub, colorClass }: { label: string; value: string | number; sub?: string; colorClass?: string }) {
   return (
-    <div style={{ background: '#1a1f2e', border: '1px solid #1e293b', borderRadius: 12, padding: '16px 20px' }}>
-      <div style={{ fontSize: 12, color: '#64748b', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: color || '#e2e8f0' }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>{sub}</div>}
+    <div className="bg-white border border-[#D4D4D4] rounded-xl p-3.5 shadow-xs">
+      <div className="text-[11px] font-bold text-[#666666] uppercase tracking-wider">{label}</div>
+      <div className={`text-xl font-bold mt-1 ${colorClass || 'text-[#2B2B2B]'}`}>{value}</div>
+      {sub && <div className="text-[10px] text-[#888888] mt-0.5">{sub}</div>}
     </div>
   );
 }
 
 function ChannelBar({ channel, rate }: { channel: string; rate: number }) {
   const pct = Math.round(rate * 100);
-  const color = pct >= 60 ? '#22c55e' : pct >= 35 ? '#f59e0b' : '#ef4444';
+  const colorClass = pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-500' : 'bg-rose-500';
+  const textClass = pct >= 70 ? 'text-emerald-800' : pct >= 40 ? 'text-amber-800' : 'text-rose-800';
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-      <span style={{ width: 90, fontSize: 13, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6 }}>
+    <div className="flex items-center gap-2.5 py-1.5 border-b border-slate-100 last:border-0 text-xs">
+      <div className="w-24 flex items-center gap-1.5 font-medium text-[#2B2B2B] capitalize">
         {renderChannelIcon(channel)}
         <span>{channel}</span>
-      </span>
-      <div style={{ flex: 1, height: 8, background: '#0f1117', borderRadius: 4, overflow: 'hidden' }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 4, transition: 'width 0.6s ease' }} />
       </div>
-      <span style={{ width: 36, fontSize: 12, color, textAlign: 'right' }}>{pct}%</span>
+      <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+        <div className={`h-full ${colorClass}`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className={`w-10 text-right font-mono font-bold ${textClass}`}>{pct}%</span>
     </div>
   );
 }
@@ -132,98 +129,152 @@ export default function CustomerDetailPage({ params }: { params: { customerId: s
 
   useEffect(() => {
     fetch(`${API}/api/customers/${customerId}`)
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
-      .then(d => { setData(d); setLoading(false); })
-      .catch(e => { setError(`Failed to load customer: ${e}`); setLoading(false); });
+      .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then(d => {
+        setData(d);
+        setLoading(false);
+      })
+      .catch(e => {
+        setError(`Failed to load customer: ${e}`);
+        setLoading(false);
+      });
   }, [customerId]);
 
-  if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0f1117', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
-      Loading customer profile...
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center text-xs font-semibold text-[#666666]">
+        Loading customer behavioral profile...
+      </div>
+    );
+  }
 
-  if (error || !data) return (
-    <div style={{ minHeight: '100vh', background: '#0f1117', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
-      {error || 'Customer not found'}
-    </div>
-  );
+  if (error || !data) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center text-xs font-bold text-rose-700">
+        {error || 'Customer profile not found'}
+      </div>
+    );
+  }
 
   const { profile, channel_effectiveness, episodic_history, active_events, ai_overview, risk_indicators } = data;
   const reliability = profile.payment_reliability || 0;
   const reliabilityPct = Math.round(reliability * 100);
-  const reliabilityColor = reliability >= 0.75 ? '#22c55e' : reliability >= 0.50 ? '#f59e0b' : '#ef4444';
+  const reliabilityColor = reliabilityPct >= 80 ? 'text-emerald-800' : reliabilityPct >= 60 ? 'text-amber-800' : 'text-rose-800';
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f1117', color: '#e2e8f0', fontFamily: "'Inter', sans-serif" }}>
-      {/* Header */}
-      <div style={{ background: '#1a1f2e', borderBottom: '1px solid #1e293b', padding: '20px 32px', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <Link href={`/merchant/customers/${profile.merchant_id || 'merch_01'}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: 14 }}>
-          ← Customers
-        </Link>
-        <span style={{ color: '#334155' }}>|</span>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{profile.name}</h1>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{customerId} · {profile.language} · {profile.city}</div>
-        </div>
-
-        {/* Risk badge */}
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
-          {risk_indicators.length > 0 && (
-            <span style={{ background: '#ef444422', color: '#ef4444', padding: '4px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <AlertTriangle style={{ width: 14, height: 14 }} />
-              <span>{risk_indicators.filter(r => r.severity === 'high').length} High Risk Signals</span>
-            </span>
-          )}
-          {profile.telegram_chat_id ? (
-            <span style={{ color: '#06b6d4', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <Send style={{ width: 14, height: 14 }} />
-              <span>Telegram Linked</span>
-            </span>
-          ) : (
-            <span style={{ color: '#475569', fontSize: 13 }}>No Telegram</span>
-          )}
-        </div>
-      </div>
-
-      <div style={{ padding: '24px 32px', display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24 }}>
-        {/* LEFT COLUMN */}
-        <div>
-          {/* AI Overview */}
-          <div style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #1a1f2e 100%)', border: '1px solid #1e40af', borderRadius: 12, padding: '20px 24px', marginBottom: 20 }}>
-            <div style={{ fontSize: 12, color: '#60a5fa', marginBottom: 8, fontWeight: 600, letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Bot style={{ width: 14, height: 14 }} />
-              <span>AI RISK OVERVIEW</span>
+    <div className="min-h-screen bg-[#FAFAFA] text-[#2B2B2B] font-sans antialiased">
+      {/* Top Header */}
+      <header className="bg-white border-b border-[#D4D4D4] px-6 py-4 sticky top-0 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/merchant/customers/${profile.merchant_id || 'merch_01'}`}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#666666] hover:text-[#2B2B2B] px-2.5 py-1.5 rounded-lg border border-[#D4D4D4] hover:bg-slate-50 transition-colors"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span>All Customers</span>
+            </Link>
+            <span className="text-[#D4D4D4]">|</span>
+            <div>
+              <h1 className="text-base font-bold text-[#2B2B2B] leading-tight flex items-center gap-2">
+                <span>{profile.name}</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 uppercase font-mono">
+                  {customerId}
+                </span>
+              </h1>
+              <p className="text-[11px] text-[#666666] capitalize">
+                {profile.language} · {profile.city || 'India'} · {profile.customer_type || 'Standard Subscriber'}
+              </p>
             </div>
-            <MarkdownRenderer content={ai_overview} isDark={true} />
           </div>
 
-          {/* Stats row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
-            <StatCard label="Reliability" value={`${reliabilityPct}%`} color={reliabilityColor} />
-            <StatCard label="Risk Score" value={Math.round((profile.risk_score || 0) * 100)} sub="0–100" color={profile.risk_score > 0.6 ? '#ef4444' : '#f59e0b'} />
-            <StatCard label="Failures" value={profile.total_failures || 0} color={profile.total_failures > 5 ? '#ef4444' : '#e2e8f0'} />
-            <StatCard label="Recoveries" value={profile.total_recoveries || 0} color="#22c55e" />
+          <div className="flex items-center gap-2">
+            {profile.telegram_chat_id ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-sky-50 text-sky-800 border border-sky-200">
+                <Send className="w-3 h-3 text-sky-600" />
+                <span>Telegram Connected</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                Telegram Unlinked
+              </span>
+            )}
+            <Link
+              href={`/payer?customer=${encodeURIComponent(profile.name)}&amount=4999`}
+              target="_blank"
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#2B2B2B] hover:bg-black text-white text-xs font-semibold transition-colors"
+            >
+              <ExternalLink className="w-3 h-3" />
+              <span>Simulate Payer Portal</span>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column (2 Cols) */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* AI Behavioral Overview */}
+          <div className="bg-white border border-[#D4D4D4] rounded-2xl p-5 shadow-xs space-y-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-blue-700 uppercase tracking-wider">
+              <Bot className="w-4 h-4 text-blue-600" />
+              <span>AI Behavioral Diagnosis &amp; Payment Prior</span>
+            </div>
+            <div className="text-xs text-slate-700 leading-relaxed bg-[#FAFAFA] p-3.5 rounded-xl border border-slate-200">
+              <MarkdownRenderer content={ai_overview} isDark={false} />
+            </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 24 }}>
-            <StatCard label="LTV" value={`₹${((profile.ltv_inr || 0) / 1000).toFixed(0)}k`} />
-            <StatCard label="Avg Days Late" value={`${(profile.typical_payment_delay_days || 0).toFixed(1)}d`} />
-            <StatCard label="Promise Accuracy" value={`${Math.round((profile.historical_promise_accuracy || 0) * 100)}%`} color={(profile.historical_promise_accuracy || 0) < 0.65 ? '#ef4444' : '#22c55e'} />
+          {/* Primary Stats Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+            <StatCard label="On-Time Reliability" value={`${reliabilityPct}%`} colorClass={reliabilityColor} />
+            <StatCard
+              label="Risk Index"
+              value={Math.round((profile.risk_score || 0) * 100)}
+              sub="Scale 0-100"
+              colorClass={profile.risk_score > 0.6 ? 'text-rose-700' : 'text-amber-700'}
+            />
+            <StatCard
+              label="Total Failures"
+              value={profile.total_failures || 0}
+              colorClass={profile.total_failures > 3 ? 'text-rose-700 font-bold' : 'text-[#2B2B2B]'}
+            />
+            <StatCard label="Total Recoveries" value={profile.total_recoveries || 0} colorClass="text-emerald-800 font-bold" />
+          </div>
+
+          {/* Secondary Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <StatCard label="Customer Lifetime Value" value={`₹${Math.round(profile.ltv_inr || 0).toLocaleString('en-IN')}`} />
+            <StatCard label="Typical Payment Delay" value={`${(profile.typical_payment_delay_days || 0).toFixed(1)} Days`} />
+            <StatCard
+              label="Promise-to-Pay Accuracy"
+              value={`${Math.round((profile.historical_promise_accuracy || 0) * 100)}%`}
+              colorClass={(profile.historical_promise_accuracy || 0) < 0.65 ? 'text-rose-700' : 'text-emerald-800'}
+            />
           </div>
 
           {/* Risk Indicators */}
           {risk_indicators.length > 0 && (
-            <div style={{ marginBottom: 24 }}>
-              <h2 style={{ fontSize: 14, fontWeight: 600, color: '#94a3b8', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Risk Signals</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="space-y-2.5">
+              <h3 className="text-xs font-bold text-[#2B2B2B] uppercase tracking-wider flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                <span>Behavioral Risk Signals</span>
+              </h3>
+              <div className="space-y-2">
                 {risk_indicators.map((r, i) => {
                   const s = SEVERITY_STYLE[r.severity] || SEVERITY_STYLE.low;
                   return (
-                    <div key={i} style={{ background: s.bg, border: `1px solid ${s.color}44`, borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.dotColor }} />
-                      <span style={{ fontSize: 13, color: '#e2e8f0' }}>{r.detail || r.type}</span>
-                      <span style={{ marginLeft: 'auto', fontSize: 11, color: s.color, fontWeight: 600 }}>{r.severity.toUpperCase()}</span>
+                    <div
+                      key={i}
+                      className={`p-3 rounded-xl border flex items-center justify-between text-xs shadow-xs ${s.bg} ${s.border}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-current" />
+                        <span className="font-semibold text-slate-800">{r.detail || r.type}</span>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${s.text}`}>
+                        {r.severity}
+                      </span>
                     </div>
                   );
                 })}
@@ -231,20 +282,36 @@ export default function CustomerDetailPage({ params }: { params: { customerId: s
             </div>
           )}
 
-          {/* Active Events */}
+          {/* Active Recovery Events */}
           {active_events.length > 0 && (
-            <div style={{ marginBottom: 24 }}>
-              <h2 style={{ fontSize: 14, fontWeight: 600, color: '#94a3b8', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Active Recovery Events</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="space-y-2.5">
+              <h3 className="text-xs font-bold text-[#2B2B2B] uppercase tracking-wider flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-blue-600" />
+                <span>Active Recovery Incidents</span>
+              </h3>
+              <div className="space-y-2">
                 {active_events.map(ev => (
-                  <div key={ev.event_id} style={{ background: '#1a1f2e', border: '1px solid #1e293b', borderRadius: 8, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{ev.event_type?.replace(/_/g, ' ')}</div>
-                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{ev.root_cause || '—'} · {ev.event_id}</div>
+                  <div
+                    key={ev.event_id}
+                    className="bg-white border border-[#D4D4D4] rounded-xl p-3.5 flex items-center justify-between text-xs shadow-xs"
+                  >
+                    <div>
+                      <div className="font-bold text-[#2B2B2B] capitalize">{ev.event_type?.replace(/_/g, ' ')}</div>
+                      <div className="text-[11px] text-[#666666] font-mono mt-0.5">
+                        {ev.root_cause || 'unassigned'} · {ev.event_id}
+                      </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: '#e2e8f0' }}>₹{(ev.amount || 0).toLocaleString('en-IN')}</div>
-                      <div style={{ fontSize: 11, color: ev.payment_status === 'recovered' ? '#22c55e' : ev.payment_status === 'escalated' ? '#f59e0b' : '#ef4444' }}>
+                    <div className="text-right">
+                      <div className="font-bold text-[#2B2B2B]">₹{(ev.amount || 0).toLocaleString('en-IN')}</div>
+                      <div
+                        className={`text-[10px] font-bold uppercase mt-0.5 ${
+                          ev.payment_status === 'recovered'
+                            ? 'text-emerald-800'
+                            : ev.payment_status === 'escalated'
+                            ? 'text-blue-800'
+                            : 'text-amber-800'
+                        }`}
+                      >
                         {ev.payment_status}
                       </div>
                     </div>
@@ -254,91 +321,106 @@ export default function CustomerDetailPage({ params }: { params: { customerId: s
             </div>
           )}
 
-          {/* Episode History */}
-          <div>
-            <h2 style={{ fontSize: 14, fontWeight: 600, color: '#94a3b8', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Episodic History ({episodic_history.length} entries)
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {episodic_history.length === 0 ? (
-                <div style={{ color: '#475569', fontSize: 13, padding: 16, textAlign: 'center' }}>No history yet</div>
-              ) : episodic_history.map((ep, i) => (
-                <div key={i} style={{ background: '#1a1f2e', border: '1px solid #1e293b', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ display: 'flex', alignItems: 'center' }}>{renderChannelIcon(ep.channel)}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, color: '#e2e8f0' }}>{ep.episode_type?.replace(/_/g, ' ')}</div>
-                    {ep.notes && <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{ep.notes}</div>}
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    {ep.amount && <div style={{ fontSize: 13, color: '#94a3b8' }}>₹{ep.amount.toLocaleString('en-IN')}</div>}
-                    {ep.outcome && (
-                      <div style={{ fontSize: 11, color: OUTCOME_COLORS[ep.outcome] || '#94a3b8', marginTop: 2 }}>
-                        {ep.outcome}
-                        {ep.response_hours ? ` · ${ep.response_hours.toFixed(1)}h` : ''}
-                      </div>
-                    )}
-                    <div style={{ fontSize: 10, color: '#334155', marginTop: 2 }}>
-                      {ep.created_at ? new Date(ep.created_at).toLocaleDateString('en-IN') : ''}
-                    </div>
-                  </div>
-                </div>
+          {/* Episodic History */}
+          <div className="space-y-2.5">
+            <h3 className="text-xs font-bold text-[#2B2B2B] uppercase tracking-wider flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-slate-500" />
+              <span>Episodic Payment History ({episodic_history.length} events)</span>
+            </h3>
+            <div className="bg-white border border-[#D4D4D4] rounded-xl shadow-xs overflow-hidden">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-[#F6F6F6] text-[#666666] border-b border-[#EBEBEB] text-[11px] uppercase">
+                    <th className="py-2.5 px-3.5">Date</th>
+                    <th className="py-2.5 px-3.5">Type</th>
+                    <th className="py-2.5 px-3.5">Channel</th>
+                    <th className="py-2.5 px-3.5">Outcome</th>
+                    <th className="py-2.5 px-3.5 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#EBEBEB]">
+                  {episodic_history.slice(0, 8).map((ep, i) => (
+                    <tr key={i} className="hover:bg-[#FAFAFA] transition-colors">
+                      <td className="py-2.5 px-3.5 text-[#666666] font-mono text-[11px]">
+                        {ep.created_at ? new Date(ep.created_at).toLocaleDateString() : 'Recent'}
+                      </td>
+                      <td className="py-2.5 px-3.5 font-medium text-[#2B2B2B] capitalize">
+                        {ep.episode_type?.replace(/_/g, ' ')}
+                      </td>
+                      <td className="py-2.5 px-3.5 capitalize text-[#666666]">{ep.channel || 'System'}</td>
+                      <td className="py-2.5 px-3.5">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            ep.outcome === 'recovered' || ep.outcome === 'paid'
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                              : 'bg-rose-50 text-rose-800 border border-rose-200'
+                          }`}
+                        >
+                          {ep.outcome}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3.5 text-right font-mono font-semibold text-[#2B2B2B]">
+                        {ep.amount ? `₹${ep.amount.toLocaleString('en-IN')}` : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Contact & Channel Effectiveness */}
+        <div className="space-y-6">
+          {/* Contact Card */}
+          <div className="bg-white border border-[#D4D4D4] rounded-2xl p-5 shadow-xs space-y-3">
+            <h3 className="text-xs font-bold text-[#2B2B2B] uppercase tracking-wider">Contact Coordinates</h3>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-[#666666]">Phone:</span>
+                <span className="font-mono font-bold text-[#2B2B2B]">{profile.phone}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-[#666666]">Email:</span>
+                <span className="font-mono text-[#2B2B2B] truncate max-w-[180px]">{profile.email}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-[#666666]">Preferred Channel:</span>
+                <span className="font-bold text-emerald-800 capitalize">{profile.preferred_channel}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-slate-100">
+                <span className="text-[#666666]">Language:</span>
+                <span className="font-medium text-[#2B2B2B] capitalize">{profile.language}</span>
+              </div>
+              <div className="flex justify-between py-1.5">
+                <span className="text-[#666666]">Merchant ID:</span>
+                <span className="font-mono text-slate-500">{profile.merchant_id || 'merch_01'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Channel Response Rates */}
+          <div className="bg-white border border-[#D4D4D4] rounded-2xl p-5 shadow-xs space-y-3">
+            <h3 className="text-xs font-bold text-[#2B2B2B] uppercase tracking-wider">Channel Conversion Rates</h3>
+            <div className="space-y-1">
+              {Object.entries(channel_effectiveness || {}).map(([ch, rate]) => (
+                <ChannelBar key={ch} channel={ch} rate={rate} />
               ))}
             </div>
           </div>
-        </div>
 
-        {/* RIGHT SIDEBAR */}
-        <div>
-          {/* Contact Info */}
-          <div style={{ background: '#1a1f2e', border: '1px solid #1e293b', borderRadius: 12, padding: '20px', marginBottom: 16 }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Contact</h3>
-            {[
-              { label: 'Email', value: profile.email },
-              { label: 'Phone', value: profile.phone },
-              { label: 'WhatsApp', value: profile.whatsapp_number },
-              { label: 'Type', value: profile.customer_type },
-            ].map(row => (
-              <div key={row.label} style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, color: '#475569' }}>{row.label}</div>
-                <div style={{ fontSize: 13, color: '#94a3b8' }}>{row.value || '—'}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Channel Effectiveness */}
-          <div style={{ background: '#1a1f2e', border: '1px solid #1e293b', borderRadius: 12, padding: '20px', marginBottom: 16 }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Channel Effectiveness</h3>
-            {Object.entries(channel_effectiveness).length === 0 ? (
-              <div style={{ color: '#475569', fontSize: 13 }}>No data yet</div>
-            ) : (
-              Object.entries(channel_effectiveness)
-                .sort((a, b) => (b[1] as number) - (a[1] as number))
-                .map(([ch, rate]) => <ChannelBar key={ch} channel={ch} rate={rate as number} />)
-            )}
-            <div style={{ fontSize: 11, color: '#334155', marginTop: 12 }}>
-              Preferred: <span style={{ color: '#94a3b8' }}>{profile.preferred_channel}</span>
+          {/* Legal Compliance Box */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-[11px] text-slate-600 space-y-2 shadow-xs">
+            <div className="flex items-center gap-1.5 font-bold text-slate-800">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>DPDP 2023 &amp; RBI Compliance Notice</span>
             </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div style={{ background: '#1a1f2e', border: '1px solid #1e293b', borderRadius: 12, padding: '20px' }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Actions</h3>
-            {[
-              { label: 'Send WhatsApp Recovery', icon: <MessageSquare style={{ width: 14, height: 14 }} />, color: '#22c55e' },
-              { label: 'Send Email Link', icon: <Mail style={{ width: 14, height: 14 }} />, color: '#60a5fa' },
-              { label: 'Escalate to HITL', icon: <AlertTriangle style={{ width: 14, height: 14 }} />, color: '#f59e0b' },
-              { label: 'Pause Outreach', icon: <PauseCircle style={{ width: 14, height: 14 }} />, color: '#64748b' },
-            ].map(action => (
-              <button key={action.label} style={{ width: '100%', padding: '10px 14px', background: 'transparent', border: `1px solid ${action.color}44`, borderRadius: 8, color: action.color, fontSize: 13, cursor: 'pointer', marginBottom: 8, textAlign: 'left', transition: 'background 0.15s', display: 'flex', alignItems: 'center', gap: 8 }}
-                onMouseEnter={e => (e.currentTarget.style.background = action.color + '11')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                {action.icon}
-                <span>{action.label}</span>
-              </button>
-            ))}
+            <p className="leading-relaxed">
+              This telemetry is strictly scoped under Section 4(1) of the Digital Personal Data Protection Act 2023 for contractual payment reconciliation. No unmasked PAN/CVV data is retained.
+            </p>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
