@@ -106,49 +106,62 @@ def log_audit_entry(
                     "action_taken": action_taken,
                     "details": details,
                     "reasoning": reasoning or "",
+                    "entry_hash": entry_hash,
+                    "prev_entry_hash": entry["prev_entry_hash"],
                 }).execute()
             except Exception as e:
                 logger.debug(f"Could not persist audit log to Supabase: {e}")
 
+
     # 2. Trace to Langfuse Cloud (v4 SDK create_event & flush)
-    lf = _get_langfuse_client()
-    if lf:
-        try:
-            # Deterministic 32-char hex trace ID groups all nodes for the same event into 1 unified Trace
-            trace_id_hex = hashlib.md5(event_id.encode()).hexdigest()
-            lf.create_event(
-                trace_context={"trace_id": trace_id_hex},
-                name=f"node_{node_name}",
-                input={
-                    "event_id": event_id,
-                    "node_name": node_name,
-                    "action_taken": action_taken,
-                },
-                output={
-                    "details": details,
-                    "reasoning": reasoning or "",
-                    "entry_hash": entry_hash,
-                },
-                metadata={
-                    "event_id": event_id,
-                    "node_name": node_name,
-                    "timestamp": entry["timestamp"],
-                    "service": "revenue_recovery_orchestrator",
-                },
-                status_message=f"Action executed: {action_taken}",
-            )
-            lf.flush()
-        except Exception as e:
-            logger.warning(f"Could not send trace to Langfuse: {e}")
+    if os.getenv("DISABLE_AUDIT_DB", "false").lower() not in ("1", "true", "yes") and os.getenv("ENVIRONMENT") != "batch_eval":
+        lf = _get_langfuse_client()
+        if lf:
+            try:
+                # Deterministic 32-char hex trace ID groups all nodes for the same event into 1 unified Trace
+                trace_id_hex = hashlib.md5(event_id.encode()).hexdigest()
+                lf.create_event(
+                    trace_context={"trace_id": trace_id_hex},
+                    name=f"node_{node_name}",
+                    input={
+                        "event_id": event_id,
+                        "node_name": node_name,
+                        "action_taken": action_taken,
+                    },
+                    output={
+                        "details": details,
+                        "reasoning": reasoning or "",
+                        "entry_hash": entry_hash,
+                    },
+                    metadata={
+                        "event_id": event_id,
+                        "node_name": node_name,
+                        "timestamp": entry["timestamp"],
+                        "service": "revenue_recovery_orchestrator",
+                    },
+                    status_message=f"Action executed: {action_taken}",
+                )
+                lf.flush()
+            except Exception as e:
+                logger.warning(f"Could not send trace to Langfuse: {e}")
+
 
     return entry
+
+
+# Alias for backward compatibility and test scripts
+create_audit_entry = log_audit_entry
+
 
 def verify_audit_chain(entries: List[Dict[str, Any]]) -> bool:
     """
     Verifies the SHA-256 chain integrity of an ordered list of audit entries.
     Returns True if the chain is intact, False if any entry was tampered with.
     """
-    prev_hash = "GENESIS"
+    if not entries:
+        return True
+
+    prev_hash = entries[0].get("prev_entry_hash", "GENESIS")
     for entry in entries:
         chain_data = json.dumps({
             "event_id": entry.get("event_id", ""),
@@ -167,6 +180,7 @@ def verify_audit_chain(entries: List[Dict[str, Any]]) -> bool:
             return False
         prev_hash = stored_hash or expected_hash
     return True
+
 
 
 def trace_conversational_turn(

@@ -38,7 +38,7 @@ logger = logging.getLogger("evals.deepeval_model")
 class AzureOpenAIDeepEvalModel(DeepEvalBaseLLM):
     """
     Primary LLM-as-judge model powered by Azure OpenAI.
-    Supports modern GPT-5.4 Mini / GPT-5.4 Nano / GPT-4o deployments.
+    Supports gpt-4o-mini / gpt-4o deployments.
     """
 
     def __init__(
@@ -52,8 +52,9 @@ class AzureOpenAIDeepEvalModel(DeepEvalBaseLLM):
         self.deployment_name = (
             deployment_name
             or os.getenv("DEEPEVAL_JUDGE_MODEL")
-            or os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-54-mini")
+            or os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini")
         )
+
         self.temperature = temperature
         self.api_version = api_version or os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
         self.endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
@@ -200,7 +201,8 @@ AzureDeepEvalModel = AzureOpenAIDeepEvalModel
 
 def get_judge_model(model_name: Optional[str] = None) -> DeepEvalBaseLLM:
     """Factory helper to obtain a configured judge model."""
-    name = model_name or os.getenv("DEEPEVAL_JUDGE_MODEL", "gpt-54-mini")
+    name = model_name or os.getenv("DEEPEVAL_JUDGE_MODEL", "gpt-4o-mini")
     if "gemini" in name.lower():
         return GeminiDeepEvalModel(model_name=name)
     return AzureOpenAIDeepEvalModel(deployment_name=name)
+

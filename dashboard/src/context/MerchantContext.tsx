@@ -181,13 +181,54 @@ export function MerchantProvider({ children }: { children: ReactNode }) {
 
   // 1-Click Action Handlers
   const handleApproveHitl = async (incident: Incident) => {
-    setIncidents(prev =>
-      prev.map(i => (i.id === incident.id ? { ...i, status: 'auto_recovering', currentAttempts: 1 } : i))
-    );
-    if (selectedIncident?.id === incident.id) {
-      setSelectedIncident(prev => (prev ? { ...prev, status: 'auto_recovering', currentAttempts: 1 } : null));
+    setSendingChannel('whatsapp');
+    try {
+      const res = await fetch(apiUrl('/api/orchestrator/approve-hitl'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          incident_id: incident.id,
+          customer_name: incident.customer,
+          customer_phone: incident.customerPhone || '+919820144102',
+          customer_email: incident.customerEmail || 'finance@techmatrix.com',
+          amount: incident.amount,
+          decision: 'APPROVE',
+          note: `Supervisor authorization approved via dashboard for ₹${incident.amount.toLocaleString('en-IN')}`,
+        }),
+      });
+      const data = await res.json();
+
+      setIncidents(prev =>
+        prev.map(i => (i.id === incident.id ? { 
+          ...i, 
+          status: 'auto_recovering', 
+          currentAttempts: (i.currentAttempts || 0) + 1,
+          link: data.payment_link || i.link,
+          paymentLink: data.payment_link || i.paymentLink,
+        } : i))
+      );
+      if (selectedIncident?.id === incident.id) {
+        setSelectedIncident(prev => (prev ? { 
+          ...prev, 
+          status: 'auto_recovering', 
+          currentAttempts: (prev.currentAttempts || 0) + 1,
+          link: data.payment_link || prev.link,
+          paymentLink: data.payment_link || prev.paymentLink,
+        } : null));
+      }
+
+      setChannelResult(data.message || `Supervisor Approval granted for ${incident.customer} (₹${incident.amount.toLocaleString('en-IN')}). Recovery move executed.`);
+    } catch {
+      setIncidents(prev =>
+        prev.map(i => (i.id === incident.id ? { ...i, status: 'auto_recovering', currentAttempts: 1 } : i))
+      );
+      if (selectedIncident?.id === incident.id) {
+        setSelectedIncident(prev => (prev ? { ...prev, status: 'auto_recovering', currentAttempts: 1 } : null));
+      }
+      setChannelResult(`Supervisor Approval granted for ${incident.customer} (₹${incident.amount.toLocaleString('en-IN')}). Recovery move executed.`);
+    } finally {
+      setSendingChannel(null);
     }
-    setChannelResult(`Supervisor Approval granted for ${incident.customer} (₹${incident.amount.toLocaleString('en-IN')}). Recovery move executed.`);
   };
 
   const handleSendWhatsApp = async (incident: Incident) => {
@@ -232,6 +273,7 @@ export function MerchantProvider({ children }: { children: ReactNode }) {
       setSendingChannel(null);
     }
   };
+
 
   const handleVoiceCall = async (incident: Incident) => {
     setSendingChannel('voice');

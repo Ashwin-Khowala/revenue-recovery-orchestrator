@@ -226,7 +226,9 @@ async def voice_preview_endpoint(req: VoicePreviewRequest):
 class TelegramDispatchRequest(BaseModel):
     customer_name: str
     amount: float
-    root_cause: str
+    incident_id: Optional[str] = None
+    root_cause: Optional[str] = "subscription_failed"
+    strategy: Optional[str] = None
     recovery_link: Optional[str] = None
     chat_id: Optional[str] = None
 
@@ -239,11 +241,12 @@ async def send_telegram_endpoint(req: TelegramDispatchRequest):
     """
     from orchestrator.channels.telegram import send_telegram_recovery
     link = req.recovery_link or f"https://rzp.io/i/{req.customer_name.lower().replace(' ', '')[:6]}_{int(req.amount)}"
+    rc = req.root_cause or req.strategy or "subscription_failed"
     result = send_telegram_recovery(
         customer_name=req.customer_name,
         amount=req.amount,
         recovery_link=link,
-        root_cause=req.root_cause or "subscription_failed",
+        root_cause=rc,
         recipient_chat_id=req.chat_id,
     )
     return result
@@ -289,6 +292,140 @@ async def send_voice_action(req: ActionDispatchRequest):
         recipient_phone=phone,
     )
     return result
+
+
+class HitlApprovalRequest(BaseModel):
+    incident_id: str
+    decision: Optional[str] = "APPROVE"  # "APPROVE" or "REJECT"
+    note: Optional[str] = "Supervisor authorization granted via Merchant Console"
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_email: Optional[str] = None
+    amount: Optional[float] = None
+    channel_override: Optional[str] = None  # "whatsapp", "email", "voice", "telegram"
+
+
+@app.post("/api/orchestrator/approve-hitl")
+@app.post("/api/orchestrator/resume-hitl")
+@app.post("/api/hitl/approve")
+async def approve_hitl_endpoint(req: HitlApprovalRequest):
+    """
+    Resumes an escalated LangGraph recovery incident after supervisor review.
+    Executes the approved recovery action (WhatsApp/Email/Payment Link), writes an immutable SHA-256 audit entry,
+    and updates incident state.
+    """
+    event_id = req.incident_id
+    decision = req.decision.upper() if req.decision else "APPROVE"
+    
+    # Check if in pending queue or load state
+    pending = PENDING_RECOVERY_QUEUE.get(event_id)
+    amount = req.amount or (pending["state"]["amount"] if pending else 145000.0)
+    customer_name = req.customer_name or (pending["state"]["customer_name"] if pending else "TechMatrix Solutions")
+    customer_phone = req.customer_phone or (pending["state"].get("customer_phone") if pending else "+919820144102")
+    customer_email = req.customer_email or (pending["state"].get("customer_email") if pending else "finance@techmatrix.com")
+    
+    if decision == "REJECT":
+        audit_entry = log_audit_entry(
+            event_id=event_id,
+            node_name="hitl_escalation",
+            action_taken="HITL_REJECTED",
+            details={"decision": "REJECT", "note": req.note, "amount": amount},
+            reasoning=f"Supervisor rejected automated outreach: {req.note}. Incident closed without contacting customer.",
+        )
+        return {
+            "success": True,
+            "incident_id": event_id,
+            "status": "rejected",
+            "decision": "REJECTED",
+            "message": f"Outreach for {customer_name} (₹{amount:,.0f}) rejected by supervisor. No customer messages sent.",
+            "audit_entry": audit_entry,
+        }
+
+    # APPROVE: Execute downstream recovery action
+    # 1. Create real Razorpay Payment Link
+    from orchestrator.razorpay_client import create_recovery_payment_link
+    plink_result = create_recovery_payment_link(
+        amount=amount,
+        customer_name=customer_name,
+        customer_email=customer_email,
+        customer_phone=customer_phone,
+        description=f"Authorized Recovery - {event_id}",
+        reference_id=event_id,
+    )
+    recovery_link = plink_result.get("short_url", f"https://rzp.io/i/{event_id[-8:]}")
+    payment_link_id = plink_result.get("payment_link_id")
+
+    # 2. Dispatch via target channel (WhatsApp or Email or Telegram)
+    channel = req.channel_override or "whatsapp"
+    dispatch_result = {}
+    if channel == "whatsapp":
+        from orchestrator.channels.whatsapp import send_whatsapp_recovery
+        dispatch_result = send_whatsapp_recovery(
+            recipient_phone=customer_phone,
+            customer_name=customer_name,
+            amount=amount,
+            recovery_link=recovery_link,
+            root_cause="receivable_overdue",
+        )
+    elif channel == "email":
+        from orchestrator.channels.email import send_email_recovery
+        dispatch_result = send_email_recovery(
+            recipient_email=customer_email,
+            customer_name=customer_name,
+            amount=amount,
+            recovery_link=recovery_link,
+            root_cause="receivable_overdue",
+        )
+    elif channel == "telegram":
+        from orchestrator.channels.telegram import send_telegram_recovery
+        dispatch_result = send_telegram_recovery(
+            customer_name=customer_name,
+            amount=amount,
+            recovery_link=recovery_link,
+            root_cause="receivable_overdue",
+        )
+
+    # 3. Log cryptographic SHA-256 audit entry
+    audit_entry = log_audit_entry(
+        event_id=event_id,
+        node_name="hitl_escalation",
+        action_taken="HITL_APPROVED_AND_EXECUTED",
+        details={
+            "decision": "APPROVED",
+            "supervisor_note": req.note,
+            "amount": amount,
+            "channel_used": channel,
+            "payment_link": recovery_link,
+            "payment_link_id": payment_link_id,
+            "dispatch_result": dispatch_result,
+        },
+        reasoning=f"Supervisor approved ₹{amount:,.0f} high-value recovery. Released 1-click Razorpay payment link via {channel.capitalize()}.",
+    )
+
+    # 4. Update Supabase if connected
+    client = _get_supabase_client()
+    if client:
+        try:
+            client.table("events").update({
+                "payment_status": "auto_recovering",
+                "razorpay_ref": payment_link_id,
+            }).eq("event_id", event_id).execute()
+        except Exception as e:
+            logger.debug(f"Could not update event status in Supabase: {e}")
+
+    return {
+        "success": True,
+        "incident_id": event_id,
+        "status": "auto_recovering",
+        "decision": "APPROVED",
+        "channel_used": channel,
+        "payment_link": recovery_link,
+        "payment_link_id": payment_link_id,
+        "dispatch_result": dispatch_result,
+        "audit_entry": audit_entry,
+        "message": f"Supervisor Approval confirmed. Released ₹{amount:,.0f} recovery workflow via {channel.capitalize()} (Link: {recovery_link}).",
+    }
+
 
 
 
@@ -567,7 +704,7 @@ async def copilot_chat_endpoint(req: CopilotChatRequest):
                 "• Explain the financial rationale: why 'Do Nothing' or Margin Shield protects long-term profits."
             )
             response = client.chat.completions.create(
-                model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-54-mini"),
+                model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini"),
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": req.query},
@@ -578,7 +715,7 @@ async def copilot_chat_endpoint(req: CopilotChatRequest):
             return {
                 "success": True,
                 "answer": answer,
-                "model_used": os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-54-mini"),
+                "model_used": os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini"),
             }
         except Exception as e:
             logger.warning(f"Copilot Azure OpenAI query failed: {e}. Using deterministic reasoning engine.")
@@ -682,6 +819,7 @@ async def resume_hitl_endpoint(req: ResumeHitlRequest):
 
 
 @app.post("/api/webhooks/razorpay")
+@app.post("/api/razorpay-webhook")
 async def razorpay_webhook_listener(
     request: Request,
     x_razorpay_signature: Optional[str] = Header(None),
@@ -846,11 +984,12 @@ async def voice_agent_dialogue_endpoint(req: VoiceAgentDialogueRequest):
             messages.append({"role": "user", "content": req.user_speech})
 
             res = client.chat.completions.create(
-                model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-54-mini"),
+                model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini"),
                 messages=messages,
                 max_completion_tokens=200,
             )
             llm_text = res.choices[0].message.content
+
             return {
                 "success": True,
                 "voice_reply": llm_text,

@@ -1,7 +1,7 @@
 """
 Inbound Customer Reply Intent Classifier
 =========================================
-Uses Azure OpenAI GPT-5.4 Mini to reason over unstructured customer replies
+Uses Azure OpenAI gpt-4o-mini to reason over unstructured customer replies
 (WhatsApp, SMS, Email, Telegram) and extract high-signal actionable intents:
 
   1. promise_to_pay: Extracts target date & pauses outreach until T_promised + 24h.
@@ -184,7 +184,7 @@ def handle_inbound_reply(
 ) -> Dict[str, Any]:
     """
     Orchestrates end-to-end execution of customer inbound replies:
-      1. Classifies intent via Azure GPT-5.4 Mini.
+      1. Classifies intent via Azure gpt-4o-mini.
       2. If Promise-to-Pay: Upserts date into Supabase promise_to_pay table and pauses outreach.
       3. If Cancellation: Triggers stopping rule, flags churn in DB, alerts merchant.
       4. If Alternative Rail: Generates dynamic UPI/Smart link.

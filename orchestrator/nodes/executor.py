@@ -143,6 +143,9 @@ def execute_action(state: RecoveryState) -> Dict[str, Any]:
     # --------------------------------------------------------------------------
     # Case 5: Voice Channel (Hinglish AI Voice Caller)
     # --------------------------------------------------------------------------
+    from orchestrator.governance import CrossTrackThrottler
+    cid = state.get("customer_id", "cust_01")
+
     if target_channel == "voice" or action_type == "voice_recovery_call":
         voice_result = generate_voice_recovery(
             customer_name=customer_name,
@@ -151,6 +154,7 @@ def execute_action(state: RecoveryState) -> Dict[str, Any]:
             recipient_phone=customer_phone,
         )
         new_contact_count = contact_count + 1
+        CrossTrackThrottler.record_touch(customer_id=cid, channel="voice", track_name=root_cause, event_id=event_id)
         audit_entry = log_audit_entry(
             event_id=event_id,
             node_name="execute_action",
@@ -185,6 +189,7 @@ def execute_action(state: RecoveryState) -> Dict[str, Any]:
 
         if wa_result.get("success"):
             new_contact_count = contact_count + 1
+            CrossTrackThrottler.record_touch(customer_id=cid, channel="whatsapp", track_name=root_cause, event_id=event_id)
             audit_entry = log_audit_entry(
                 event_id=event_id,
                 node_name="execute_action",
@@ -214,6 +219,7 @@ def execute_action(state: RecoveryState) -> Dict[str, Any]:
                 root_cause=root_cause,
             )
             new_contact_count = contact_count + 1
+            CrossTrackThrottler.record_touch(customer_id=cid, channel="email", track_name=root_cause, event_id=event_id)
             audit_entry = log_audit_entry(
                 event_id=event_id,
                 node_name="execute_action",
@@ -245,6 +251,7 @@ def execute_action(state: RecoveryState) -> Dict[str, Any]:
             root_cause=root_cause,
         )
         new_contact_count = contact_count + 1
+        CrossTrackThrottler.record_touch(customer_id=cid, channel="email", track_name=root_cause, event_id=event_id)
         audit_entry = log_audit_entry(
             event_id=event_id,
             node_name="execute_action",
@@ -256,6 +263,14 @@ def execute_action(state: RecoveryState) -> Dict[str, Any]:
             },
             reasoning=f"Direct email recovery link delivered to {customer_email}.",
         )
+        return {
+            "channel_used": "email",
+            "contact_count": new_contact_count,
+            "execution_result": email_result,
+            "razorpay_ref": payment_link_id or state.get("razorpay_ref"),
+            "audit_trail": state.get("audit_trail", []) + [audit_entry],
+        }
+
     # --------------------------------------------------------------------------
     # Case 8: Telegram Proactive Recovery (fixed — resolves customer chat_id from DB)
     # --------------------------------------------------------------------------

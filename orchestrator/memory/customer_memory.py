@@ -29,11 +29,41 @@ def _get_client():
     return _supabase
 
 
+_world_cache = None
+
+
+def _get_world_cache() -> Dict[str, Any]:
+    global _world_cache
+    if _world_cache is not None:
+        return _world_cache
+    world_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "world.json")
+    if os.path.exists(world_path):
+        try:
+            import json
+            with open(world_path, "r", encoding="utf-8") as f:
+                _world_cache = json.load(f)
+        except Exception as e:
+            logger.debug("Failed to load world.json cache: %s", e)
+            _world_cache = {}
+    else:
+        _world_cache = {}
+    return _world_cache
+
+
 def get_customer_profile(customer_id: str) -> Optional[Dict[str, Any]]:
     """
     Fetches the full behavioral profile for a customer.
     Returns None if customer not found (falls back to event history dict).
     """
+    # Fast path for offline batch evaluation
+    if os.getenv("ENVIRONMENT") == "batch_eval" or os.getenv("DISABLE_AUDIT_DB", "false").lower() in ("1", "true", "yes"):
+        cache = _get_world_cache()
+        customers = cache.get("customers", [])
+        for c in customers:
+            if c.get("customer_id") == customer_id:
+                return c
+        return None
+
     client = _get_client()
     if not client:
         return None
@@ -50,6 +80,13 @@ def get_episodic_history(customer_id: str, limit: int = 10) -> List[Dict[str, An
     Retrieves the N most recent episodes for a customer.
     Returns a rich timeline used to build memory_context for the LLM.
     """
+    # Fast path for offline batch evaluation
+    if os.getenv("ENVIRONMENT") == "batch_eval" or os.getenv("DISABLE_AUDIT_DB", "false").lower() in ("1", "true", "yes"):
+        cache = _get_world_cache()
+        episodes = cache.get("episodes", [])
+        matched = [ep for ep in episodes if ep.get("customer_id") == customer_id]
+        return matched[-limit:]
+
     client = _get_client()
     if not client:
         return []
@@ -66,6 +103,7 @@ def get_episodic_history(customer_id: str, limit: int = 10) -> List[Dict[str, An
     except Exception as e:
         logger.debug(f"get_episodic_history({customer_id}): {e}")
         return []
+
 
 
 def get_channel_effectiveness(customer_id: str) -> Dict[str, float]:

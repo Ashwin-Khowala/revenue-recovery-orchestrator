@@ -211,12 +211,12 @@ OPENAI_TOOL_SCHEMAS: List[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "register_promise_to_pay",
-            "description": "Registers a Promise-to-Pay (PTP) commitment date and pauses automated outreach.",
+            "description": "Registers a Promise-to-Pay (PTP) commitment date and pauses automated outreach. ONLY call this when the customer provides a legitimate, physically possible calendar date (e.g., 'Tomorrow', 'Next Monday', '15 October', '2026-09-30'). NEVER call with impossible dates like '31 September', day '0', or nonsense.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "promised_date": {"type": "string", "description": "Date promised by customer (e.g., 'Monday', 'Tomorrow', '2026-09-05')"},
-                    "note": {"type": "string", "description": "Note or reason"},
+                    "promised_date": {"type": "string", "description": "Legitimate calendar date promised by customer (e.g., 'Next Monday', 'Tomorrow', '15 October', '2026-09-30')"},
+                    "note": {"type": "string", "description": "Customer context or explanation note"},
                 },
                 "required": ["promised_date"],
             },

@@ -194,21 +194,21 @@ BENCHMARK_SCENARIOS = [
 # ═══════════════════════════════════════════════════════════════════════════════
 
 MODEL_SPECS = {
-    "azure/gpt-54-mini": {
-        "display_name": "Azure OpenAI GPT-5.4 Mini",
+    "azure/gpt-4o-mini": {
+        "display_name": "Azure OpenAI gpt-4o-mini",
         "provider": "Azure OpenAI",
         "input_cost_per_1m": 0.15,
         "output_cost_per_1m": 0.60,
         "avg_input_tokens": 420,
         "avg_output_tokens": 90,
     },
-    "azure/gpt-54-nano": {
-        "display_name": "Azure OpenAI GPT-5.4 Nano",
+    "azure/gpt-4o": {
+        "display_name": "Azure OpenAI gpt-4o",
         "provider": "Azure OpenAI",
-        "input_cost_per_1m": 0.05,
-        "output_cost_per_1m": 0.20,
+        "input_cost_per_1m": 2.50,
+        "output_cost_per_1m": 10.00,
         "avg_input_tokens": 420,
-        "avg_output_tokens": 80,
+        "avg_output_tokens": 90,
     },
     "google/gemini-2.5-flash-lite": {
         "display_name": "Google Gemini 2.5 Flash Lite",
@@ -271,13 +271,14 @@ def run_classifier_with_llm(event: dict, model_key: str) -> dict:
 
     # Configure the environment for the target LLM
     prev_azure_dep = os.environ.get("AZURE_OPENAI_DEPLOYMENT_NAME")
-    if model_key == "azure/gpt-54-mini":
-        os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"] = "gpt-54-mini"
-    elif model_key == "azure/gpt-54-nano":
-        os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"] = "gpt-54-nano"
+    if model_key == "azure/gpt-4o-mini":
+        os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"] = "gpt-4o-mini"
+    elif model_key == "azure/gpt-4o":
+        os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"] = "gpt-4o"
     elif model_key == "google/gemini-2.5-flash-lite":
-        # Force Gemini path by temporarily unset Azure key in local call
+        # Force Gemini path
         pass
+
 
     state = {
         "event_id": event["event_id"],

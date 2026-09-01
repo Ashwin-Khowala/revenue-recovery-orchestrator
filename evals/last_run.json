@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-09-01T00:00:00Z",
+  "dataset": "evals/labeled_holdout.json",
+  "n_events": 150,
+  "total_at_risk_inr": 9750738.0,
+  "methodology_note": "Simulated recovery heuristic: P(recovery) >= 0.40 credits face amount for non-escalated events. Real money movement is separated in Razorpay Test Mode checkout verification.",
+  "metrics": {
+    "baseline_naive": {
+      "total_at_risk": 9750738.0,
+      "total_recovered": 5543558.0,
+      "recovery_rate_pct": 56.85,
+      "false_interventions": 18,
+      "total_cost": 120.0,
+      "cost_per_recovered_rupee": 2e-05,
+      "duplicate_contacts": 24,
+      "escalations": 0,
+      "escalation_rate_pct": 0.0
+    },
+    "baseline_rules": {
+      "total_at_risk": 9750738.0,
+      "total_recovered": 6660365.0,
+      "recovery_rate_pct": 68.31,
+      "false_interventions": 14,
+      "total_cost": 74.65,
+      "cost_per_recovered_rupee": 1e-05,
+      "duplicate_contacts": 17,
+      "escalations": 0,
+      "escalation_rate_pct": 0.0
+    },
+    "orchestrator": {
+      "total_at_risk": 9750738.0,
+      "total_recovered": 2577978.0,
+      "recovery_rate_pct": 26.44,
+      "false_interventions": 0,
+      "total_cost": 37.7,
+      "cost_per_recovered_rupee": 1e-05,
+      "duplicate_contacts": 0,
+      "escalations": 29,
+      "escalation_rate_pct": 19.33
+    }
+  },
+  "classifier_accuracy_pct": 100.0
+}

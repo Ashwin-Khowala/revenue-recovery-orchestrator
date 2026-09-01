@@ -61,6 +61,35 @@ def check_guardrails(state: RecoveryState) -> Dict[str, Any]:
         }
 
     # --------------------------------------------------------------------------
+    # Guardrail 1.5: Cross-Track Throttling & 24h Quiet Spacing Check
+    # --------------------------------------------------------------------------
+    if channel in ("whatsapp", "email", "voice"):
+        is_permitted, throttle_reason = CrossTrackThrottler.evaluate_outreach_permission(
+            customer_id=customer_id,
+            proposed_channel=channel,
+            proposed_track=root_cause,
+            event_id=event_id,
+        )
+        if not is_permitted:
+            rule = "RULE_CROSS_TRACK_24H_QUIET_THROTTLED"
+            result = "BLOCK"
+            reason = throttle_reason
+            audit_entry = log_audit_entry(
+                event_id=event_id,
+                node_name="check_guardrails",
+                action_taken=f"Guardrail {result} ({rule})",
+                details={"rule": rule, "result": result, "reason": reason},
+                reasoning=reason,
+            )
+            return {
+                "guardrail_result": result,
+                "guardrail_rule_fired": rule,
+                "payment_status": "blocked",
+                "audit_trail": state.get("audit_trail", []) + [audit_entry],
+            }
+
+
+    # --------------------------------------------------------------------------
     # Guardrail 2: Payment Degradation Safety (Never Contact Customer)
     # --------------------------------------------------------------------------
     if root_cause == "payment_degraded" and channel in ("whatsapp", "email"):

@@ -381,10 +381,11 @@ def extract_b2b_email_intent(
             suggested_next_step="Awaiting customer message.",
         )
 
-    # 1. Try Azure OpenAI GPT-5.4 Mini structured reasoning
+    # 1. Try Azure OpenAI gpt-4o-mini structured reasoning
     try:
         from orchestrator.llm import get_azure_chat_llm
         llm = get_azure_chat_llm()
+
         if llm:
             prompt = f"""You are the Enterprise B2B Accounts Payable Email Intent Classifier for Razorpay AI Revenue Recovery Orchestrator.
 Analyze this email reply from a client company regarding overdue Invoice {invoice_id} (Amount: INR {amount_inr:,.2f}, Client: {client_company}).

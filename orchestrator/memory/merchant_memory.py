@@ -31,6 +31,15 @@ def _get_client():
 
 def get_merchant_profile(merchant_id: str) -> Optional[Dict[str, Any]]:
     """Full merchant profile including policy and limits."""
+    if os.getenv("ENVIRONMENT") == "batch_eval" or os.getenv("DISABLE_AUDIT_DB", "false").lower() in ("1", "true", "yes"):
+        from orchestrator.memory.customer_memory import _get_world_cache
+        cache = _get_world_cache()
+        merchants = cache.get("merchants", [])
+        for m in merchants:
+            if m.get("merchant_id") == merchant_id:
+                return m
+        return None
+
     client = _get_client()
     if not client:
         return None
@@ -40,6 +49,7 @@ def get_merchant_profile(merchant_id: str) -> Optional[Dict[str, Any]]:
     except Exception as e:
         logger.debug(f"get_merchant_profile({merchant_id}): {e}")
         return None
+
 
 
 def get_merchant_policy(merchant_id: str) -> Dict[str, Any]:
@@ -83,9 +93,9 @@ def get_channel_capacity_remaining(merchant_id: str) -> Dict[str, int]:
         "human_review": profile.get("human_review_limit", 20),
     }
     
-    if not client:
+    if not client or os.getenv("ENVIRONMENT") == "batch_eval" or os.getenv("DISABLE_AUDIT_DB", "false").lower() in ("1", "true", "yes"):
         return limits
-    
+
     try:
         # Count actions dispatched today
         today_start = datetime.combine(date.today(), datetime.min.time()).isoformat()
@@ -125,9 +135,13 @@ def get_merchant_telegram_chat_ids(merchant_id: str) -> list:
     """
     Returns all Telegram chat_ids linked to merchant staff (for HITL approvals).
     """
+    if os.getenv("ENVIRONMENT") == "batch_eval" or os.getenv("DISABLE_REAL_TELEGRAM", "false").lower() in ("1", "true", "yes"):
+        return []
+
     client = _get_client()
     if not client:
         return []
+
     try:
         res = (
             client.table("merchant_users")

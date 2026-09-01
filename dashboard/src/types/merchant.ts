@@ -26,6 +26,7 @@ export interface Incident {
   id: string;
   customer: string;
   customerPhone?: string;
+  customerEmail?: string;
   customerId?: string;
   merchantId?: string;
   amount: number;
@@ -36,11 +37,13 @@ export interface Incident {
   currentAttempts: number;
   duplicateContactBreaches: number;
   link?: string;
+  paymentLink?: string;
   archetype?: string;
   createdAt?: string;
   metadata?: Record<string, any>;
   history?: Record<string, any>;
 }
+
 
 export interface RootCauseMeta {
   label: string;

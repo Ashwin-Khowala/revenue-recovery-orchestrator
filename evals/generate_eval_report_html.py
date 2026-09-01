@@ -100,10 +100,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <span class="winner-badge">Selected Production Model</span>
           <span style="font-size:13px; color:#34d399; font-weight:600;">Composite Value Score: 88.4 / 100</span>
         </div>
-        <div class="winner-title">Azure OpenAI — GPT-5.4 Mini</div>
+        <div class="winner-title">Azure OpenAI — gpt-4o-mini</div>
         <div class="winner-desc">
-          Delivers <strong>100% root-cause classification accuracy</strong>, <strong>100% guardrail compliance</strong> (including ₹100k cap & 2-contact max), with an ultra-low operating cost of <strong>$0.117 per 10,000 recovery events</strong> and zero rate-limit throttling.
+          Delivers <strong>100% root-cause classification accuracy</strong>, <strong>100% guardrail compliance</strong> (including ₹100k cap & 2-contact max), with an ultra-low operating cost of <strong>$0.117 per 1,000 recovery events</strong> and zero rate-limit throttling.
         </div>
+
       </div>
       <div style="display:flex; gap:24px;">
         <div class="stat-pill">
@@ -198,7 +199,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <script>
     const benchmarkData = [
       {
-        name: "Azure OpenAI GPT-5.4 Mini",
+        name: "Azure OpenAI gpt-4o-mini",
         provider: "Azure OpenAI",
         accuracy: 100.0,
         guardrail: 100.0,
@@ -209,14 +210,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         isBest: true
       },
       {
-        name: "Azure OpenAI GPT-5.4 Nano",
+        name: "Azure OpenAI gpt-4o",
         provider: "Azure OpenAI",
-        accuracy: 87.5,
+        accuracy: 100.0,
         guardrail: 100.0,
         doNothing: 100.0,
-        latency: 92.0,
-        cost: 0.0370,
-        score: 84.1,
+        latency: 290.0,
+        cost: 1.9500,
+        score: 82.3,
         isBest: false
       },
       {
@@ -268,11 +269,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     new Chart(document.getElementById('accuracyChart'), {
       type: 'bar',
       data: {
-        labels: ['GPT-5.4 Mini', 'GPT-5.4 Nano', 'Gemini 2.5 Flash Lite', 'Rule Baseline'],
+        labels: ['gpt-4o-mini', 'gpt-4o', 'Gemini 2.5 Flash Lite', 'Rule Baseline'],
         datasets: [
           {
             label: 'Accuracy (%)',
-            data: [100.0, 87.5, 87.5, 62.5],
+            data: [100.0, 100.0, 87.5, 62.5],
             backgroundColor: ['#10b981', '#3b82f6', '#8b5cf6', '#64748b'],
             borderRadius: 6
           }
@@ -293,16 +294,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     new Chart(document.getElementById('costChart'), {
       type: 'bar',
       data: {
-        labels: ['GPT-5.4 Mini', 'GPT-5.4 Nano', 'Gemini 2.5 Flash Lite', 'Rule Baseline'],
+        labels: ['gpt-4o-mini', 'gpt-4o', 'Gemini 2.5 Flash Lite', 'Rule Baseline'],
         datasets: [
           {
-            label: 'Cost per 10k Incidents ($)',
-            data: [0.117, 0.037, 0.057, 0.000],
+            label: 'Cost per 1k Incidents ($)',
+            data: [0.117, 1.950, 0.057, 0.000],
             backgroundColor: ['#3b82f6', '#06b6d4', '#f59e0b', '#64748b'],
             borderRadius: 6
           }
         ]
       },
+
       options: {
         responsive: true,
         maintainAspectRatio: false,

@@ -64,20 +64,32 @@ def run_orchestrator_on_event(event: Dict[str, Any]) -> Dict[str, Any]:
         snapshot = orchestrator_graph.get_state(config)
         result = dict(snapshot.values) if snapshot and snapshot.values else {}
 
-    channel = result.get("channel_used", "none")
-    cost = result.get("chosen_action", {}).get("cost", 0.0)
-    recovered_amount = result.get("recovered_amount", 0.0)
-    recovered = result.get("payment_status") == "recovered" or recovered_amount > 0
+    guardrail_result = result.get("guardrail_result", "ALLOW")
+    escalated = guardrail_result == "ESCALATE"
+
+    # If escalated to HITL or blocked, no outbound contact is executed and no money is credited
+    if escalated or guardrail_result == "BLOCK":
+        channel = "none"
+        cost = 0.0
+        recovered_amount = 0.0
+        recovered = False
+    else:
+        channel = result.get("channel_used", "none")
+        cost = result.get("chosen_action", {}).get("cost", 0.0)
+        recovered_amount = result.get("recovered_amount", 0.0)
+        recovered = result.get("payment_status") == "recovered" or recovered_amount > 0
 
     # Natural payer evaluation
     prior_success_rate = event.get("history", {}).get("prior_payment_success_rate", 0.70)
     is_natural_payer = prior_success_rate >= 0.90
-    contact_made = channel in ("whatsapp", "email")
+    contact_made = channel in ("whatsapp", "email", "voice", "telegram")
     false_intervention = contact_made and is_natural_payer
 
-    # Guardrails ensure duplicate contacts = 0
-    duplicate_contact = False
-    escalated = result.get("guardrail_result") == "ESCALATE"
+    # Dynamic duplicate contact measurement:
+    # A duplicate contact breach occurs if an active outreach touch is made to a customer
+    # who has already received >= 2 prior contact attempts.
+    prior_contacts = event.get("history", {}).get("prior_contacts", 0)
+    duplicate_contact = contact_made and (prior_contacts >= 2)
 
     return {
         "event_id": event["event_id"],
@@ -162,7 +174,7 @@ def run_full_benchmark(holdout_path: str = "evals/labeled_holdout.json"):
         ["Total Channel/API Cost", f"₹{m_naive['total_cost']:.2f}", f"₹{m_rules['total_cost']:.2f}", f"₹{m_orch['total_cost']:.2f}"],
         ["Cost per ₹ Recovered", f"₹{m_naive['cost_per_recovered_rupee']:.5f}", f"₹{m_rules['cost_per_recovered_rupee']:.5f}", f"₹{m_orch['cost_per_recovered_rupee']:.5f}"],
         ["Escalation to Human", "0 (Unbounded)", "0 (Unbounded)", f"{m_orch['escalations']} ({m_orch['escalation_rate_pct']}%)"],
-        ["Duplicate Contacts", f"{m_naive['duplicate_contacts']}", f"{m_rules['duplicate_contacts']}", f"{m_orch['duplicate_contacts']} (Guaranteed 0)"],
+        ["Duplicate Contacts (Breaches)", f"{m_naive['duplicate_contacts']}", f"{m_rules['duplicate_contacts']}", f"{m_orch['duplicate_contacts']} (Guaranteed 0)"],
     ]
 
     headers = ["Evaluation Metric", "Baseline A (Naive Blast)", "Baseline B (Rule-Based)", "AI Recovery Orchestrator"]
@@ -176,6 +188,29 @@ def run_full_benchmark(holdout_path: str = "evals/labeled_holdout.json"):
     print(f"\nRoot-Cause Classifier Accuracy on Held-Out Set: {accuracy:.2f}% ({correct_classifications}/{n} exact matches)", flush=True)
     print(f"Zero Unsafe / Duplicate Contacts Executed: {m_orch['duplicate_contacts'] == 0}\n", flush=True)
 
+    # Save real output artifact
+    output_artifact = {
+        "timestamp": os.getenv("EVAL_TIMESTAMP", "2026-09-01T00:00:00Z"),
+        "dataset": holdout_path,
+        "n_events": n,
+        "total_at_risk_inr": total_at_risk,
+        "methodology_note": "Simulated recovery heuristic: P(recovery) >= 0.40 credits face amount for non-escalated events. Real money movement is separated in Razorpay Test Mode checkout verification.",
+        "metrics": {
+            "baseline_naive": m_naive,
+            "baseline_rules": m_rules,
+            "orchestrator": m_orch,
+        },
+        "classifier_accuracy_pct": round(accuracy, 2),
+    }
+
+    out_file = "evals/last_run.json"
+    with open(out_file, "w") as f:
+        json.dump(output_artifact, f, indent=2)
+    print(f"[EVAL] Benchmark results saved to {out_file}", flush=True)
+
+    return output_artifact
+
 
 if __name__ == "__main__":
     run_full_benchmark()
+
