@@ -30,6 +30,7 @@ export default function RecoveryQueueView() {
     minAmountFilter,
     setMinAmountFilter,
     setSelectedIncident,
+    setPlanModalIncident,
     setMainView,
     handleApproveHitl,
     handleSendWhatsApp,
@@ -361,11 +362,12 @@ export default function RecoveryQueueView() {
                       <div className="flex items-center justify-end gap-1.5">
                         {inc.status === 'pending_hitl' ? (
                           <button
-                            onClick={() => handleApproveHitl(inc)}
-                            className="px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1"
+                            onClick={() => setPlanModalIncident(inc)}
+                            className="px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-1.5"
+                            title="Review Agent Plan of Action"
                           >
-                            <Check className="w-3 h-3" />
-                            <span>Approve</span>
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Review Plan</span>
                           </button>
                         ) : (
                           <button
@@ -380,9 +382,9 @@ export default function RecoveryQueueView() {
                         )}
 
                         <button
-                          onClick={() => setSelectedIncident(inc)}
-                          className="p-1 rounded-md text-[#666666] hover:text-[#2B2B2B] hover:bg-[#FAFAFA] transition-colors"
-                          title="Inspect Details"
+                          onClick={() => setPlanModalIncident(inc)}
+                          className="p-1 rounded-md text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors"
+                          title="View Agent Plan of Action"
                         >
                           <Eye className="w-4 h-4" />
                         </button>

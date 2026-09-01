@@ -12,6 +12,8 @@ import B2BReceivablesView from '@/components/merchant/views/B2BReceivablesView';
 import MandatesSchemeView from '@/components/merchant/views/MandatesSchemeView';
 import PTPForecastView from '@/components/merchant/views/PTPForecastView';
 import DeclineTaxonomyView from '@/components/merchant/views/DeclineTaxonomyView';
+import PlanOfActionModal from '@/components/merchant/layout/PlanOfActionModal';
+import NotificationToastCenter from '@/components/merchant/layout/NotificationToastCenter';
 import AIChatBot from '@/components/AIChatBot';
 
 function MerchantDashboardContent() {
@@ -112,6 +114,12 @@ function MerchantDashboardContent() {
           )}
         </div>
       </div>
+
+      {/* Autonomous Recovery Plan of Action Modal */}
+      <PlanOfActionModal />
+
+      {/* Floating Rich Toast Notification Center */}
+      <NotificationToastCenter />
     </div>
   );
 }
