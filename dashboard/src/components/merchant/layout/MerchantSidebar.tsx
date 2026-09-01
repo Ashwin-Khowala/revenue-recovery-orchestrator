@@ -22,8 +22,9 @@ import {
 export default function MerchantSidebar() {
   const { mainView, setMainView, incidents, realtimeStatus, isSyncing } = useMerchant();
 
-  const pendingHitlCount = incidents.filter(i => i.status === 'pending_hitl').length;
-  const activeCount = incidents.filter(i => i.status !== 'recovered').length;
+  const safeIncidents = Array.isArray(incidents) ? incidents : [];
+  const pendingHitlCount = safeIncidents.filter(i => i.status === 'pending_hitl').length;
+  const activeCount = safeIncidents.filter(i => i.status !== 'recovered').length;
 
   const NAV_ITEMS: {
     id: MainView;

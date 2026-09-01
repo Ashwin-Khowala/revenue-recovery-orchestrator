@@ -142,7 +142,8 @@ export function MerchantProvider({ children }: { children: ReactNode }) {
       const res = await fetch(apiUrl('/api/incidents'));
       if (res.ok) {
         const data = await res.json();
-        setIncidents(data);
+        const list = Array.isArray(data) ? data : (data.incidents || []);
+        setIncidents(list);
       }
     } catch {
       setRealtimeStatus('offline');
@@ -243,14 +244,15 @@ export function MerchantProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchIncidents, selectedIncident?.id, addToast]);
 
-  // Compute aggregate stats
+  // Compute aggregate stats safely
+  const safeIncidents = Array.isArray(incidents) ? incidents : [];
   const stats: MerchantStats = {
-    totalAtRisk: incidents.filter(i => i.status !== 'recovered').reduce((acc, i) => acc + i.amount, 0),
-    totalRecovered: incidents.filter(i => i.status === 'recovered').reduce((acc, i) => acc + i.amount, 0),
-    marginShielded: incidents.filter(i => i.archetype === 'comparison_window_shopping').reduce((acc, i) => acc + Math.round(i.amount * 0.15), 0),
-    pendingHitlCount: incidents.filter(i => i.status === 'pending_hitl').length,
+    totalAtRisk: safeIncidents.filter(i => i.status !== 'recovered').reduce((acc, i) => acc + i.amount, 0),
+    totalRecovered: safeIncidents.filter(i => i.status === 'recovered').reduce((acc, i) => acc + i.amount, 0),
+    marginShielded: safeIncidents.filter(i => i.archetype === 'comparison_window_shopping').reduce((acc, i) => acc + Math.round(i.amount * 0.15), 0),
+    pendingHitlCount: safeIncidents.filter(i => i.status === 'pending_hitl').length,
     recoveryRate: Math.round(
-      (incidents.filter(i => i.status === 'recovered').length / (incidents.length || 1)) * 100
+      (safeIncidents.filter(i => i.status === 'recovered').length / (safeIncidents.length || 1)) * 100
     ),
   };
 
