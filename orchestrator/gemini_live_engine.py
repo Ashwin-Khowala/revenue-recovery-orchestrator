@@ -338,6 +338,7 @@ def _run_sync_fallback_turn(
     customer_id: str,
     merchant_id: str,
     history: Optional[List[Dict[str, str]]] = None,
+    force_heuristic: bool = False,
 ) -> Dict[str, Any]:
     gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     azure_key = os.getenv("AZURE_OPENAI_API_KEY")
@@ -346,8 +347,8 @@ def _run_sync_fallback_turn(
     system_inst = build_system_instruction(role, customer_name, amount, root_cause, history)
     lower_text = user_speech.lower()
 
-    # 1. Check Azure OpenAI Function Calling if available
-    if azure_key:
+    # 1. Check Azure OpenAI Function Calling if available (unless force_heuristic=True)
+    if azure_key and not force_heuristic:
         try:
             from openai import AzureOpenAI
             client = AzureOpenAI(
@@ -415,8 +416,8 @@ def _run_sync_fallback_turn(
         except Exception as e:
             logger.warning(f"Azure OpenAI fallback error: {e}")
 
-    # 2. Check Google GenAI
-    if gemini_key:
+    # 2. Check Google GenAI (unless force_heuristic=True)
+    if gemini_key and not force_heuristic:
         try:
             from google import genai
             from google.genai import types
@@ -548,15 +549,47 @@ def _run_sync_fallback_turn(
             )
 
     else:
-        # Payer Role Handlers
-        if any(k in lower_text for k in ("discount", "concession", "5%", "offer", "waive", "less")):
+        # 1. Human Escalation (highest priority)
+        if any(k in lower_text for k in ("human", "person", "agent", "manager", "representative", "speak to", "call me", "escalate", "frustrated", "someone")):
+            tool_res = execute_tool("escalate_to_human", {"customer_id": customer_id, "customer_name": customer_name, "reason": user_speech, "amount": amount})
+            executed_tools.append(tool_res)
+            reply = tool_res.get("message", f"Escalation ticket {tool_res.get('ticket_id', 'ESC-0000')} created. A representative will contact you shortly.")
+
+        # 2. Invoice Aging & Overdue status
+        elif any(k in lower_text for k in ("overdue", "how late", "how many days", "when was it due", "due date", "days late", "days overdue")):
+            tool_res = execute_tool("get_invoice_aging", {"customer_id": customer_id})
+            executed_tools.append(tool_res)
+            days = tool_res.get("days_overdue", 0)
+            bucket = tool_res.get("aging_bucket", "Current")
+            amt = tool_res.get("amount_inr", amount)
+            reply = f"Your invoice of ₹{amt:,.2f} is **{days} days overdue** ({bucket}). I can help you settle now with a 1-click payment link or schedule a future date."
+
+        # 3. Past Payment History
+        elif any(k in lower_text for k in ("history", "past payment", "what have i paid", "previous", "last payment", "my payments", "payment record")):
+            tool_res = execute_tool("get_payment_history", {"customer_id": customer_id, "limit": 10})
+            executed_tools.append(tool_res)
+            records = tool_res.get("records", [])
+            if records:
+                lines = "\n".join(f"• {r.get('date', 'N/A')}: ₹{r.get('amount_inr', 0):,.2f} — {r.get('outcome', 'N/A')} ({r.get('channel', 'N/A')})" for r in records[:5])
+                reply = f"**Your Payment History (last {len(records)} records):**\n{lines}\n\n**Total settled:** ₹{tool_res.get('total_paid_inr', 0):,.2f}"
+            else:
+                reply = "No payment history found for your account. Please contact support if you believe this is incorrect."
+
+        # 4. Subscription Plan Details
+        elif any(k in lower_text for k in ("plan", "subscription", "what am i on", "my plan", "account active", "renew", "tier")):
+            tool_res = execute_tool("get_subscription_plan_details", {"customer_id": customer_id})
+            executed_tools.append(tool_res)
+            reply = tool_res.get("message", f"Your subscription details: Plan {tool_res.get('plan_name', 'Starter Plus')}, ₹{tool_res.get('amount_inr', 4999):,.2f}/{tool_res.get('billing_cycle', 'Monthly')}.")
+
+        # 5. Settlement Concession Discount
+        elif any(k in lower_text for k in ("discount", "concession", "5%", "offer", "waive", "less")):
             tool_res = execute_tool("apply_concession_discount", {"discount_percent": 5, "reason": "Customer requested settlement concession"})
             executed_tools.append(tool_res)
             updated_amount = round(amount * 0.95)
             reply = f"I have applied a 5% settlement concession for you! Your updated payable total is ₹{updated_amount:,.2f}. Would you like the 1-click Razorpay payment link?"
 
+        # 6. Promise-to-Pay Commitment
         elif any(k in lower_text for k in ("promise", "monday", "tomorrow", "friday", "pay on", "salary", "pause", "this friday", "next monday", "in 3 days", "in 7 days")):
-            # Extract the most specific date phrase from what the user actually said
             if "tomorrow" in lower_text:
                 promised_date = "Tomorrow"
             elif "this friday" in lower_text or ("friday" in lower_text and "next" not in lower_text):
@@ -575,40 +608,14 @@ def _run_sync_fallback_turn(
             executed_tools.append(tool_res)
             reply = f"Thank you! I have confirmed your Promise-to-Pay for **{promised_date}**. All automated outreach and reminders have been paused until then."
 
-        elif any(k in lower_text for k in ("link", "pay", "razorpay", "upi", "qr", "how")):
+        # 7. Payment Link Generation
+        elif any(k in lower_text for k in ("link", "send me the link", "pay link", "razorpay", "upi", "qr", "how to pay", "pay now")):
             tool_res = execute_tool("get_payment_link", {"customer_name": customer_name, "amount": amount, "event_id": f"evt_{customer_id}"})
             executed_tools.append(tool_res)
             dynamic_url = tool_res.get("payment_url") or f"https://rzp.io/i/{customer_id[-6:]}_{int(amount)}"
             reply = f"Here is your secure 1-click Razorpay payment link: {dynamic_url} (Payable: ₹{amount:,.2f})."
 
-        elif any(k in lower_text for k in ("human", "person", "agent", "manager", "representative", "speak to", "call me", "escalate", "frustrated", "someone")):
-            tool_res = execute_tool("escalate_to_human", {"customer_id": customer_id, "customer_name": customer_name, "reason": user_speech, "amount": amount})
-            executed_tools.append(tool_res)
-            reply = tool_res.get("message", f"Escalation ticket {tool_res.get('ticket_id', 'ESC-0000')} created. A representative will contact you shortly.")
-
-        elif any(k in lower_text for k in ("history", "past payment", "what have i paid", "previous", "last payment", "my payments", "payment record")):
-            tool_res = execute_tool("get_payment_history", {"customer_id": customer_id, "limit": 10})
-            executed_tools.append(tool_res)
-            records = tool_res.get("records", [])
-            if records:
-                lines = "\n".join(f"• {r.get('date', 'N/A')}: ₹{r.get('amount_inr', 0):,.2f} — {r.get('outcome', 'N/A')} ({r.get('channel', 'N/A')})" for r in records[:5])
-                reply = f"**Your Payment History (last {len(records)} records):**\n{lines}\n\n**Total settled:** ₹{tool_res.get('total_paid_inr', 0):,.2f}"
-            else:
-                reply = "No payment history found for your account. Please contact support if you believe this is incorrect."
-
-        elif any(k in lower_text for k in ("overdue", "how late", "how many days", "when was it due", "due date", "days late")):
-            tool_res = execute_tool("get_invoice_aging", {"customer_id": customer_id})
-            executed_tools.append(tool_res)
-            days = tool_res.get("days_overdue", 0)
-            bucket = tool_res.get("aging_bucket", "Current")
-            amt = tool_res.get("amount_inr", amount)
-            reply = f"Your invoice of ₹{amt:,.2f} is **{days} days overdue** ({bucket}). I can help you settle now with a 1-click payment link or schedule a future date."
-
-        elif any(k in lower_text for k in ("plan", "subscription", "what am i on", "my plan", "account active", "renew", "active", "tier")):
-            tool_res = execute_tool("get_subscription_plan_details", {"customer_id": customer_id})
-            executed_tools.append(tool_res)
-            reply = tool_res.get("message", f"Your subscription details: Plan {tool_res.get('plan_name', 'Starter Plus')}, ₹{tool_res.get('amount_inr', 4999):,.2f}/{tool_res.get('billing_cycle', 'Monthly')}.")
-
+        # 8. Customer Profile / Default fallback
         else:
             tool_res = execute_tool("get_customer_intelligence", {"customer_id": customer_id})
             executed_tools.append(tool_res)

@@ -154,13 +154,22 @@ MONTH_MAP = {
 }
 
 
+NON_MONTH_WORDS = {
+    "day", "days", "week", "weeks", "month", "months", "year", "years",
+    "hour", "hours", "tarikh", "time", "date", "morning", "evening", "afternoon",
+    "somwar", "mangalwar", "budhwar", "guruwar", "shukrawar", "shaniwar", "raviwar"
+}
+
+
 def resolve_month(token: str) -> Optional[int]:
     """Resolves exact or typo month names (e.g. 'januaury', 'janu', 'sepember') to month integer (1-12)."""
     import difflib
     t = token.lower().strip()
+    if t in NON_MONTH_WORDS:
+        return None
     if t in MONTH_MAP:
         return MONTH_MAP[t]
-    matches = difflib.get_close_matches(t, STANDARD_MONTH_NAMES, n=1, cutoff=0.55)
+    matches = difflib.get_close_matches(t, STANDARD_MONTH_NAMES, n=1, cutoff=0.75)
     if matches:
         return MONTH_MAP[matches[0]]
     return None
@@ -169,7 +178,7 @@ def resolve_month(token: str) -> Optional[int]:
 def validate_promised_date(date_str: str) -> tuple[bool, str]:
     """
     Robust calendar date validator handling typos, day bounds (1-31), zero/negative values,
-    and invalid dates (e.g. 31 September, 30 February).
+    relative durations ('in 3 days', 'in 7 days'), and invalid dates (e.g. 31 September, 30 February).
     Returns (is_valid, normalized_date_or_error_message).
     """
     import re
@@ -179,16 +188,27 @@ def validate_promised_date(date_str: str) -> tuple[bool, str]:
     if not clean or clean in ("0", "none", "null", "undefined", "rubbish", "garbage", "xyz", "abc", "asdf"):
         return False, "Unrecognized or empty date format."
 
-    # 1. Check relative date keywords (when no standalone conflicting numbers)
+    # 1. Handle relative durations with numbers (e.g. 'in 3 days', '7 days', 'in 2 weeks')
+    rel_num_match = re.search(r'(?:in\s+)?(\d+)\s+(day|days|week|weeks|month|months)', clean)
+    if rel_num_match:
+        n = int(rel_num_match.group(1))
+        unit = rel_num_match.group(2).rstrip('s')
+        if n <= 0:
+            return False, "Duration must be greater than 0."
+        unit_str = f"{unit}s" if n > 1 else unit
+        return True, f"In {n} {unit_str.title()}"
+
+    # 2. Check relative date keywords (when no standalone conflicting numbers)
     rel_keywords = [
         "today", "tomorrow", "tonight", "next", "monday", "tuesday", "wednesday",
         "thursday", "friday", "saturday", "sunday", "week", "month", "days", "kal", "parso",
-        "somwar", "mangalwar", "budhwar", "guruwar", "shukrawar", "shaniwar", "raviwar"
+        "somwar", "mangalwar", "budhwar", "guruwar", "shukrawar", "shaniwar", "raviwar",
+        "salary", "payday"
     ]
     if any(k in clean for k in rel_keywords) and not re.search(r'\d+', clean):
         return True, date_str.strip().title()
 
-    # 2. Check for numeric day + month name or month name + numeric day (e.g. '0 janu', '31 september', 'januaury 0', '15 oct')
+    # 3. Check for numeric day + month name or month name + numeric day (e.g. '0 janu', '31 september', 'januaury 0', '15 oct')
     m1 = re.search(r'(\d+)(?:st|nd|rd|th)?\s+(?:of\s+)?([a-zA-Z]+)', clean)
     m2 = re.search(r'([a-zA-Z]+)\s+(\d+)(?:st|nd|rd|th)?', clean)
 
