@@ -1,0 +1,119 @@
+{
+  "timestamp": 1788288756.4635406,
+  "total_test_cases": 10,
+  "classification_accuracy_pct": 100.0,
+  "action_match_pct": 60.0,
+  "cumulative_ev": 187465.55,
+  "results": [
+    {
+      "event_id": "evt_0401",
+      "ground_truth_category": "checkout_abandoned",
+      "predicted_category": "checkout_abandoned",
+      "ground_truth_action": "whatsapp",
+      "predicted_action": "do_nothing",
+      "channel_used": "none",
+      "expected_value": 867.43,
+      "classification_accuracy": 1.0,
+      "intervention_match": 0.0
+    },
+    {
+      "event_id": "evt_0402",
+      "ground_truth_category": "mandate_auth_failed",
+      "predicted_category": "mandate_auth_failed",
+      "ground_truth_action": "whatsapp",
+      "predicted_action": "whatsapp_mandate_afa_link",
+      "channel_used": "whatsapp",
+      "expected_value": 47933.15,
+      "classification_accuracy": 1.0,
+      "intervention_match": 1.0
+    },
+    {
+      "event_id": "evt_0403",
+      "ground_truth_category": "receivable_overdue",
+      "predicted_category": "receivable_overdue",
+      "ground_truth_action": "email",
+      "predicted_action": "email_ptp_request",
+      "channel_used": "email",
+      "expected_value": 10064.95,
+      "classification_accuracy": 1.0,
+      "intervention_match": 1.0
+    },
+    {
+      "event_id": "evt_0404",
+      "ground_truth_category": "checkout_abandoned",
+      "predicted_category": "checkout_abandoned",
+      "ground_truth_action": "email",
+      "predicted_action": "standard_cart_recovery",
+      "channel_used": "whatsapp",
+      "expected_value": 2696.66,
+      "classification_accuracy": 1.0,
+      "intervention_match": 0.0
+    },
+    {
+      "event_id": "evt_0405",
+      "ground_truth_category": "mandate_auth_failed",
+      "predicted_category": "mandate_auth_failed",
+      "ground_truth_action": "whatsapp",
+      "predicted_action": "whatsapp_mandate_afa_link",
+      "channel_used": "whatsapp",
+      "expected_value": 66253.02,
+      "classification_accuracy": 1.0,
+      "intervention_match": 1.0
+    },
+    {
+      "event_id": "evt_0406",
+      "ground_truth_category": "mandate_auth_failed",
+      "predicted_category": "mandate_auth_failed",
+      "ground_truth_action": "whatsapp",
+      "predicted_action": "whatsapp_mandate_afa_link",
+      "channel_used": "whatsapp",
+      "expected_value": 43598.85,
+      "classification_accuracy": 1.0,
+      "intervention_match": 1.0
+    },
+    {
+      "event_id": "evt_0407",
+      "ground_truth_category": "checkout_abandoned",
+      "predicted_category": "checkout_abandoned",
+      "ground_truth_action": "whatsapp",
+      "predicted_action": "standard_cart_recovery",
+      "channel_used": "whatsapp",
+      "expected_value": 2150.38,
+      "classification_accuracy": 1.0,
+      "intervention_match": 1.0
+    },
+    {
+      "event_id": "evt_0408",
+      "ground_truth_category": "promise_to_pay",
+      "predicted_category": "promise_to_pay",
+      "ground_truth_action": "whatsapp",
+      "predicted_action": "scheduled_reconciliation_check",
+      "channel_used": "scheduled_check",
+      "expected_value": 222.8,
+      "classification_accuracy": 1.0,
+      "intervention_match": 0.0
+    },
+    {
+      "event_id": "evt_0409",
+      "ground_truth_category": "checkout_abandoned",
+      "predicted_category": "checkout_abandoned",
+      "ground_truth_action": "whatsapp",
+      "predicted_action": "standard_cart_recovery",
+      "channel_used": "whatsapp",
+      "expected_value": 8338.6,
+      "classification_accuracy": 1.0,
+      "intervention_match": 1.0
+    },
+    {
+      "event_id": "evt_0410",
+      "ground_truth_category": "checkout_abandoned",
+      "predicted_category": "checkout_abandoned",
+      "ground_truth_action": "whatsapp",
+      "predicted_action": "do_nothing",
+      "channel_used": "none",
+      "expected_value": 5339.71,
+      "classification_accuracy": 1.0,
+      "intervention_match": 0.0
+    }
+  ]
+}
