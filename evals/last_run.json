@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-01T14:23:11.769462+00:00",
+  "timestamp": "2026-09-01T19:24:09.950566+00:00",
   "dataset": "evals/labeled_holdout.json",
   "n_events": 150,
   "total_at_risk_inr": 9750738.0,
@@ -46,30 +46,29 @@
     },
     "orchestrator": {
       "total_at_risk": 9750738.0,
-      "total_recovered": 3476471.0,
-      "recovery_rate_pct": 35.65,
-      "incremental_recovered_vs_organic": 1531218.0,
-      "total_contacts_made": 43,
-      "false_interventions": 4,
-      "total_cost": 38.45,
+      "total_recovered": 3123587.0,
+      "recovery_rate_pct": 32.03,
+      "incremental_recovered_vs_organic": 1178334.0,
+      "total_contacts_made": 35,
+      "false_interventions": 3,
+      "total_cost": 32.05,
       "cost_per_recovered_rupee": 1e-05,
       "duplicate_contacts": 0,
-      "escalations": 29,
-      "escalation_rate_pct": 19.33
+      "escalations": 26,
+      "escalation_rate_pct": 17.33
     },
     "counterfactual_hitl_approved": {
       "total_at_risk": 9750738.0,
-      "total_recovered": 7246091.0,
-      "recovery_rate_pct": 74.31,
-      "incremental_recovered_vs_organic": 5300838.0,
-      "total_contacts_made": 43,
-      "false_interventions": 4,
-      "total_cost": 38.45,
-      "cost_per_recovered_rupee": 1e-05,
+      "total_recovered": 6603207.0,
+      "recovery_rate_pct": 67.72,
+      "incremental_recovered_vs_organic": 4657954.0,
+      "total_contacts_made": 35,
+      "false_interventions": 3,
+      "total_cost": 32.05,
+      "cost_per_recovered_rupee": 0.0,
       "duplicate_contacts": 0,
-      "escalations": 29,
-      "escalation_rate_pct": 19.33
+      "escalations": 26,
+      "escalation_rate_pct": 17.33
     }
-  },
-  "classifier_accuracy_pct": 100.0
+  }
 }

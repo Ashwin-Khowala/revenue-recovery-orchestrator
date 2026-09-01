@@ -18,7 +18,8 @@ export type MainView =
   | 'b2b_receivables'
   | 'mandates_scheme'
   | 'ptp_forecast'
-  | 'decline_taxonomy';
+  | 'decline_taxonomy'
+  | 'exceptions';
 
 export type DrawerTab = 'overview' | 'ev_math' | 'telemetry' | 'audit';
 

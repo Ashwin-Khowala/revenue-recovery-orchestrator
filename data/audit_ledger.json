@@ -1,350 +1,542 @@
 [
   {
-    "timestamp": "2026-09-01T14:25:05.236406+00:00",
-    "event_id": "evt_001",
-    "node_name": "memory_enrichment",
-    "action_taken": "Priors Loaded",
-    "details": {
-      "reliability": 0.95
-    },
-    "reasoning": "",
-    "prev_entry_hash": "GENESIS",
-    "entry_hash": "3984e902cd28056ee74d966486b98728ef6506a0dcf976328020238852a912d7"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:05.238613+00:00",
-    "event_id": "evt_001",
-    "node_name": "classify_root_cause",
-    "action_taken": "Diagnosed subscription_failed",
-    "details": {
-      "confidence": 0.98
-    },
-    "reasoning": "",
-    "prev_entry_hash": "3984e902cd28056ee74d966486b98728ef6506a0dcf976328020238852a912d7",
-    "entry_hash": "bfbdfdb971d8c9616903a043e6a4fb1e0d5ebf4e118391f177db8229421b82bc"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:05.266524+00:00",
-    "event_id": "evt_001",
+    "timestamp": "2026-09-01T19:24:07.714748+00:00",
+    "event_id": "adv_0022",
     "node_name": "score_policy_options",
-    "action_taken": "Ranked WhatsApp Payment Link",
+    "action_taken": "Chose whatsapp_followup (EV: \u20b94606.7)",
     "details": {
-      "ev": 4500.0
-    },
-    "reasoning": "",
-    "prev_entry_hash": "bfbdfdb971d8c9616903a043e6a4fb1e0d5ebf4e118391f177db8229421b82bc",
-    "entry_hash": "8871854638fc478c34ad664701878736f4c128420f7da875805640c733b72b9b"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:05.287613+00:00",
-    "event_id": "evt_001",
-    "node_name": "check_guardrails",
-    "action_taken": "Guardrail ALLOW (RULE_ALL_GUARDRAILS_PASSED)",
-    "details": {
-      "result": "ALLOW"
-    },
-    "reasoning": "",
-    "prev_entry_hash": "8871854638fc478c34ad664701878736f4c128420f7da875805640c733b72b9b",
-    "entry_hash": "d5ae7f430c8337399e68c7e6433e1e395d11d3c295ba123cd9100d793402c050"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:05.311638+00:00",
-    "event_id": "evt_002",
-    "node_name": "memory_enrichment",
-    "action_taken": "Priors Loaded",
-    "details": {
-      "reliability": 0.8
-    },
-    "reasoning": "",
-    "prev_entry_hash": "d5ae7f430c8337399e68c7e6433e1e395d11d3c295ba123cd9100d793402c050",
-    "entry_hash": "5edaccab53baffd19b554c3efaecb587592d7cdca88915aef6fb117523aedb64"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:05.335909+00:00",
-    "event_id": "evt_002",
-    "node_name": "check_guardrails",
-    "action_taken": "Guardrail BLOCK",
-    "details": {
-      "result": "BLOCK"
-    },
-    "reasoning": "",
-    "prev_entry_hash": "5edaccab53baffd19b554c3efaecb587592d7cdca88915aef6fb117523aedb64",
-    "entry_hash": "c748534c0362e5e56c96ed9f93f0f796250ed8932fbbc8ed3eff438a9ee2a7ce"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:05.363373+00:00",
-    "event_id": "evt_003",
-    "node_name": "executor",
-    "action_taken": "WhatsApp Sent",
-    "details": {
-      "status": "delivered"
-    },
-    "reasoning": "",
-    "prev_entry_hash": "c748534c0362e5e56c96ed9f93f0f796250ed8932fbbc8ed3eff438a9ee2a7ce",
-    "entry_hash": "2f78f051b50c1861fcc93f1f985490800aabe587f3976e7937de52a797376534"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:05.402210+00:00",
-    "event_id": "evt_storage_test_001",
-    "node_name": "memory_enrichment",
-    "action_taken": "Priors Loaded",
-    "details": {
-      "reliability": 0.9
-    },
-    "reasoning": "",
-    "prev_entry_hash": "2f78f051b50c1861fcc93f1f985490800aabe587f3976e7937de52a797376534",
-    "entry_hash": "c82e26f9a498de2c52585de7a873e4104e62fddc1681af866a682e4e847e713b"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:05.422712+00:00",
-    "event_id": "evt_storage_test_001",
-    "node_name": "check_guardrails",
-    "action_taken": "Guardrail ALLOW",
-    "details": {
-      "result": "ALLOW"
-    },
-    "reasoning": "",
-    "prev_entry_hash": "c82e26f9a498de2c52585de7a873e4104e62fddc1681af866a682e4e847e713b",
-    "entry_hash": "64dec3c10de4e5a4d11abdad65d67786188e970929be57cb15d1ef0d7610fcdf"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:40.685111+00:00",
-    "event_id": "evt_stop_01",
-    "node_name": "check_guardrails",
-    "action_taken": "Guardrail ESCALATE (RULE_MAX_CONTACT_FREQUENCY_EXCEEDED)",
-    "details": {
-      "rule": "RULE_MAX_CONTACT_FREQUENCY_EXCEEDED",
-      "result": "ESCALATE",
-      "total_contacts": 4
-    },
-    "reasoning": "Customer has already received 4 outreach attempts (limit=2). Escalating to human.",
-    "prev_entry_hash": "64dec3c10de4e5a4d11abdad65d67786188e970929be57cb15d1ef0d7610fcdf",
-    "entry_hash": "10afee377d292493e143a24ce8d7fb0d7d15335a0285b1bb8f97d06ea0e74991"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:43.014605+00:00",
-    "event_id": "evt_stop_03",
-    "node_name": "check_guardrails",
-    "action_taken": "Guardrail ESCALATE (RULE_HIGH_VALUE_THRESHOLD_ESCALATION)",
-    "details": {
-      "rule": "RULE_HIGH_VALUE_THRESHOLD_ESCALATION",
-      "result": "ESCALATE",
-      "amount": 145000.0
-    },
-    "reasoning": "Amount \u20b9145,000.00 >= \u20b9100,000.00. High financial impact requires Human-In-The-Loop approval.",
-    "prev_entry_hash": "10afee377d292493e143a24ce8d7fb0d7d15335a0285b1bb8f97d06ea0e74991",
-    "entry_hash": "ed1081718f7d6416fc38562e8a58a931308da7c20c07cb0dc092b99ea31679dc"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:43.025815+00:00",
-    "event_id": "evt_stop_04",
-    "node_name": "execute_action",
-    "action_taken": "Silent Route Rerouted",
-    "details": {
-      "status": "rerouted",
-      "primary_route": "axis_bank_degraded",
-      "backup_route": "hdfc_smart_gateway_v2",
-      "backoff_delay_sec": 300,
-      "merchant_alert": "Route degraded. Auto-switched to HDFC secondary route. Zero customer contact."
-    },
-    "reasoning": "Silent payment route rerouted to secondary gateway without customer outreach.",
-    "prev_entry_hash": "ed1081718f7d6416fc38562e8a58a931308da7c20c07cb0dc092b99ea31679dc",
-    "entry_hash": "e787a762e274d4f3cf009e0026abbf83bfd9edeb8b2fa3d53445395913580a38"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:43.078136+00:00",
-    "event_id": "evt_stop_05",
-    "node_name": "execute_action",
-    "action_taken": "PTP Scheduled Check Created",
-    "details": {
-      "status": "scheduled",
-      "promised_date": "2026-09-03",
-      "action": "Outreach paused until promised date."
-    },
-    "reasoning": "Promise-to-pay registered for 2026-09-03. Outreach paused.",
-    "prev_entry_hash": "e787a762e274d4f3cf009e0026abbf83bfd9edeb8b2fa3d53445395913580a38",
-    "entry_hash": "979ca36801ca134fdad29eddd346a56b072956997c016fa1bcbb8d9c96b04f89"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:43.111854+00:00",
-    "event_id": "optout_+919820199999",
-    "node_name": "consent_registry",
-    "action_taken": "OMNICHANNEL_OPT_OUT_REGISTERED",
-    "details": {
-      "identifier": "+919820199999",
-      "source_channel": "sms",
-      "reason": "User texted STOP",
-      "status": "PERMANENT_OPT_OUT",
-      "opted_out_at": "2026-09-01T14:25:43.109579+00:00"
-    },
-    "reasoning": "Permanent opt-out recorded from channel 'sms'. All future recovery outreach permanently blocked.",
-    "prev_entry_hash": "979ca36801ca134fdad29eddd346a56b072956997c016fa1bcbb8d9c96b04f89",
-    "entry_hash": "2c2c3db5dafac32bf9ee60570869dc179f8ac2b251d403ea1ad02099219d68ec"
-  },
-  {
-    "timestamp": "2026-09-01T14:25:43.147264+00:00",
-    "event_id": "evt_stop_07",
-    "node_name": "execute_action",
-    "action_taken": "Email Recovery Dispatched (Razorpay Link)",
-    "details": {
-      "email_result": {
-        "success": true,
-        "channel": "email",
-        "message_id": "sim_email_customer_999",
-        "recipient": "customer@example.com",
-        "status": "delivered_simulated",
-        "error": null
+      "chosen_action": {
+        "action_type": "whatsapp_followup",
+        "target_channel": "whatsapp",
+        "description": "Send a polite WhatsApp reminder with invoice summary and quick payment link, leveraging moderate channel effectiveness.",
+        "cost": 0.8,
+        "p_recovery": 0.1849,
+        "gross_expected_recovery": 4622.5,
+        "friction_penalty": 15.0,
+        "risk_penalty": 0.0,
+        "expected_value": 4606.7
       },
-      "payment_link": "https://rzp.io/i/vtstop07",
-      "payment_link_id": "plink_eval_vtstop07"
+      "all_scored_candidates": [
+        {
+          "action_type": "whatsapp_followup",
+          "target_channel": "whatsapp",
+          "description": "Send a polite WhatsApp reminder with invoice summary and quick payment link, leveraging moderate channel effectiveness.",
+          "cost": 0.8,
+          "p_recovery": 0.1849,
+          "gross_expected_recovery": 4622.5,
+          "friction_penalty": 15.0,
+          "risk_penalty": 0.0,
+          "expected_value": 4606.7
+        },
+        {
+          "action_type": "email_ptp_request",
+          "target_channel": "email",
+          "description": "Send a concise payment reminder with a Promise-to-Pay request and a clear settlement date option.",
+          "cost": 0.05,
+          "p_recovery": 0.1657,
+          "gross_expected_recovery": 4142.5,
+          "friction_penalty": 15.0,
+          "risk_penalty": 0.0,
+          "expected_value": 4127.45
+        },
+        {
+          "action_type": "do_nothing",
+          "target_channel": "none",
+          "description": "Allow natural recovery to occur without additional outreach, evaluating baseline payment probability.",
+          "cost": 0.0,
+          "p_recovery": 0.0996,
+          "gross_expected_recovery": 2490.0,
+          "friction_penalty": 0.0,
+          "risk_penalty": 0.0,
+          "expected_value": 2490.0
+        },
+        {
+          "action_type": "voice_followup",
+          "target_channel": "voice",
+          "description": "Place a human or voice AI call if email/WhatsApp do not elicit a response, given elevated aging.",
+          "cost": 0.0,
+          "p_recovery": 0.0956,
+          "gross_expected_recovery": 2390.0,
+          "friction_penalty": 15.0,
+          "risk_penalty": 0.0,
+          "expected_value": 2375.0
+        }
+      ]
     },
-    "reasoning": "Direct email recovery link delivered to customer@example.com.",
-    "prev_entry_hash": "2c2c3db5dafac32bf9ee60570869dc179f8ac2b251d403ea1ad02099219d68ec",
-    "entry_hash": "800c82bf7c37b260e2441c76143a362bc41d35d13d9462b5048ac947da83f883"
+    "reasoning": "Selected 'whatsapp_followup' via whatsapp with highest Net EV = \u20b94606.70 (P(rec)=0.18, Gross=\u20b94622.50, Friction=\u20b915.00).",
+    "prev_entry_hash": "9a66bc8983226859a1cb5b04042285116bca956c1fa0134b176fd3e310464e58",
+    "entry_hash": "35561553883a4d679c9e5733c85d9cda0f73c88b64feb291f2f9f8981c059b43"
   },
   {
-    "timestamp": "2026-09-01T14:25:43.220778+00:00",
-    "event_id": "evt_stop_08",
-    "node_name": "execute_action",
-    "action_taken": "Telegram Send Failed (No Linked Account)",
-    "details": {
-      "customer_id": "cust_stop_08",
-      "tg_sent": false,
-      "payment_link": "https://rzp.io/i/vtstop08",
-      "language": "english",
-      "discount_applied": 0.0
-    },
-    "reasoning": "Proactive Telegram recovery dispatched to customer cust_stop_08 (chat_id resolved from DB).",
-    "prev_entry_hash": "800c82bf7c37b260e2441c76143a362bc41d35d13d9462b5048ac947da83f883",
-    "entry_hash": "e66af8e33236ea1fc96d4765f2d60900e7d300ee2f534c110ce4f31bbb0162fe"
-  },
-  {
-    "timestamp": "2026-09-01T14:26:27.596289+00:00",
-    "event_id": "evt_stop_01",
+    "timestamp": "2026-09-01T19:24:07.727635+00:00",
+    "event_id": "adv_0022",
     "node_name": "check_guardrails",
-    "action_taken": "Guardrail ESCALATE (RULE_MAX_CONTACT_FREQUENCY_EXCEEDED)",
+    "action_taken": "Guardrail BLOCK (RULE_MERCHANT_POLICY_CHANNEL_PROHIBITED)",
     "details": {
-      "rule": "RULE_MAX_CONTACT_FREQUENCY_EXCEEDED",
-      "result": "ESCALATE",
-      "total_contacts": 4
+      "rule": "RULE_MERCHANT_POLICY_CHANNEL_PROHIBITED",
+      "result": "BLOCK",
+      "channel": "whatsapp",
+      "allowed": [
+        "email"
+      ]
     },
-    "reasoning": "Customer has already received 4 outreach attempts (limit=2). Escalating to human.",
-    "prev_entry_hash": "e66af8e33236ea1fc96d4765f2d60900e7d300ee2f534c110ce4f31bbb0162fe",
-    "entry_hash": "2a18c0320aedf5ec8bcd4c992e9270c5308e162d2d085d37b9c6b231d109b44e"
+    "reasoning": "Channel 'whatsapp' is prohibited under merchant policy for merch_02 (allowed: ['email']).",
+    "prev_entry_hash": "35561553883a4d679c9e5733c85d9cda0f73c88b64feb291f2f9f8981c059b43",
+    "entry_hash": "b12ef271a1703a7ae7debdc387cc63411986c1777a7c9c2cc783e3f9d13607b2"
   },
   {
-    "timestamp": "2026-09-01T14:26:27.606383+00:00",
-    "event_id": "evt_stop_03",
-    "node_name": "check_guardrails",
-    "action_taken": "Guardrail ESCALATE (RULE_HIGH_VALUE_THRESHOLD_ESCALATION)",
-    "details": {
-      "rule": "RULE_HIGH_VALUE_THRESHOLD_ESCALATION",
-      "result": "ESCALATE",
-      "amount": 145000.0
-    },
-    "reasoning": "Amount \u20b9145,000.00 >= \u20b9100,000.00. High financial impact requires Human-In-The-Loop approval.",
-    "prev_entry_hash": "2a18c0320aedf5ec8bcd4c992e9270c5308e162d2d085d37b9c6b231d109b44e",
-    "entry_hash": "b9299d90f151c09ebfe9a5845bbca6de64d964e4dd58d40f78482846477dd751"
-  },
-  {
-    "timestamp": "2026-09-01T14:26:27.639283+00:00",
-    "event_id": "evt_stop_04",
+    "timestamp": "2026-09-01T19:24:07.738865+00:00",
+    "event_id": "adv_0022",
     "node_name": "execute_action",
-    "action_taken": "Silent Route Rerouted",
+    "action_taken": "No Action Taken (Passive)",
     "details": {
-      "status": "rerouted",
-      "primary_route": "axis_bank_degraded",
-      "backup_route": "hdfc_smart_gateway_v2",
-      "backoff_delay_sec": 300,
-      "merchant_alert": "Route degraded. Auto-switched to HDFC secondary route. Zero customer contact."
+      "action_type": "whatsapp_followup",
+      "guardrail_result": "BLOCK"
     },
-    "reasoning": "Silent payment route rerouted to secondary gateway without customer outreach.",
-    "prev_entry_hash": "b9299d90f151c09ebfe9a5845bbca6de64d964e4dd58d40f78482846477dd751",
-    "entry_hash": "16c8d787141d2ea60dba2c33279edc99b08066e8fcfbfb447be5c0924dac4d75"
+    "reasoning": "Execution bypassed: guardrail_result=BLOCK, action=whatsapp_followup",
+    "prev_entry_hash": "b12ef271a1703a7ae7debdc387cc63411986c1777a7c9c2cc783e3f9d13607b2",
+    "entry_hash": "d91ad99a7769f4000a68379e1767e4e46b146fcaf19833b12018dd1c872e2d8d"
   },
   {
-    "timestamp": "2026-09-01T14:26:27.667414+00:00",
-    "event_id": "evt_stop_05",
-    "node_name": "execute_action",
-    "action_taken": "PTP Scheduled Check Created",
+    "timestamp": "2026-09-01T19:24:07.749221+00:00",
+    "event_id": "adv_0022",
+    "node_name": "outcome_tracker",
+    "action_taken": "Outcome: BLOCKED",
     "details": {
-      "status": "scheduled",
-      "promised_date": "2026-09-03",
-      "action": "Outreach paused until promised date."
+      "status": "blocked",
+      "recovered_amount": 0.0
     },
-    "reasoning": "Promise-to-pay registered for 2026-09-03. Outreach paused.",
-    "prev_entry_hash": "16c8d787141d2ea60dba2c33279edc99b08066e8fcfbfb447be5c0924dac4d75",
-    "entry_hash": "2e50126526bc7f5e8f520e26fbc694437231707980863412aad855c0488c0a9b"
+    "reasoning": "Workflow blocked by safety/compliance guardrails.",
+    "prev_entry_hash": "d91ad99a7769f4000a68379e1767e4e46b146fcaf19833b12018dd1c872e2d8d",
+    "entry_hash": "195384132682331045b3036f2714d849d8a3b0c7aa7b881477a5b16c3ea804a8"
   },
   {
-    "timestamp": "2026-09-01T14:26:27.698104+00:00",
-    "event_id": "optout_+919820199999",
-    "node_name": "consent_registry",
-    "action_taken": "OMNICHANNEL_OPT_OUT_REGISTERED",
+    "timestamp": "2026-09-01T19:24:08.727977+00:00",
+    "event_id": "adv_0045",
+    "node_name": "classify_root_cause",
+    "action_taken": "Classified as promise_to_pay (LLM)",
     "details": {
-      "identifier": "+919820199999",
-      "source_channel": "sms",
-      "reason": "User texted STOP",
-      "status": "PERMANENT_OPT_OUT",
-      "opted_out_at": "2026-09-01T14:26:27.696765+00:00"
+      "root_cause": "promise_to_pay",
+      "confidence": 0.99,
+      "candidate_actions": [
+        {
+          "action_type": "do_nothing",
+          "target_channel": "none",
+          "cost": 0.0,
+          "description": "Pause all outreach until promised pay date plus 24 hours; rely on natural recovery and avoid friction due to explicit promise and opt-out."
+        },
+        {
+          "action_type": "scheduled_reconciliation_check",
+          "target_channel": "scheduled_check",
+          "cost": 0.0,
+          "description": "Schedule an automated payment status check for 24 hours after the promised date to verify settlement before any further action."
+        }
+      ]
     },
-    "reasoning": "Permanent opt-out recorded from channel 'sms'. All future recovery outreach permanently blocked.",
-    "prev_entry_hash": "2e50126526bc7f5e8f520e26fbc694437231707980863412aad855c0488c0a9b",
-    "entry_hash": "c85afcd7e6b3c8ed1746920fb354504f9e4375ff0732b65f7a731fc4e3b53558"
+    "reasoning": "Customer explicitly confirmed a future settlement date aligned to next salary date, which matches the promise_to_pay category. Historical promise accuracy is very high (0.976), risk score is low, and the amount is modest. Because opt_out is true, outreach should be suppressed until the promised date plus 24 hours, then a reconciliation check can be performed if unpaid.",
+    "prev_entry_hash": "195384132682331045b3036f2714d849d8a3b0c7aa7b881477a5b16c3ea804a8",
+    "entry_hash": "ef14fc7ec6eda2493e2237e35d3c6a016c5ce45d5e68c6ffd0eb94eeea2c101e"
   },
   {
-    "timestamp": "2026-09-01T14:26:27.729930+00:00",
-    "event_id": "evt_stop_07",
-    "node_name": "execute_action",
-    "action_taken": "Email Recovery Dispatched (Razorpay Link)",
+    "timestamp": "2026-09-01T19:24:08.732049+00:00",
+    "event_id": "adv_0045",
+    "node_name": "score_policy_options",
+    "action_taken": "Chose scheduled_reconciliation_check (EV: \u20b91785.11)",
     "details": {
-      "email_result": {
-        "success": true,
-        "channel": "email",
-        "message_id": "sim_email_customer_999",
-        "recipient": "customer@example.com",
-        "status": "delivered_simulated",
-        "error": null
+      "chosen_action": {
+        "action_type": "scheduled_reconciliation_check",
+        "target_channel": "scheduled_check",
+        "description": "Schedule an automated payment status check for 24 hours after the promised date to verify settlement before any further action.",
+        "cost": 0.0,
+        "p_recovery": 0.893,
+        "gross_expected_recovery": 1785.11,
+        "friction_penalty": 0.0,
+        "risk_penalty": 0.0,
+        "expected_value": 1785.11
       },
-      "payment_link": "https://rzp.io/i/vtstop07",
-      "payment_link_id": "plink_eval_vtstop07"
+      "all_scored_candidates": [
+        {
+          "action_type": "scheduled_reconciliation_check",
+          "target_channel": "scheduled_check",
+          "description": "Schedule an automated payment status check for 24 hours after the promised date to verify settlement before any further action.",
+          "cost": 0.0,
+          "p_recovery": 0.893,
+          "gross_expected_recovery": 1785.11,
+          "friction_penalty": 0.0,
+          "risk_penalty": 0.0,
+          "expected_value": 1785.11
+        },
+        {
+          "action_type": "do_nothing",
+          "target_channel": "none",
+          "description": "Pause all outreach until promised pay date plus 24 hours; rely on natural recovery and avoid friction due to explicit promise and opt-out.",
+          "cost": 0.0,
+          "p_recovery": 0.3502,
+          "gross_expected_recovery": 700.05,
+          "friction_penalty": 0.0,
+          "risk_penalty": 0.0,
+          "expected_value": 700.05
+        }
+      ]
     },
-    "reasoning": "Direct email recovery link delivered to customer@example.com.",
-    "prev_entry_hash": "c85afcd7e6b3c8ed1746920fb354504f9e4375ff0732b65f7a731fc4e3b53558",
-    "entry_hash": "eb804167b2857a7080c6bb38ff71531c5f2359b58141667dcadafe0feca90cef"
+    "reasoning": "Selected 'scheduled_reconciliation_check' via scheduled_check with highest Net EV = \u20b91785.11 (P(rec)=0.89, Gross=\u20b91785.11, Friction=\u20b90.00).",
+    "prev_entry_hash": "ef14fc7ec6eda2493e2237e35d3c6a016c5ce45d5e68c6ffd0eb94eeea2c101e",
+    "entry_hash": "26565d2df3c6fc296230d4f31a5c03dd052cacf0f83ba6adf360dc15cf60a083"
   },
   {
-    "timestamp": "2026-09-01T14:26:27.775225+00:00",
-    "event_id": "evt_stop_08",
-    "node_name": "execute_action",
-    "action_taken": "Telegram Send Failed (No Linked Account)",
+    "timestamp": "2026-09-01T19:24:08.753231+00:00",
+    "event_id": "adv_0045",
+    "node_name": "check_guardrails",
+    "action_taken": "Guardrail BLOCK (RULE_OPT_OUT_ENFORCED)",
     "details": {
-      "customer_id": "cust_stop_08",
-      "tg_sent": false,
-      "payment_link": "https://rzp.io/i/vtstop08",
-      "language": "english",
-      "discount_applied": 0.0
+      "rule": "RULE_OPT_OUT_ENFORCED",
+      "result": "BLOCK",
+      "reason": "Customer explicitly opted out of recovery communications. All outreach blocked across all channels."
     },
-    "reasoning": "Proactive Telegram recovery dispatched to customer cust_stop_08 (chat_id resolved from DB).",
-    "prev_entry_hash": "eb804167b2857a7080c6bb38ff71531c5f2359b58141667dcadafe0feca90cef",
-    "entry_hash": "fa332419ec0989333d08223611c3024c4041ed842af2be163910a024c192d939"
+    "reasoning": "Customer explicitly opted out of recovery communications. All outreach blocked across all channels.",
+    "prev_entry_hash": "26565d2df3c6fc296230d4f31a5c03dd052cacf0f83ba6adf360dc15cf60a083",
+    "entry_hash": "d5c7b5203fa1919eac7639ff035f1d04df6ae49e4a2218268c894e58bca11361"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.173593+00:00",
+    "timestamp": "2026-09-01T19:24:08.772647+00:00",
+    "event_id": "adv_0045",
+    "node_name": "execute_action",
+    "action_taken": "No Action Taken (Passive)",
+    "details": {
+      "action_type": "scheduled_reconciliation_check",
+      "guardrail_result": "BLOCK"
+    },
+    "reasoning": "Execution bypassed: guardrail_result=BLOCK, action=scheduled_reconciliation_check",
+    "prev_entry_hash": "d5c7b5203fa1919eac7639ff035f1d04df6ae49e4a2218268c894e58bca11361",
+    "entry_hash": "2314a6bd0068db0a08de779057c9c97fd59d6a13b980907619e188c62fdf0a9c"
+  },
+  {
+    "timestamp": "2026-09-01T19:24:08.790287+00:00",
+    "event_id": "adv_0045",
+    "node_name": "outcome_tracker",
+    "action_taken": "Outcome: BLOCKED",
+    "details": {
+      "status": "blocked",
+      "recovered_amount": 0.0
+    },
+    "reasoning": "Workflow blocked by safety/compliance guardrails.",
+    "prev_entry_hash": "2314a6bd0068db0a08de779057c9c97fd59d6a13b980907619e188c62fdf0a9c",
+    "entry_hash": "d727e9c0b0aac3dcd46b66b2a4faee6bddd79e22d9c53879d1dc09d4828e1557"
+  },
+  {
+    "timestamp": "2026-09-01T19:24:09.663722+00:00",
+    "event_id": "adv_0040",
+    "node_name": "classify_root_cause",
+    "action_taken": "Classified as receivable_overdue (LLM)",
+    "details": {
+      "root_cause": "receivable_overdue",
+      "confidence": 0.91,
+      "candidate_actions": [
+        {
+          "action_type": "do_nothing",
+          "target_channel": "none",
+          "cost": 0.0,
+          "description": "Evaluate natural recovery probability without outreach, given no prior contacts and customer opt-out status."
+        },
+        {
+          "action_type": "email_ptp_request",
+          "target_channel": "email",
+          "cost": 0.05,
+          "description": "Send a minimal, compliant payment reminder with a request to confirm a promise-to-pay date."
+        },
+        {
+          "action_type": "email_invoice_reminder",
+          "target_channel": "email",
+          "cost": 0.05,
+          "description": "Send a polite overdue invoice reminder referencing INV-2026-9040 and payment instructions."
+        },
+        {
+          "action_type": "voice_followup",
+          "target_channel": "voice",
+          "cost": 2.5,
+          "description": "Escalate to a voice follow-up only if email fails and contact policy permits, due to medium tolerance and high invoice value."
+        }
+      ]
+    },
+    "reasoning": "This is a B2B invoice overdue incident: amount is high (\u20b9500,000), terms are Net 30, and the invoice is 20 days past due. Customer risk score is moderate-low (0.307) with decent historical payment success and average lateness of only 4.4 days, which suggests delay rather than distress. There is no evidence of a commercial dispute or missing PO, and no prior contacts have been made. Since opt_out is true, outreach should be minimized and limited to compliant, low-friction channels. The most likely sub-type is cashflow delay rather than dispute or credit distress.",
+    "prev_entry_hash": "d727e9c0b0aac3dcd46b66b2a4faee6bddd79e22d9c53879d1dc09d4828e1557",
+    "entry_hash": "187ca38fc2531f580e5fdbf5d5c82ba922ff1119452dbb047d1eaccfb67518ef"
+  },
+  {
+    "timestamp": "2026-09-01T19:24:09.668474+00:00",
+    "event_id": "adv_0040",
+    "node_name": "score_policy_options",
+    "action_taken": "Chose email_ptp_request (EV: \u20b9263834.95)",
+    "details": {
+      "chosen_action": {
+        "action_type": "email_ptp_request",
+        "target_channel": "email",
+        "description": "Send a minimal, compliant payment reminder with a request to confirm a promise-to-pay date.",
+        "cost": 0.05,
+        "p_recovery": 0.5282,
+        "gross_expected_recovery": 264100.0,
+        "friction_penalty": 15.0,
+        "risk_penalty": 250.0,
+        "expected_value": 263834.95
+      },
+      "all_scored_candidates": [
+        {
+          "action_type": "email_ptp_request",
+          "target_channel": "email",
+          "description": "Send a minimal, compliant payment reminder with a request to confirm a promise-to-pay date.",
+          "cost": 0.05,
+          "p_recovery": 0.5282,
+          "gross_expected_recovery": 264100.0,
+          "friction_penalty": 15.0,
+          "risk_penalty": 250.0,
+          "expected_value": 263834.95
+        },
+        {
+          "action_type": "email_invoice_reminder",
+          "target_channel": "email",
+          "description": "Send a polite overdue invoice reminder referencing INV-2026-9040 and payment instructions.",
+          "cost": 0.05,
+          "p_recovery": 0.5282,
+          "gross_expected_recovery": 264100.0,
+          "friction_penalty": 15.0,
+          "risk_penalty": 250.0,
+          "expected_value": 263834.95
+        },
+        {
+          "action_type": "voice_followup",
+          "target_channel": "voice",
+          "description": "Escalate to a voice follow-up only if email fails and contact policy permits, due to medium tolerance and high invoice value.",
+          "cost": 0.0,
+          "p_recovery": 0.3047,
+          "gross_expected_recovery": 152350.0,
+          "friction_penalty": 15.0,
+          "risk_penalty": 0.0,
+          "expected_value": 152335.0
+        },
+        {
+          "action_type": "do_nothing",
+          "target_channel": "none",
+          "description": "Evaluate natural recovery probability without outreach, given no prior contacts and customer opt-out status.",
+          "cost": 0.0,
+          "p_recovery": 0.127,
+          "gross_expected_recovery": 63500.0,
+          "friction_penalty": 0.0,
+          "risk_penalty": 0.0,
+          "expected_value": 63500.0
+        }
+      ]
+    },
+    "reasoning": "Selected 'email_ptp_request' via email with highest Net EV = \u20b9263834.95 (P(rec)=0.53, Gross=\u20b9264100.00, Friction=\u20b915.00).",
+    "prev_entry_hash": "187ca38fc2531f580e5fdbf5d5c82ba922ff1119452dbb047d1eaccfb67518ef",
+    "entry_hash": "68cc3fbf2ef50bcbda2cd24a3514dcc06c7cf48fd5d136e30c34aa88f15e82d7"
+  },
+  {
+    "timestamp": "2026-09-01T19:24:09.692208+00:00",
+    "event_id": "adv_0040",
+    "node_name": "check_guardrails",
+    "action_taken": "Guardrail BLOCK (RULE_OPT_OUT_ENFORCED)",
+    "details": {
+      "rule": "RULE_OPT_OUT_ENFORCED",
+      "result": "BLOCK",
+      "reason": "Customer explicitly opted out of recovery communications. All outreach blocked across all channels."
+    },
+    "reasoning": "Customer explicitly opted out of recovery communications. All outreach blocked across all channels.",
+    "prev_entry_hash": "68cc3fbf2ef50bcbda2cd24a3514dcc06c7cf48fd5d136e30c34aa88f15e82d7",
+    "entry_hash": "9e2bdab2873423994e3b7ade989bd203b8a69b767fabbd4a979b770cd3beeb98"
+  },
+  {
+    "timestamp": "2026-09-01T19:24:09.719732+00:00",
+    "event_id": "adv_0040",
+    "node_name": "execute_action",
+    "action_taken": "No Action Taken (Passive)",
+    "details": {
+      "action_type": "email_ptp_request",
+      "guardrail_result": "BLOCK"
+    },
+    "reasoning": "Execution bypassed: guardrail_result=BLOCK, action=email_ptp_request",
+    "prev_entry_hash": "9e2bdab2873423994e3b7ade989bd203b8a69b767fabbd4a979b770cd3beeb98",
+    "entry_hash": "c9562c7d1a1bc36f39f415b7bfd76e084a54076110608876a9e7d4f7051b4c5a"
+  },
+  {
+    "timestamp": "2026-09-01T19:24:09.741488+00:00",
+    "event_id": "adv_0040",
+    "node_name": "outcome_tracker",
+    "action_taken": "Outcome: BLOCKED",
+    "details": {
+      "status": "blocked",
+      "recovered_amount": 0.0
+    },
+    "reasoning": "Workflow blocked by safety/compliance guardrails.",
+    "prev_entry_hash": "c9562c7d1a1bc36f39f415b7bfd76e084a54076110608876a9e7d4f7051b4c5a",
+    "entry_hash": "05c84d4c678e35f81f415e62295bf164b601aa86686ad7f8fc2dc1794ade8ab4"
+  },
+  {
+    "timestamp": "2026-09-01T19:24:09.857729+00:00",
+    "event_id": "adv_0043",
+    "node_name": "classify_root_cause",
+    "action_taken": "Classified as receivable_overdue (LLM)",
+    "details": {
+      "root_cause": "receivable_overdue",
+      "confidence": 0.91,
+      "candidate_actions": [
+        {
+          "action_type": "do_nothing",
+          "target_channel": "none",
+          "cost": 0.0,
+          "description": "Evaluate natural recovery probability without outreach friction; useful baseline given historically strong payment behavior."
+        },
+        {
+          "action_type": "whatsapp_ptp_request",
+          "target_channel": "whatsapp",
+          "cost": 0.8,
+          "description": "Send a Hinglish WhatsApp reminder requesting a Promise-to-Pay date and offering a quick payment confirmation path."
+        },
+        {
+          "action_type": "email_invoice_reminder",
+          "target_channel": "email",
+          "cost": 0.05,
+          "description": "Dispatch a concise invoice reminder with invoice details and payment link; low-cost secondary touch."
+        },
+        {
+          "action_type": "voice_followup",
+          "target_channel": "voice",
+          "cost": 2.5,
+          "description": "Use voice outreach only if WhatsApp/email do not elicit response, since voice has the highest effectiveness but higher cost."
+        }
+      ]
+    },
+    "reasoning": "This is a B2B invoice past Net 30 by 33 days, so it falls squarely under receivable overdue. The customer has no prior contacts, low risk score, strong historical payment success, and only modest lateness history, which argues against credit distress or a dispute. With no evidence of missing PO or billing mismatch, the most likely sub-type is cashflow delay rather than commercial dispute. Given the high LTV and good promise accuracy, a structured follow-up is viable.",
+    "prev_entry_hash": "05c84d4c678e35f81f415e62295bf164b601aa86686ad7f8fc2dc1794ade8ab4",
+    "entry_hash": "572a447f8060d91051b520c35f8dd757b8131fb5f36dee952e2f038015a75047"
+  },
+  {
+    "timestamp": "2026-09-01T19:24:09.879932+00:00",
+    "event_id": "adv_0043",
+    "node_name": "score_policy_options",
+    "action_taken": "Chose whatsapp_ptp_request (EV: \u20b995912.7)",
+    "details": {
+      "chosen_action": {
+        "action_type": "whatsapp_ptp_request",
+        "target_channel": "whatsapp",
+        "description": "Send a Hinglish WhatsApp reminder requesting a Promise-to-Pay date and offering a quick payment confirmation path.",
+        "cost": 0.8,
+        "p_recovery": 0.6633,
+        "gross_expected_recovery": 96178.5,
+        "friction_penalty": 15.0,
+        "risk_penalty": 250.0,
+        "expected_value": 95912.7
+      },
+      "all_scored_candidates": [
+        {
+          "action_type": "whatsapp_ptp_request",
+          "target_channel": "whatsapp",
+          "description": "Send a Hinglish WhatsApp reminder requesting a Promise-to-Pay date and offering a quick payment confirmation path.",
+          "cost": 0.8,
+          "p_recovery": 0.6633,
+          "gross_expected_recovery": 96178.5,
+          "friction_penalty": 15.0,
+          "risk_penalty": 250.0,
+          "expected_value": 95912.7
+        },
+        {
+          "action_type": "email_invoice_reminder",
+          "target_channel": "email",
+          "description": "Dispatch a concise invoice reminder with invoice details and payment link; low-cost secondary touch.",
+          "cost": 0.05,
+          "p_recovery": 0.5947,
+          "gross_expected_recovery": 86231.5,
+          "friction_penalty": 15.0,
+          "risk_penalty": 250.0,
+          "expected_value": 85966.45
+        },
+        {
+          "action_type": "voice_followup",
+          "target_channel": "voice",
+          "description": "Use voice outreach only if WhatsApp/email do not elicit response, since voice has the highest effectiveness but higher cost.",
+          "cost": 0.0,
+          "p_recovery": 0.3431,
+          "gross_expected_recovery": 49749.5,
+          "friction_penalty": 15.0,
+          "risk_penalty": 0.0,
+          "expected_value": 49734.5
+        },
+        {
+          "action_type": "do_nothing",
+          "target_channel": "none",
+          "description": "Evaluate natural recovery probability without outreach friction; useful baseline given historically strong payment behavior.",
+          "cost": 0.0,
+          "p_recovery": 0.1429,
+          "gross_expected_recovery": 20720.5,
+          "friction_penalty": 0.0,
+          "risk_penalty": 0.0,
+          "expected_value": 20720.5
+        }
+      ]
+    },
+    "reasoning": "Selected 'whatsapp_ptp_request' via whatsapp with highest Net EV = \u20b995912.70 (P(rec)=0.66, Gross=\u20b996178.50, Friction=\u20b915.00).",
+    "prev_entry_hash": "572a447f8060d91051b520c35f8dd757b8131fb5f36dee952e2f038015a75047",
+    "entry_hash": "3fe8610dc25aeea0a89978c32cff97a49df4a2ca4c70d0925a7c993eb4254f62"
+  },
+  {
+    "timestamp": "2026-09-01T19:24:09.898859+00:00",
+    "event_id": "adv_0043",
+    "node_name": "check_guardrails",
+    "action_taken": "Guardrail BLOCK (RULE_MERCHANT_POLICY_CHANNEL_PROHIBITED)",
+    "details": {
+      "rule": "RULE_MERCHANT_POLICY_CHANNEL_PROHIBITED",
+      "result": "BLOCK",
+      "channel": "whatsapp",
+      "allowed": [
+        "email"
+      ]
+    },
+    "reasoning": "Channel 'whatsapp' is prohibited under merchant policy for merch_02 (allowed: ['email']).",
+    "prev_entry_hash": "3fe8610dc25aeea0a89978c32cff97a49df4a2ca4c70d0925a7c993eb4254f62",
+    "entry_hash": "5d02345cf49350f6170cfa0721203ce75194655965b864fab9285dd0376ee481"
+  },
+  {
+    "timestamp": "2026-09-01T19:24:09.913497+00:00",
+    "event_id": "adv_0043",
+    "node_name": "execute_action",
+    "action_taken": "No Action Taken (Passive)",
+    "details": {
+      "action_type": "whatsapp_ptp_request",
+      "guardrail_result": "BLOCK"
+    },
+    "reasoning": "Execution bypassed: guardrail_result=BLOCK, action=whatsapp_ptp_request",
+    "prev_entry_hash": "5d02345cf49350f6170cfa0721203ce75194655965b864fab9285dd0376ee481",
+    "entry_hash": "9f787c76aaece3fc2ae54fe78888de3d88865aeada79a6e627413a0a24e29411"
+  },
+  {
+    "timestamp": "2026-09-01T19:24:09.929707+00:00",
+    "event_id": "adv_0043",
+    "node_name": "outcome_tracker",
+    "action_taken": "Outcome: BLOCKED",
+    "details": {
+      "status": "blocked",
+      "recovered_amount": 0.0
+    },
+    "reasoning": "Workflow blocked by safety/compliance guardrails.",
+    "prev_entry_hash": "9f787c76aaece3fc2ae54fe78888de3d88865aeada79a6e627413a0a24e29411",
+    "entry_hash": "07c0cb49decafd2999143f651085c6f0fd5cedd80eb877a48cdffa1ceb2ac2fd"
+  },
+  {
+    "timestamp": "2026-09-01T19:25:20.317326+00:00",
     "event_id": "evt_spam_guard_01",
     "node_name": "check_guardrails",
     "action_taken": "Guardrail ESCALATE (RULE_MAX_CONTACT_FREQUENCY_EXCEEDED)",
     "details": {
       "rule": "RULE_MAX_CONTACT_FREQUENCY_EXCEEDED",
       "result": "ESCALATE",
-      "total_contacts": 2
+      "total_contacts": 2,
+      "limit": 2
     },
-    "reasoning": "Customer has already received 2 outreach attempts (limit=2). Escalating to human.",
-    "prev_entry_hash": "fa332419ec0989333d08223611c3024c4041ed842af2be163910a024c192d939",
-    "entry_hash": "3672e25ef861da61ad278a81afcc0905eae4c5452007e9cdcaeffc9dde4e3b37"
+    "reasoning": "Customer has already received 2 outreach attempts (merchant limit=2). Escalating to human.",
+    "prev_entry_hash": "07c0cb49decafd2999143f651085c6f0fd5cedd80eb877a48cdffa1ceb2ac2fd",
+    "entry_hash": "53c60ace4ac951dc16338acc41fb6b74cb87ac2c3d56829477f3d38826eba0ed"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.186014+00:00",
+    "timestamp": "2026-09-01T19:25:20.327025+00:00",
     "event_id": "evt_llm_fail_deg",
     "node_name": "classify_root_cause",
     "action_taken": "Classified as payment_degraded (Decline Taxonomy / Rule Engine)",
@@ -370,11 +562,11 @@
       ]
     },
     "reasoning": "Deterministic match (gateway_timeout): Route degradation detected. Fault Domain: MERCHANT_SYSTEM. Customer must NOT be contacted.",
-    "prev_entry_hash": "3672e25ef861da61ad278a81afcc0905eae4c5452007e9cdcaeffc9dde4e3b37",
-    "entry_hash": "8455632ff2394a697a837a274ae44d6f9d5378f336cb9b00d2b62a93da78fe23"
+    "prev_entry_hash": "53c60ace4ac951dc16338acc41fb6b74cb87ac2c3d56829477f3d38826eba0ed",
+    "entry_hash": "f0f08c45b163968f5949715bc18f4677df799cb78c8e86f32e93fe62be5765a1"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.218987+00:00",
+    "timestamp": "2026-09-01T19:25:20.352123+00:00",
     "event_id": "evt_llm_fail_mandate",
     "node_name": "classify_root_cause",
     "action_taken": "Classified as mandate_auth_failed (Rule Engine)",
@@ -403,11 +595,11 @@
       ]
     },
     "reasoning": "Deterministic match: Mandate amount \u20b925000.0 > \u20b915,000 without RBI Additional Factor Authentication (AFA).",
-    "prev_entry_hash": "8455632ff2394a697a837a274ae44d6f9d5378f336cb9b00d2b62a93da78fe23",
-    "entry_hash": "f8d16980ad2d3b4181c73c8fae16711f73921503ab487e0b70d3384ae2da4d5e"
+    "prev_entry_hash": "f0f08c45b163968f5949715bc18f4677df799cb78c8e86f32e93fe62be5765a1",
+    "entry_hash": "5c6e9fd510b1184f803c4ce5f5abc4a4ff5719ba7c7bd0464e07ef82ad34ef37"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.251081+00:00",
+    "timestamp": "2026-09-01T19:25:20.383648+00:00",
     "event_id": "evt_race_test_01",
     "node_name": "outcome_tracker",
     "action_taken": "Action Cancelled (Payment Cleared Early)",
@@ -416,11 +608,11 @@
       "status": "cancelled_by_webhook"
     },
     "reasoning": "Payment captured proactively via self-service retry. Recovery action averted.",
-    "prev_entry_hash": "f8d16980ad2d3b4181c73c8fae16711f73921503ab487e0b70d3384ae2da4d5e",
-    "entry_hash": "046489a43d89a30b683526b9085536de74bd299dc8baada3571dcbc5ebe6f583"
+    "prev_entry_hash": "5c6e9fd510b1184f803c4ce5f5abc4a4ff5719ba7c7bd0464e07ef82ad34ef37",
+    "entry_hash": "125cd886b603b70a4cc2ddef8b821b7aca4a61aa85498e9fc46a28a08a2848d3"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.291434+00:00",
+    "timestamp": "2026-09-01T19:25:20.421967+00:00",
     "event_id": "evt_wa_fail_01",
     "node_name": "execute_action",
     "action_taken": "Email Recovery Dispatched (Failover)",
@@ -435,11 +627,11 @@
       "payment_link": "https://rzp.io/i/wafail01"
     },
     "reasoning": "WhatsApp failed. Cleanly failed over to Resend Email without duplicate messages.",
-    "prev_entry_hash": "046489a43d89a30b683526b9085536de74bd299dc8baada3571dcbc5ebe6f583",
-    "entry_hash": "445997e45862bfc93e94e97eb9c660f885b8e3621d4576fcbbac10ccd1e09b41"
+    "prev_entry_hash": "125cd886b603b70a4cc2ddef8b821b7aca4a61aa85498e9fc46a28a08a2848d3",
+    "entry_hash": "69cf69fd3a26e1d626e053e969c06bddd14f2187abbbe001accbbae5045e6ed1"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.345447+00:00",
+    "timestamp": "2026-09-01T19:25:20.450989+00:00",
     "event_id": "evt_001",
     "node_name": "memory_enrichment",
     "action_taken": "Priors Loaded",
@@ -447,11 +639,11 @@
       "reliability": 0.95
     },
     "reasoning": "",
-    "prev_entry_hash": "445997e45862bfc93e94e97eb9c660f885b8e3621d4576fcbbac10ccd1e09b41",
-    "entry_hash": "0d1ceb1d650d4fd6a2c6a55c525101e048a3a522795065b9df35638c6b190853"
+    "prev_entry_hash": "69cf69fd3a26e1d626e053e969c06bddd14f2187abbbe001accbbae5045e6ed1",
+    "entry_hash": "ddf16a359eba335a98169d091995047ee6dc8b491a583922b08d508faae599bd"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.380860+00:00",
+    "timestamp": "2026-09-01T19:25:20.473560+00:00",
     "event_id": "evt_001",
     "node_name": "classify_root_cause",
     "action_taken": "Diagnosed subscription_failed",
@@ -459,11 +651,11 @@
       "confidence": 0.98
     },
     "reasoning": "",
-    "prev_entry_hash": "0d1ceb1d650d4fd6a2c6a55c525101e048a3a522795065b9df35638c6b190853",
-    "entry_hash": "b852e046d2b34f728cbc4c5ef6246e5cff24c452bce0f2077369a69eeeee3825"
+    "prev_entry_hash": "ddf16a359eba335a98169d091995047ee6dc8b491a583922b08d508faae599bd",
+    "entry_hash": "edf53ad028799910a0a7c2a118ed26d723c8afa11f26b1b5688f161e758192b6"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.410876+00:00",
+    "timestamp": "2026-09-01T19:25:20.504332+00:00",
     "event_id": "evt_001",
     "node_name": "score_policy_options",
     "action_taken": "Ranked WhatsApp Payment Link",
@@ -471,11 +663,11 @@
       "ev": 4500.0
     },
     "reasoning": "",
-    "prev_entry_hash": "b852e046d2b34f728cbc4c5ef6246e5cff24c452bce0f2077369a69eeeee3825",
-    "entry_hash": "3189c12b3e2f0c50e084efab47b744b3b8494b5465a48580fe8e5640e0bda066"
+    "prev_entry_hash": "edf53ad028799910a0a7c2a118ed26d723c8afa11f26b1b5688f161e758192b6",
+    "entry_hash": "9999e6ffc628d62a65d66454a53a11ff5847edae53252b83e72adf486c8f323d"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.438196+00:00",
+    "timestamp": "2026-09-01T19:25:20.528725+00:00",
     "event_id": "evt_001",
     "node_name": "check_guardrails",
     "action_taken": "Guardrail ALLOW (RULE_ALL_GUARDRAILS_PASSED)",
@@ -483,11 +675,11 @@
       "result": "ALLOW"
     },
     "reasoning": "",
-    "prev_entry_hash": "3189c12b3e2f0c50e084efab47b744b3b8494b5465a48580fe8e5640e0bda066",
-    "entry_hash": "95b7d3e5d909e4ecc59b5a43b3a9d247f9232b883e96d3205aa2e7ed6c140c9d"
+    "prev_entry_hash": "9999e6ffc628d62a65d66454a53a11ff5847edae53252b83e72adf486c8f323d",
+    "entry_hash": "63fd78910aa009d32a6fb82c4822e006220fc4caa5c156782ae383cdadcda858"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.472040+00:00",
+    "timestamp": "2026-09-01T19:25:20.554153+00:00",
     "event_id": "evt_002",
     "node_name": "memory_enrichment",
     "action_taken": "Priors Loaded",
@@ -495,11 +687,11 @@
       "reliability": 0.8
     },
     "reasoning": "",
-    "prev_entry_hash": "95b7d3e5d909e4ecc59b5a43b3a9d247f9232b883e96d3205aa2e7ed6c140c9d",
-    "entry_hash": "fdfcc8aa223252e9ff7ddbd18064ee66b5ec8facdb7166b0bc859bf5d60ce238"
+    "prev_entry_hash": "63fd78910aa009d32a6fb82c4822e006220fc4caa5c156782ae383cdadcda858",
+    "entry_hash": "7c85db1cbc10d3d31ef19bfcac5ee50a14f3b6d53034fe707b7147b6c22b0beb"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.500851+00:00",
+    "timestamp": "2026-09-01T19:25:20.581077+00:00",
     "event_id": "evt_002",
     "node_name": "check_guardrails",
     "action_taken": "Guardrail BLOCK",
@@ -507,11 +699,11 @@
       "result": "BLOCK"
     },
     "reasoning": "",
-    "prev_entry_hash": "fdfcc8aa223252e9ff7ddbd18064ee66b5ec8facdb7166b0bc859bf5d60ce238",
-    "entry_hash": "db64947236761c5126f13cf471c3ff65aa02964b780a5a9acd9a3c89f7479384"
+    "prev_entry_hash": "7c85db1cbc10d3d31ef19bfcac5ee50a14f3b6d53034fe707b7147b6c22b0beb",
+    "entry_hash": "5a7a0a561eda7a82d8578bb83fc1e4a9bcecd60f92d08bdc28ee952e42f8f986"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.551683+00:00",
+    "timestamp": "2026-09-01T19:25:20.604959+00:00",
     "event_id": "evt_003",
     "node_name": "executor",
     "action_taken": "WhatsApp Sent",
@@ -519,11 +711,11 @@
       "status": "delivered"
     },
     "reasoning": "",
-    "prev_entry_hash": "db64947236761c5126f13cf471c3ff65aa02964b780a5a9acd9a3c89f7479384",
-    "entry_hash": "7491ddab3572ba22637ee64b47054441a818d507503177898df95c9e760323b9"
+    "prev_entry_hash": "5a7a0a561eda7a82d8578bb83fc1e4a9bcecd60f92d08bdc28ee952e42f8f986",
+    "entry_hash": "da813100dae4b17b090579168d80f206eee156a14baf7bbe88408d91465a4ef1"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.591369+00:00",
+    "timestamp": "2026-09-01T19:25:20.634071+00:00",
     "event_id": "evt_storage_test_001",
     "node_name": "memory_enrichment",
     "action_taken": "Priors Loaded",
@@ -531,11 +723,11 @@
       "reliability": 0.9
     },
     "reasoning": "",
-    "prev_entry_hash": "7491ddab3572ba22637ee64b47054441a818d507503177898df95c9e760323b9",
-    "entry_hash": "f089d02db07b263c5a6bf85dd13f7cf6a3e6531bf0b11770d4cd43fd76fc202f"
+    "prev_entry_hash": "da813100dae4b17b090579168d80f206eee156a14baf7bbe88408d91465a4ef1",
+    "entry_hash": "28e7afe8056b8e9ca22b6e8a2c193f5ff278c493c3450fdebf25a76ecf48eb4c"
   },
   {
-    "timestamp": "2026-09-01T14:27:04.617476+00:00",
+    "timestamp": "2026-09-01T19:25:20.656200+00:00",
     "event_id": "evt_storage_test_001",
     "node_name": "check_guardrails",
     "action_taken": "Guardrail ALLOW",
@@ -543,11 +735,11 @@
       "result": "ALLOW"
     },
     "reasoning": "",
-    "prev_entry_hash": "f089d02db07b263c5a6bf85dd13f7cf6a3e6531bf0b11770d4cd43fd76fc202f",
-    "entry_hash": "78441efdcccd29d2b764fb74754e8c73445b70a243400d4b39611e8246056b01"
+    "prev_entry_hash": "28e7afe8056b8e9ca22b6e8a2c193f5ff278c493c3450fdebf25a76ecf48eb4c",
+    "entry_hash": "513113fa3c895494567427e980389018acd26b9378aef8fb1f58b861432d3dcb"
   },
   {
-    "timestamp": "2026-09-01T14:27:28.851681+00:00",
+    "timestamp": "2026-09-01T19:25:35.142003+00:00",
     "event_id": "INV-001",
     "node_name": "resolve_b2b_process_blocker",
     "action_taken": "PO_ATTACHED_AND_REDISPATCHED",
@@ -557,11 +749,11 @@
       "client_company": "Vikram Solar Infra"
     },
     "reasoning": "Attached client PO #PO-9821 to invoice INV-001 and re-dispatched clean invoice with 1-click Razorpay link.",
-    "prev_entry_hash": "78441efdcccd29d2b764fb74754e8c73445b70a243400d4b39611e8246056b01",
-    "entry_hash": "8fed7b7ed4d247a839859da12516352dae03ae759075fabe9654156ce1f5e73e"
+    "prev_entry_hash": "513113fa3c895494567427e980389018acd26b9378aef8fb1f58b861432d3dcb",
+    "entry_hash": "dfb5a857367d4b1f0892a78950b0293d4d9140749c4674e39d7448121c4fc478"
   },
   {
-    "timestamp": "2026-09-01T14:27:29.645743+00:00",
+    "timestamp": "2026-09-01T19:25:35.423083+00:00",
     "event_id": "INV-002",
     "node_name": "route_b2b_dispute_to_human",
     "action_taken": "DUNNING_HALTED_DISPUTE_ESCALATED",
@@ -571,11 +763,11 @@
       "client_company": "Apex Logistics B2B"
     },
     "reasoning": "Automated dunning halted for disputed invoice INV-002. Assigned escalation ticket to Account Executive.",
-    "prev_entry_hash": "8fed7b7ed4d247a839859da12516352dae03ae759075fabe9654156ce1f5e73e",
-    "entry_hash": "0d74a981d737dc09097425ae12c5b058773dc1ca460fb454be41ff62eb980503"
+    "prev_entry_hash": "dfb5a857367d4b1f0892a78950b0293d4d9140749c4674e39d7448121c4fc478",
+    "entry_hash": "47c876bc2f2c3ad8dc2137971ed0dfeeed636304518a2e8a1e79d2317c0f4761"
   },
   {
-    "timestamp": "2026-09-01T14:27:33.043139+00:00",
+    "timestamp": "2026-09-01T19:25:38.500386+00:00",
     "event_id": "test_checkout_margin_01",
     "node_name": "classify_root_cause",
     "action_taken": "Classified as checkout_abandoned (comparison_window_shopping)",
@@ -602,11 +794,11 @@
       ]
     },
     "reasoning": "Customer viewed cart 3 times with brief duration (10s) without initiating checkout. Comparison / window shopping behavior. Margin-Shield activated: ZERO DISCOUNT to prevent margin cannibalization.",
-    "prev_entry_hash": "0d74a981d737dc09097425ae12c5b058773dc1ca460fb454be41ff62eb980503",
-    "entry_hash": "bc96b7e945a122a09ffb4cb041a5e8d636497518368261a756dc2876def0af6e"
+    "prev_entry_hash": "47c876bc2f2c3ad8dc2137971ed0dfeeed636304518a2e8a1e79d2317c0f4761",
+    "entry_hash": "69c9d356a81c6ef33f6f2eb56e486c99c1739de6d60fdc1e8945068f0a704bf7"
   },
   {
-    "timestamp": "2026-09-01T14:27:33.047214+00:00",
+    "timestamp": "2026-09-01T19:25:38.502659+00:00",
     "event_id": "test_checkout_margin_01",
     "node_name": "score_policy_options",
     "action_taken": "Chose non_discounted_cart_reminder (EV: \u20b92036.95)",
@@ -648,11 +840,11 @@
       ]
     },
     "reasoning": "Selected 'non_discounted_cart_reminder' via email with highest Net EV = \u20b92036.95 (P(rec)=0.41, Gross=\u20b92052.00, Friction=\u20b915.00).",
-    "prev_entry_hash": "bc96b7e945a122a09ffb4cb041a5e8d636497518368261a756dc2876def0af6e",
-    "entry_hash": "0bd8cefbff6b8658c7930b5eb318ed402445f4e95e92086c67ce8ed8112777ac"
+    "prev_entry_hash": "69c9d356a81c6ef33f6f2eb56e486c99c1739de6d60fdc1e8945068f0a704bf7",
+    "entry_hash": "3d87b0f75419e0260bf7afd8094920983d7636dafd5392ccd0dbaac47b8295fb"
   },
   {
-    "timestamp": "2026-09-01T14:27:33.084682+00:00",
+    "timestamp": "2026-09-01T19:25:38.528678+00:00",
     "event_id": "test_tax_01",
     "node_name": "classify_root_cause",
     "action_taken": "Classified as payment_degraded (Decline Taxonomy / Rule Engine)",
@@ -678,11 +870,11 @@
       ]
     },
     "reasoning": "Deterministic match (gateway_timeout): Route degradation detected. Fault Domain: MERCHANT_SYSTEM. Customer must NOT be contacted.",
-    "prev_entry_hash": "0bd8cefbff6b8658c7930b5eb318ed402445f4e95e92086c67ce8ed8112777ac",
-    "entry_hash": "ae1fe7b1c383771542009fef956a918c0d46cd6dda250ecfca11db773c5fd234"
+    "prev_entry_hash": "3d87b0f75419e0260bf7afd8094920983d7636dafd5392ccd0dbaac47b8295fb",
+    "entry_hash": "e452e8968c02aa6248ac3e8993ba50f518961cd4311fe45f276f8678dffe179f"
   },
   {
-    "timestamp": "2026-09-01T14:27:44.383281+00:00",
+    "timestamp": "2026-09-01T19:25:43.892226+00:00",
     "event_id": "test_temporal_001",
     "node_name": "temporal_recovery_workflow",
     "action_taken": "do_nothing",
@@ -693,12 +885,12 @@
       "channel_used": null
     },
     "reasoning": "Durable workflow executed: status=recovered",
-    "prev_entry_hash": "ae1fe7b1c383771542009fef956a918c0d46cd6dda250ecfca11db773c5fd234",
-    "entry_hash": "c20d289d0d81681a6ae1a6798843bee0ef6eb856e4313f6a30a35413a26f2488"
+    "prev_entry_hash": "e452e8968c02aa6248ac3e8993ba50f518961cd4311fe45f276f8678dffe179f",
+    "entry_hash": "c536f4430d9fa171b708d7a7d1a2d5977f8af406c2bcbce17eea55e077cbea54"
   },
   {
-    "timestamp": "2026-09-01T14:27:48.955448+00:00",
-    "event_id": "test_temporal_high_val",
+    "timestamp": "2026-09-01T19:25:47.610451+00:00",
+    "event_id": "test_temporal_high_val_f91c7e",
     "node_name": "classify_root_cause",
     "action_taken": "Classified as receivable_overdue (LLM)",
     "details": {
@@ -709,54 +901,65 @@
           "action_type": "do_nothing",
           "target_channel": "none",
           "cost": 0.0,
-          "description": "Hold action to evaluate natural recovery probability without customer friction."
+          "description": "Evaluate natural recovery probability without additional outreach."
         },
         {
-          "action_type": "voice_ae_escalation",
-          "target_channel": "voice",
-          "cost": 2.5,
-          "description": "Escalate to a human Account Executive for direct follow-up due to high-value overdue invoice and low historical payment success."
-        },
-        {
-          "action_type": "email_invoice_reminder",
+          "action_type": "email_reminder",
           "target_channel": "email",
           "cost": 0.05,
-          "description": "Send a formal overdue invoice reminder with payment details and updated invoice copy."
+          "description": "Send a polite overdue invoice reminder with payment details and invoice copy."
         },
         {
-          "action_type": "legal_notice_precheck",
-          "target_channel": "scheduled_check",
-          "cost": 0.0,
-          "description": "Prepare for credit distress escalation if commitments remain broken or aging continues beyond policy thresholds."
+          "action_type": "whatsapp_followup",
+          "target_channel": "whatsapp",
+          "cost": 0.8,
+          "description": "Send a concise payment reminder via WhatsApp to prompt settlement."
+        },
+        {
+          "action_type": "voice_followup",
+          "target_channel": "voice",
+          "cost": 2.5,
+          "description": "Place a collections call for high-value overdue receivable follow-up."
         }
       ]
     },
-    "reasoning": "This is a B2B invoice overdue incident (invoice.overdue) with amount \u20b9145,000 and 15 days past due, which places it squarely in receivables recovery rather than checkout or mandate failure. The high invoice value and low prior payment success rate (0.4) indicate elevated collection risk. There is no evidence of a payment rail outage, mandate issue, or explicit promise-to-pay. Given the amount and aging, this is best treated as overdue receivable with potential credit distress/over-exposure risk, warranting escalation and tighter collection handling.",
-    "prev_entry_hash": "c20d289d0d81681a6ae1a6798843bee0ef6eb856e4313f6a30a35413a26f2488",
-    "entry_hash": "eb033e9b1372ba1961af64ab74471c61c866963fde988ed900a979773bd17552"
+    "reasoning": "This is a B2B invoice overdue incident (invoice.overdue) with the receivable 15 days past due. The amount is high-value at \u20b9145,000, but there is no explicit evidence of a commercial dispute, missing PO, or a promise-to-pay commitment. Prior payment success rate is low (0.4), indicating elevated collection risk, but the primary failure mode remains overdue receivable rather than payment degradation or mandate failure.",
+    "prev_entry_hash": "c536f4430d9fa171b708d7a7d1a2d5977f8af406c2bcbce17eea55e077cbea54",
+    "entry_hash": "4a484fbcf3fd58ed609118465ae1b3bd563ed7c233a33a3a1442fa8fd2d553e6"
   },
   {
-    "timestamp": "2026-09-01T14:27:48.966676+00:00",
-    "event_id": "test_temporal_high_val",
+    "timestamp": "2026-09-01T19:25:47.618101+00:00",
+    "event_id": "test_temporal_high_val_f91c7e",
     "node_name": "score_policy_options",
-    "action_taken": "Chose email_invoice_reminder (EV: \u20b963070.95)",
+    "action_taken": "Chose whatsapp_followup (EV: \u20b970378.2)",
     "details": {
       "chosen_action": {
-        "action_type": "email_invoice_reminder",
-        "target_channel": "email",
-        "description": "Send a formal overdue invoice reminder with payment details and updated invoice copy.",
-        "cost": 0.05,
-        "p_recovery": 0.4368,
-        "gross_expected_recovery": 63336.0,
+        "action_type": "whatsapp_followup",
+        "target_channel": "whatsapp",
+        "description": "Send a concise payment reminder via WhatsApp to prompt settlement.",
+        "cost": 0.8,
+        "p_recovery": 0.4872,
+        "gross_expected_recovery": 70644.0,
         "friction_penalty": 15.0,
         "risk_penalty": 250.0,
-        "expected_value": 63070.95
+        "expected_value": 70378.2
       },
       "all_scored_candidates": [
         {
-          "action_type": "email_invoice_reminder",
+          "action_type": "whatsapp_followup",
+          "target_channel": "whatsapp",
+          "description": "Send a concise payment reminder via WhatsApp to prompt settlement.",
+          "cost": 0.8,
+          "p_recovery": 0.4872,
+          "gross_expected_recovery": 70644.0,
+          "friction_penalty": 15.0,
+          "risk_penalty": 250.0,
+          "expected_value": 70378.2
+        },
+        {
+          "action_type": "email_reminder",
           "target_channel": "email",
-          "description": "Send a formal overdue invoice reminder with payment details and updated invoice copy.",
+          "description": "Send a polite overdue invoice reminder with payment details and invoice copy.",
           "cost": 0.05,
           "p_recovery": 0.4368,
           "gross_expected_recovery": 63336.0,
@@ -765,20 +968,9 @@
           "expected_value": 63070.95
         },
         {
-          "action_type": "legal_notice_precheck",
-          "target_channel": "scheduled_check",
-          "description": "Prepare for credit distress escalation if commitments remain broken or aging continues beyond policy thresholds.",
-          "cost": 0.0,
-          "p_recovery": 0.252,
-          "gross_expected_recovery": 36540.0,
-          "friction_penalty": 0.0,
-          "risk_penalty": 0.0,
-          "expected_value": 36540.0
-        },
-        {
-          "action_type": "voice_ae_escalation",
+          "action_type": "voice_followup",
           "target_channel": "voice",
-          "description": "Escalate to a human Account Executive for direct follow-up due to high-value overdue invoice and low historical payment success.",
+          "description": "Place a collections call for high-value overdue receivable follow-up.",
           "cost": 0.0,
           "p_recovery": 0.252,
           "gross_expected_recovery": 36540.0,
@@ -789,7 +981,7 @@
         {
           "action_type": "do_nothing",
           "target_channel": "none",
-          "description": "Hold action to evaluate natural recovery probability without customer friction.",
+          "description": "Evaluate natural recovery probability without additional outreach.",
           "cost": 0.0,
           "p_recovery": 0.105,
           "gross_expected_recovery": 15225.0,
@@ -799,77 +991,65 @@
         }
       ]
     },
-    "reasoning": "Selected 'email_invoice_reminder' via email with highest Net EV = \u20b963070.95 (P(rec)=0.44, Gross=\u20b963336.00, Friction=\u20b915.00).",
-    "prev_entry_hash": "eb033e9b1372ba1961af64ab74471c61c866963fde988ed900a979773bd17552",
-    "entry_hash": "d1d96e5c60d359a902ed7119aa4141e9c3c39843670c21a49180fc4e89deecab"
+    "reasoning": "Selected 'whatsapp_followup' via whatsapp with highest Net EV = \u20b970378.20 (P(rec)=0.49, Gross=\u20b970644.00, Friction=\u20b915.00).",
+    "prev_entry_hash": "4a484fbcf3fd58ed609118465ae1b3bd563ed7c233a33a3a1442fa8fd2d553e6",
+    "entry_hash": "92c7bd9051e79948b36295d6ed40776c1626388edff60c1409f16d9eeda272a3"
   },
   {
-    "timestamp": "2026-09-01T14:27:48.991270+00:00",
-    "event_id": "test_temporal_high_val",
+    "timestamp": "2026-09-01T19:25:47.637361+00:00",
+    "event_id": "test_temporal_high_val_f91c7e",
     "node_name": "check_guardrails",
     "action_taken": "Guardrail ESCALATE (RULE_HIGH_VALUE_THRESHOLD_ESCALATION)",
     "details": {
       "rule": "RULE_HIGH_VALUE_THRESHOLD_ESCALATION",
       "result": "ESCALATE",
-      "amount": 145000.0
+      "amount": 145000.0,
+      "threshold": 75000.0
     },
-    "reasoning": "Amount \u20b9145,000.00 >= \u20b9100,000.00. High financial impact requires Human-In-The-Loop approval.",
-    "prev_entry_hash": "d1d96e5c60d359a902ed7119aa4141e9c3c39843670c21a49180fc4e89deecab",
-    "entry_hash": "9adae610c6832d37f54e31c2e1df11b4ac0e54b8edefeed0d3eb4efbb350ccf1"
+    "reasoning": "Amount \u20b9145,000.00 >= merchant policy threshold \u20b975,000.00. High financial impact requires Human-In-The-Loop approval.",
+    "prev_entry_hash": "92c7bd9051e79948b36295d6ed40776c1626388edff60c1409f16d9eeda272a3",
+    "entry_hash": "ef1524395d059b35eb705d315553a72ae6e940b861631d3d9ca640b391fe68f5"
   },
   {
-    "timestamp": "2026-09-01T14:27:49.029932+00:00",
-    "event_id": "test_temporal_high_val",
+    "timestamp": "2026-09-01T19:25:47.683902+00:00",
+    "event_id": "test_temporal_high_val_f91c7e",
     "node_name": "execute_action",
-    "action_taken": "Email Recovery Dispatched (Razorpay Link)",
+    "action_taken": "WhatsApp Recovery Dispatched (Razorpay Link)",
     "details": {
-      "email_result": {
+      "wa_result": {
         "success": true,
-        "channel": "email",
-        "message_id": "sim_email_customer_145000",
-        "recipient": "customer@example.com",
-        "status": "delivered_simulated",
-        "error": null
+        "channel": "whatsapp",
+        "provider": "simulation",
+        "message_id": "sim_3210_145000",
+        "recipient": "+919876543210",
+        "status": "simulated",
+        "body": "Hello Valued Customer, reminder for invoice \u20b9145,000. Pay online: https://rzp.io/i/alf91c7e",
+        "link": "https://rzp.io/i/alf91c7e"
       },
-      "payment_link": "https://rzp.io/i/lhighval",
-      "payment_link_id": "plink_eval_lhighval"
+      "payment_link": "https://rzp.io/i/alf91c7e",
+      "payment_link_id": "plink_eval_alf91c7e"
     },
-    "reasoning": "Direct email recovery link delivered to customer@example.com.",
-    "prev_entry_hash": "9adae610c6832d37f54e31c2e1df11b4ac0e54b8edefeed0d3eb4efbb350ccf1",
-    "entry_hash": "f2b267b96c7ee8f03caa750c50b542fdba62f32c3554257e7ca47e8598e6813d"
+    "reasoning": "Delivered real Razorpay Payment Link (https://rzp.io/i/alf91c7e) to +919876543210 via WhatsApp.",
+    "prev_entry_hash": "ef1524395d059b35eb705d315553a72ae6e940b861631d3d9ca640b391fe68f5",
+    "entry_hash": "2599bc8a05a69788f7f245aab98697208784680f40dfe5b32c898f5bcab1227d"
   },
   {
-    "timestamp": "2026-09-01T14:27:49.068702+00:00",
-    "event_id": "test_temporal_high_val",
+    "timestamp": "2026-09-01T19:25:47.712886+00:00",
+    "event_id": "test_temporal_high_val_f91c7e",
     "node_name": "temporal_recovery_workflow",
-    "action_taken": "email_invoice_reminder",
+    "action_taken": "whatsapp_followup",
     "details": {
       "payment_status": "unresolved",
       "recovered_amount": 0.0,
       "guardrail_result": "ESCALATE",
-      "channel_used": "email"
+      "channel_used": "whatsapp"
     },
     "reasoning": "Durable workflow executed: status=unresolved",
-    "prev_entry_hash": "f2b267b96c7ee8f03caa750c50b542fdba62f32c3554257e7ca47e8598e6813d",
-    "entry_hash": "852e10e9e8ff7be570990c8020e81c824c930fc7341223eab7e18dd61d55fc37"
+    "prev_entry_hash": "2599bc8a05a69788f7f245aab98697208784680f40dfe5b32c898f5bcab1227d",
+    "entry_hash": "7533da9291630284a21ebd0d2b516f8eb89b607a5de9956775f725e749bd4ba0"
   },
   {
-    "timestamp": "2026-09-01T14:28:04.746948+00:00",
-    "event_id": "cust_0001",
-    "node_name": "apply_concession_discount",
-    "action_taken": "DISCOUNT_CONCESSION_5PCT",
-    "details": {
-      "discount_percent": 5,
-      "reason": "Customer requested concession on live recovery call",
-      "customer_id": "cust_0001",
-      "event_id": null
-    },
-    "reasoning": "Applied 5% instant concession (capped at 15% financial invariant). Reason: Customer requested concession on live recovery call",
-    "prev_entry_hash": "852e10e9e8ff7be570990c8020e81c824c930fc7341223eab7e18dd61d55fc37",
-    "entry_hash": "e579aaadc33bfcdda9c6766c2556531e95c620a94a525ab3cdd0a23f36f43723"
-  },
-  {
-    "timestamp": "2026-09-01T14:28:13.617007+00:00",
+    "timestamp": "2026-09-01T19:26:18.954147+00:00",
     "event_id": "cust_0001",
     "node_name": "register_promise_to_pay",
     "action_taken": "PTP_SCHEDULED_OUTREACH_PAUSED",
@@ -880,11 +1060,11 @@
       "event_id": null
     },
     "reasoning": "Customer confirmed payment commitment for Next Monday. Paused all dunning until T+24h after promised date.",
-    "prev_entry_hash": "e579aaadc33bfcdda9c6766c2556531e95c620a94a525ab3cdd0a23f36f43723",
-    "entry_hash": "a814be5e31b6933826f950990d92cc8cae4f85c041ae78abd091cb3a20005224"
+    "prev_entry_hash": "7533da9291630284a21ebd0d2b516f8eb89b607a5de9956775f725e749bd4ba0",
+    "entry_hash": "aa52d26b1f6081a179cd7e824553b664079050e693323ee4c4bb2e8817c75f88"
   },
   {
-    "timestamp": "2026-09-01T14:28:18.940290+00:00",
+    "timestamp": "2026-09-01T19:26:25.763472+00:00",
     "event_id": "optout_cust_dnd_test_01",
     "node_name": "consent_registry",
     "action_taken": "OMNICHANNEL_OPT_OUT_REGISTERED",
@@ -893,14 +1073,14 @@
       "source_channel": "whatsapp",
       "reason": "User sent STOP keyword",
       "status": "PERMANENT_OPT_OUT",
-      "opted_out_at": "2026-09-01T14:28:18.939711+00:00"
+      "opted_out_at": "2026-09-01T19:26:25.762772+00:00"
     },
     "reasoning": "Permanent opt-out recorded from channel 'whatsapp'. All future recovery outreach permanently blocked.",
-    "prev_entry_hash": "a814be5e31b6933826f950990d92cc8cae4f85c041ae78abd091cb3a20005224",
-    "entry_hash": "ba2d00186e9a91dccdf6c9ed6ce3c7b6b8495ce244d8c99738f707c692831bf5"
+    "prev_entry_hash": "aa52d26b1f6081a179cd7e824553b664079050e693323ee4c4bb2e8817c75f88",
+    "entry_hash": "e3fe7a9697a8a84a2921dde5a0b0bf3b3b9b03d425967246b68ad38a143981d1"
   },
   {
-    "timestamp": "2026-09-01T14:28:18.942303+00:00",
+    "timestamp": "2026-09-01T19:26:25.767239+00:00",
     "event_id": "evt_test_consent",
     "node_name": "check_guardrails",
     "action_taken": "Guardrail BLOCK (RULE_OPT_OUT_ENFORCED)",
@@ -910,11 +1090,11 @@
       "reason": "Customer opted out on 2026-09-01 via whatsapp (User sent STOP keyword)."
     },
     "reasoning": "Customer opted out on 2026-09-01 via whatsapp (User sent STOP keyword).",
-    "prev_entry_hash": "ba2d00186e9a91dccdf6c9ed6ce3c7b6b8495ce244d8c99738f707c692831bf5",
-    "entry_hash": "2037f9daed49599c004883c979f8f3921ce2f1c54e7ded2bf9c6a68e8f35b76c"
+    "prev_entry_hash": "e3fe7a9697a8a84a2921dde5a0b0bf3b3b9b03d425967246b68ad38a143981d1",
+    "entry_hash": "a13ff39876f4d9be06f8d0a60a002bc7e6ca832854fc343b86edce325b3e6fc2"
   },
   {
-    "timestamp": "2026-09-01T14:28:30.642710+00:00",
+    "timestamp": "2026-09-01T19:26:35.470539+00:00",
     "event_id": "test_inbound_ptp_01",
     "node_name": "inbound_intent_classifier",
     "action_taken": "Promise-to-Pay Registered for 2026-09-10",
@@ -929,11 +1109,11 @@
       "suggested_reply_message": "Thank you for confirming. We\u2019ve noted that you will clear the pending bill on 2026-09-10. Please let us know if you need any help with the payment."
     },
     "reasoning": "The customer explicitly commits to clearing the pending bill and provides a specific future payment date, which is a clear firm promise to pay.",
-    "prev_entry_hash": "2037f9daed49599c004883c979f8f3921ce2f1c54e7ded2bf9c6a68e8f35b76c",
-    "entry_hash": "ff09fe1f67149969f17b6ea4281166c741eac0bb3e0faf9664bfcc4f3f8c0423"
+    "prev_entry_hash": "a13ff39876f4d9be06f8d0a60a002bc7e6ca832854fc343b86edce325b3e6fc2",
+    "entry_hash": "b82d0da2a01c1ef9e3e661bfb5bd41d2622ae7d4d482c888fff1bd31c70c8413"
   },
   {
-    "timestamp": "2026-09-01T14:28:34.230449+00:00",
+    "timestamp": "2026-09-01T19:26:38.371964+00:00",
     "event_id": "test_inbound_cancel_01",
     "node_name": "inbound_intent_classifier",
     "action_taken": "Stopping Rule Enforced: CUSTOMER_CANCELLATION",
@@ -945,14 +1125,14 @@
       "preferred_payment_method": null,
       "cancellation_reason": "No longer wants the service",
       "stopping_rule_triggered": true,
-      "suggested_reply_message": "Understood. We\u2019ve noted your request to discontinue the service and will stop further charges. If you need any help with closure details, please let us know."
+      "suggested_reply_message": "Understood. We\u2019ve noted your request to stop the service and will not proceed with further charges. If you need any help with closure details, please let us know."
     },
     "reasoning": "The customer explicitly states they do not want the service anymore and asks not to be charged, which is a clear cancellation request.",
-    "prev_entry_hash": "ff09fe1f67149969f17b6ea4281166c741eac0bb3e0faf9664bfcc4f3f8c0423",
-    "entry_hash": "9b8782ff22d84c235d67adb9edd19678c13da78c692d2efab8652755193131b3"
+    "prev_entry_hash": "b82d0da2a01c1ef9e3e661bfb5bd41d2622ae7d4d482c888fff1bd31c70c8413",
+    "entry_hash": "a40a2cd445aa9dc99735be8164ae98bda01e2d234464f68c2b52855593359796"
   },
   {
-    "timestamp": "2026-09-01T14:28:37.068276+00:00",
+    "timestamp": "2026-09-01T19:26:41.171892+00:00",
     "event_id": "evt_voice_demo_01",
     "node_name": "voice_post_call_intelligence",
     "action_taken": "PTP_SOFT_COMMITMENT_PAUSED",
@@ -968,11 +1148,11 @@
       "transcript_snippet": "haan bhai, paisa toh bhejunga, but abhi thoda tight hai"
     },
     "reasoning": "Voice AI post-call extraction: Customer explicitly says 'paisa toh bhejunga' indicating a clear intent to pay, while 'abhi thoda tight hai' signals a temporary financial constraint rather than refusal. This matches a soft commitment to pay.",
-    "prev_entry_hash": "9b8782ff22d84c235d67adb9edd19678c13da78c692d2efab8652755193131b3",
-    "entry_hash": "2dcc696517d34a63c21e69070e54a5430e01dcfac59e11bab6e874c0e5b0e8c0"
+    "prev_entry_hash": "a40a2cd445aa9dc99735be8164ae98bda01e2d234464f68c2b52855593359796",
+    "entry_hash": "0747fe059e69c35e0122b968a8f62c3f7eec5965b388c83f9f18a54014546da5"
   },
   {
-    "timestamp": "2026-09-01T14:28:37.071765+00:00",
+    "timestamp": "2026-09-01T19:26:41.177110+00:00",
     "event_id": "evt_test_night_voice",
     "node_name": "check_guardrails",
     "action_taken": "Guardrail BLOCK (RULE_VOICE_OUTSIDE_LEGAL_CALLING_HOURS)",
@@ -982,11 +1162,11 @@
       "calling_status": "TRAI Compliance Block"
     },
     "reasoning": "TRAI Compliance Block Outbound AI phone outreach postponed until 09:00 AM IST.",
-    "prev_entry_hash": "2dcc696517d34a63c21e69070e54a5430e01dcfac59e11bab6e874c0e5b0e8c0",
-    "entry_hash": "7a6293dfb285ab6c1276e23541ebbcac82e3a4e4ef82fef6686daa38a51e87fd"
+    "prev_entry_hash": "0747fe059e69c35e0122b968a8f62c3f7eec5965b388c83f9f18a54014546da5",
+    "entry_hash": "cbd05bd7a2eb95ef58d78c99bb5798c160094b8013b6ea0d5ec10d12a727e70c"
   },
   {
-    "timestamp": "2026-09-01T14:28:38.018920+00:00",
+    "timestamp": "2026-09-01T19:26:42.125502+00:00",
     "event_id": "man_001",
     "node_name": "trigger_mandate_renewal_flow",
     "action_taken": "PROACTIVE_MANDATE_RENEWAL_DISPATCHED",
@@ -996,11 +1176,11 @@
       "phone": "+919876543210"
     },
     "reasoning": "Proactively sent 1-click renewal link to Priya Sharma before mandate expiration.",
-    "prev_entry_hash": "7a6293dfb285ab6c1276e23541ebbcac82e3a4e4ef82fef6686daa38a51e87fd",
-    "entry_hash": "ec03480f34458c95c0fedf9a5d4b55e9902871cd47ab24cda3f36dfc81402acd"
+    "prev_entry_hash": "cbd05bd7a2eb95ef58d78c99bb5798c160094b8013b6ea0d5ec10d12a727e70c",
+    "entry_hash": "ddbcc4b8fc27902456af501ff212f85fe287b591c0b3755ad0d234557936878e"
   },
   {
-    "timestamp": "2026-09-01T14:28:38.021753+00:00",
+    "timestamp": "2026-09-01T19:26:42.129150+00:00",
     "event_id": "man_002",
     "node_name": "dispatch_afa_pre_debit_notification",
     "action_taken": "RBI_AFA_PRE_DEBIT_NOTIFICATION_SENT",
@@ -1010,16 +1190,16 @@
       "customer_name": "Priya Sharma"
     },
     "reasoning": "Amount \u20b918,500.00 > \u20b915,000 threshold. Sent 1-tap pre-debit AFA approval link.",
-    "prev_entry_hash": "ec03480f34458c95c0fedf9a5d4b55e9902871cd47ab24cda3f36dfc81402acd",
-    "entry_hash": "b66ada797d96826f1b385af12d5c684936a7020f01977a32e5aec36ebb109cca"
+    "prev_entry_hash": "ddbcc4b8fc27902456af501ff212f85fe287b591c0b3755ad0d234557936878e",
+    "entry_hash": "08b21e33f5c3441c894136c4d6526de4e9c217457db78fb6b3379adfd3658f82"
   },
   {
-    "timestamp": "2026-09-01T14:28:46.560431+00:00",
+    "timestamp": "2026-09-01T19:26:52.528205+00:00",
     "event_id": "evt_ptp_test_001",
     "node_name": "ptp_intelligence",
     "action_taken": "PTP_REGISTERED_DUNNING_PAUSED",
     "details": {
-      "ptp_id": "ptp_evt_ptp_test_001_1788272926",
+      "ptp_id": "ptp_evt_ptp_test_001_1788290812",
       "promised_date": "2026-09-05",
       "amount": 14500.0,
       "linguistic_confidence": 0.78,
@@ -1028,11 +1208,11 @@
       "exact_wording": "Salary comes on 5th will transfer then"
     },
     "reasoning": "Captured MODERATE promise (Confidence: 78%). Outreach paused until 2026-09-05 + 24h.",
-    "prev_entry_hash": "b66ada797d96826f1b385af12d5c684936a7020f01977a32e5aec36ebb109cca",
-    "entry_hash": "3b1e5c3e46f7746ea055513b5e0c5b08f1280e45ace8b81d7333b7fa3ed9938b"
+    "prev_entry_hash": "08b21e33f5c3441c894136c4d6526de4e9c217457db78fb6b3379adfd3658f82",
+    "entry_hash": "145c5a426ae92150f9a633f5510d607ffef19bdaa2c41870a37300e46ffd6267"
   },
   {
-    "timestamp": "2026-09-01T14:28:46.563854+00:00",
+    "timestamp": "2026-09-01T19:26:52.532178+00:00",
     "event_id": "evt_ptp_test_001",
     "node_name": "ptp_intelligence",
     "action_taken": "PTP_RENEGOTIATED_CLOCK_RESET",
@@ -1040,19 +1220,19 @@
       "ptp_id": "ptp_evt_test_001",
       "new_promised_date": "2026-09-12",
       "revision": {
-        "revision_id": "rev_1788272926",
+        "revision_id": "rev_1788290812",
         "new_date": "2026-09-12",
         "reason": "Customer requested extension / renegotiated timeline",
         "exact_wording": "Can we push it to next Friday? Waiting for client wire.",
-        "timestamp": "2026-09-01T14:28:46.563835+00:00"
+        "timestamp": "2026-09-01T19:26:52.532136+00:00"
       }
     },
     "reasoning": "Customer renegotiated payment timeline to 2026-09-12. Clock reset; prior promise preserved in revision ledger.",
-    "prev_entry_hash": "3b1e5c3e46f7746ea055513b5e0c5b08f1280e45ace8b81d7333b7fa3ed9938b",
-    "entry_hash": "97d29e158f6f590c68634155795d8fed8b18f89273aebb5df0d56bacbb3423da"
+    "prev_entry_hash": "145c5a426ae92150f9a633f5510d607ffef19bdaa2c41870a37300e46ffd6267",
+    "entry_hash": "06022d671a3cfeb314dd0ab04064e8e7df05cf1504fb1513802078dfc757a17d"
   },
   {
-    "timestamp": "2026-09-01T14:28:46.581797+00:00",
+    "timestamp": "2026-09-01T19:26:52.550096+00:00",
     "event_id": "evt_01",
     "node_name": "ptp_break_diagnosis",
     "action_taken": "BROKEN_PTP_DIAGNOSED_FORGOT",
@@ -1062,11 +1242,11 @@
       "recommended_next_action": "gentle_smart_link_nudge"
     },
     "reasoning": "Customer missed date due to oversight. Send light-touch 1-click Razorpay link.",
-    "prev_entry_hash": "97d29e158f6f590c68634155795d8fed8b18f89273aebb5df0d56bacbb3423da",
-    "entry_hash": "b89ebe14554ba90cbc2b8703e3b938b733b38a0eb5c073cba2a2b0e52ad87e7a"
+    "prev_entry_hash": "06022d671a3cfeb314dd0ab04064e8e7df05cf1504fb1513802078dfc757a17d",
+    "entry_hash": "83f88236795b34803a78a9d9cd5ee70a37faaad7b026d5c71e07878a601430cb"
   },
   {
-    "timestamp": "2026-09-01T14:28:46.601213+00:00",
+    "timestamp": "2026-09-01T19:26:52.563198+00:00",
     "event_id": "evt_02",
     "node_name": "ptp_break_diagnosis",
     "action_taken": "BROKEN_PTP_DIAGNOSED_LIQUIDITY_CRUNCH",
@@ -1076,11 +1256,11 @@
       "recommended_next_action": "offer_split_installment_or_pause"
     },
     "reasoning": "Customer experiencing persistent cash crunch. Offer 2-split installment or 14-day pause.",
-    "prev_entry_hash": "b89ebe14554ba90cbc2b8703e3b938b733b38a0eb5c073cba2a2b0e52ad87e7a",
-    "entry_hash": "92414db41e7b8249b3dd2a937977a5839eb29934dfbf9d00185b64f2cb920456"
+    "prev_entry_hash": "83f88236795b34803a78a9d9cd5ee70a37faaad7b026d5c71e07878a601430cb",
+    "entry_hash": "3d08f9c382e125f25e6078bb331715fb788a6856471ac44647c9abad2a845ec3"
   },
   {
-    "timestamp": "2026-09-01T14:28:46.613019+00:00",
+    "timestamp": "2026-09-01T19:26:52.575091+00:00",
     "event_id": "evt_03",
     "node_name": "ptp_break_diagnosis",
     "action_taken": "BROKEN_PTP_DIAGNOSED_COMMERCIAL_DISPUTE",
@@ -1090,11 +1270,11 @@
       "recommended_next_action": "escalate_to_human_ap_reviewer"
     },
     "reasoning": "Customer raised invoice/PO dispute. Route to Finance Team rather than dunning.",
-    "prev_entry_hash": "92414db41e7b8249b3dd2a937977a5839eb29934dfbf9d00185b64f2cb920456",
-    "entry_hash": "cc23a6cae59da0ae2b6e72091813efe1bfe9eb52b7d1ac5356e1771fea3380a9"
+    "prev_entry_hash": "3d08f9c382e125f25e6078bb331715fb788a6856471ac44647c9abad2a845ec3",
+    "entry_hash": "3462344b6cd542cba02bdbbe1c1843fa19f9a7dee4b71735505d86b4f841e3d5"
   },
   {
-    "timestamp": "2026-09-01T14:28:46.628201+00:00",
+    "timestamp": "2026-09-01T19:26:52.587646+00:00",
     "event_id": "evt_04",
     "node_name": "ptp_break_diagnosis",
     "action_taken": "BROKEN_PTP_DIAGNOSED_UNRESPONSIVE",
@@ -1104,39 +1284,41 @@
       "recommended_next_action": "escalate_to_tiered_channel"
     },
     "reasoning": "Customer unresponsive after promise expiration. Advance to formal next channel on escalation ladder.",
-    "prev_entry_hash": "cc23a6cae59da0ae2b6e72091813efe1bfe9eb52b7d1ac5356e1771fea3380a9",
-    "entry_hash": "c8fae207279ee43ac394e613fe621ed2b6b6cce7e5d46f918e285ab8bd5a2972"
+    "prev_entry_hash": "3462344b6cd542cba02bdbbe1c1843fa19f9a7dee4b71735505d86b4f841e3d5",
+    "entry_hash": "37678412afee21a1a2039bc0f37ab2d27e237b6798a7a2c228261cb55112ebab"
   },
   {
-    "timestamp": "2026-09-01T14:28:49.438372+00:00",
+    "timestamp": "2026-09-01T19:26:55.063195+00:00",
     "event_id": "evt_stop_01",
     "node_name": "check_guardrails",
     "action_taken": "Guardrail ESCALATE (RULE_MAX_CONTACT_FREQUENCY_EXCEEDED)",
     "details": {
       "rule": "RULE_MAX_CONTACT_FREQUENCY_EXCEEDED",
       "result": "ESCALATE",
-      "total_contacts": 4
+      "total_contacts": 4,
+      "limit": 2
     },
-    "reasoning": "Customer has already received 4 outreach attempts (limit=2). Escalating to human.",
-    "prev_entry_hash": "c8fae207279ee43ac394e613fe621ed2b6b6cce7e5d46f918e285ab8bd5a2972",
-    "entry_hash": "a98ece86ca7205439a567a10ec592b1955bbd078e9415788782cffe5512b4d1f"
+    "reasoning": "Customer has already received 4 outreach attempts (merchant limit=2). Escalating to human.",
+    "prev_entry_hash": "37678412afee21a1a2039bc0f37ab2d27e237b6798a7a2c228261cb55112ebab",
+    "entry_hash": "ab18b11b99afb8a33d4ba46aa1e8c3edded629be3e9a8c95a00e2b183e8fce74"
   },
   {
-    "timestamp": "2026-09-01T14:28:49.461494+00:00",
+    "timestamp": "2026-09-01T19:26:55.069761+00:00",
     "event_id": "evt_stop_03",
     "node_name": "check_guardrails",
     "action_taken": "Guardrail ESCALATE (RULE_HIGH_VALUE_THRESHOLD_ESCALATION)",
     "details": {
       "rule": "RULE_HIGH_VALUE_THRESHOLD_ESCALATION",
       "result": "ESCALATE",
-      "amount": 145000.0
+      "amount": 145000.0,
+      "threshold": 75000.0
     },
-    "reasoning": "Amount \u20b9145,000.00 >= \u20b9100,000.00. High financial impact requires Human-In-The-Loop approval.",
-    "prev_entry_hash": "a98ece86ca7205439a567a10ec592b1955bbd078e9415788782cffe5512b4d1f",
-    "entry_hash": "d091248a836a6831d71f52051d859839a603e633cf9f19876d7d506fe29bc17e"
+    "reasoning": "Amount \u20b9145,000.00 >= merchant policy threshold \u20b975,000.00. High financial impact requires Human-In-The-Loop approval.",
+    "prev_entry_hash": "ab18b11b99afb8a33d4ba46aa1e8c3edded629be3e9a8c95a00e2b183e8fce74",
+    "entry_hash": "4511bc16849b918bdab67304989610d174b230dc6fbd402c2560beb0c430260b"
   },
   {
-    "timestamp": "2026-09-01T14:28:49.487661+00:00",
+    "timestamp": "2026-09-01T19:26:55.083292+00:00",
     "event_id": "evt_stop_04",
     "node_name": "execute_action",
     "action_taken": "Silent Route Rerouted",
@@ -1148,11 +1330,11 @@
       "merchant_alert": "Route degraded. Auto-switched to HDFC secondary route. Zero customer contact."
     },
     "reasoning": "Silent payment route rerouted to secondary gateway without customer outreach.",
-    "prev_entry_hash": "d091248a836a6831d71f52051d859839a603e633cf9f19876d7d506fe29bc17e",
-    "entry_hash": "601097a13a6fc53e8cb790b16d3828a3e9019193b7a741f5bb5fdda11d31dd58"
+    "prev_entry_hash": "4511bc16849b918bdab67304989610d174b230dc6fbd402c2560beb0c430260b",
+    "entry_hash": "456414b937d998ef949548948f06d93d41f0d108d7bc850b7f5dead90dfc9b41"
   },
   {
-    "timestamp": "2026-09-01T14:28:49.511949+00:00",
+    "timestamp": "2026-09-01T19:26:55.099341+00:00",
     "event_id": "evt_stop_05",
     "node_name": "execute_action",
     "action_taken": "PTP Scheduled Check Created",
@@ -1162,11 +1344,11 @@
       "action": "Outreach paused until promised date."
     },
     "reasoning": "Promise-to-pay registered for 2026-09-03. Outreach paused.",
-    "prev_entry_hash": "601097a13a6fc53e8cb790b16d3828a3e9019193b7a741f5bb5fdda11d31dd58",
-    "entry_hash": "d852f83a7bd184f1ad2fcee8990c6922e25aca3495d71cc372e555df20e6427c"
+    "prev_entry_hash": "456414b937d998ef949548948f06d93d41f0d108d7bc850b7f5dead90dfc9b41",
+    "entry_hash": "8bc568796b4f33ab56f1e49a3f9fa7f3ab870947d5451df5c59df8f874686fc1"
   },
   {
-    "timestamp": "2026-09-01T14:28:49.537817+00:00",
+    "timestamp": "2026-09-01T19:26:55.111593+00:00",
     "event_id": "optout_+919820199999",
     "node_name": "consent_registry",
     "action_taken": "OMNICHANNEL_OPT_OUT_REGISTERED",
@@ -1175,14 +1357,14 @@
       "source_channel": "sms",
       "reason": "User texted STOP",
       "status": "PERMANENT_OPT_OUT",
-      "opted_out_at": "2026-09-01T14:28:49.537042+00:00"
+      "opted_out_at": "2026-09-01T19:26:55.110814+00:00"
     },
     "reasoning": "Permanent opt-out recorded from channel 'sms'. All future recovery outreach permanently blocked.",
-    "prev_entry_hash": "d852f83a7bd184f1ad2fcee8990c6922e25aca3495d71cc372e555df20e6427c",
-    "entry_hash": "8b63672fe4dc58d9113b89c84386e37c2dad82fcb3e35f4ebb0ec911e20f60ef"
+    "prev_entry_hash": "8bc568796b4f33ab56f1e49a3f9fa7f3ab870947d5451df5c59df8f874686fc1",
+    "entry_hash": "65bdc8aca22840a5af980991b1ac8f2e3b5a31092c9d883ee6ce95e3df2f8999"
   },
   {
-    "timestamp": "2026-09-01T14:28:49.566685+00:00",
+    "timestamp": "2026-09-01T19:26:55.126911+00:00",
     "event_id": "evt_stop_07",
     "node_name": "execute_action",
     "action_taken": "Email Recovery Dispatched (Razorpay Link)",
@@ -1199,11 +1381,11 @@
       "payment_link_id": "plink_eval_vtstop07"
     },
     "reasoning": "Direct email recovery link delivered to customer@example.com.",
-    "prev_entry_hash": "8b63672fe4dc58d9113b89c84386e37c2dad82fcb3e35f4ebb0ec911e20f60ef",
-    "entry_hash": "e4b1a29a6ec0799bb60aac2b60fdc29f8c810761117f4bd189cb89576f06722f"
+    "prev_entry_hash": "65bdc8aca22840a5af980991b1ac8f2e3b5a31092c9d883ee6ce95e3df2f8999",
+    "entry_hash": "915831cab3803b3ded1b3516b79c4148b60996cfe46572622dcd1b6c2c7bd24f"
   },
   {
-    "timestamp": "2026-09-01T14:28:49.594587+00:00",
+    "timestamp": "2026-09-01T19:26:55.144923+00:00",
     "event_id": "evt_stop_08",
     "node_name": "execute_action",
     "action_taken": "Telegram Send Failed (No Linked Account)",
@@ -1215,11 +1397,11 @@
       "discount_applied": 0.0
     },
     "reasoning": "Proactive Telegram recovery dispatched to customer cust_stop_08 (chat_id resolved from DB).",
-    "prev_entry_hash": "e4b1a29a6ec0799bb60aac2b60fdc29f8c810761117f4bd189cb89576f06722f",
-    "entry_hash": "5c78a31456d79f39b782582839bd8e7b55a21bb642ccab1d1b0a78a76c0f7730"
+    "prev_entry_hash": "915831cab3803b3ded1b3516b79c4148b60996cfe46572622dcd1b6c2c7bd24f",
+    "entry_hash": "f9277bbec3fef5fab9554c1b9f250b5d339ae343a77a2ee5030ec999439a32a3"
   },
   {
-    "timestamp": "2026-09-01T14:28:49.656789+00:00",
+    "timestamp": "2026-09-01T19:26:55.169420+00:00",
     "event_id": "test_sub_ent_01",
     "node_name": "classify_root_cause",
     "action_taken": "Classified as subscription_failed (enterprise_white_glove)",
@@ -1247,25 +1429,30 @@
       ]
     },
     "reasoning": "High-value ENTERPRISE account (\u20b935,000/mo, 1mo tenure). Automated bot messaging suppressed to protect client relationship. Dispatched to Account Manager via Telegram HITL.",
-    "prev_entry_hash": "5c78a31456d79f39b782582839bd8e7b55a21bb642ccab1d1b0a78a76c0f7730",
-    "entry_hash": "39530781a571e00c48e8d75ebf8ff10a9d27c78fc50e71913ebe976ac093a87e"
+    "prev_entry_hash": "f9277bbec3fef5fab9554c1b9f250b5d339ae343a77a2ee5030ec999439a32a3",
+    "entry_hash": "4bc698aa57c0bf3564555883b888b3ce5f5e34758bacab5c02c62e76d32cb299"
   },
   {
-    "timestamp": "2026-09-01T14:28:49.679789+00:00",
+    "timestamp": "2026-09-01T19:26:55.192788+00:00",
     "event_id": "test_sub_ent_01",
     "node_name": "check_guardrails",
-    "action_taken": "Guardrail ESCALATE (RULE_ENTERPRISE_WHITE_GLOVE_ESCALATION)",
+    "action_taken": "Guardrail BLOCK (RULE_MERCHANT_POLICY_CHANNEL_PROHIBITED)",
     "details": {
-      "rule": "RULE_ENTERPRISE_WHITE_GLOVE_ESCALATION",
-      "result": "ESCALATE",
-      "archetype": "enterprise_white_glove"
+      "rule": "RULE_MERCHANT_POLICY_CHANNEL_PROHIBITED",
+      "result": "BLOCK",
+      "channel": "email",
+      "allowed": [
+        "whatsapp",
+        "voice",
+        "telegram"
+      ]
     },
-    "reasoning": "Enterprise Tier Account / White-Glove contract requires Account Manager review before outreach.",
-    "prev_entry_hash": "39530781a571e00c48e8d75ebf8ff10a9d27c78fc50e71913ebe976ac093a87e",
-    "entry_hash": "5ed8bdbe7c3ea1642cc1a46badfd6c39c8e643a68555cb3618c6e0c9b1769d35"
+    "reasoning": "Channel 'email' is prohibited under merchant policy for merch_01 (allowed: ['whatsapp', 'voice', 'telegram']).",
+    "prev_entry_hash": "4bc698aa57c0bf3564555883b888b3ce5f5e34758bacab5c02c62e76d32cb299",
+    "entry_hash": "9cca79daebf00576f89a1a4a96c2372e9b73e54c59a7726a7ea57792f198c484"
   },
   {
-    "timestamp": "2026-09-01T14:28:49.730217+00:00",
+    "timestamp": "2026-09-01T19:26:55.742307+00:00",
     "event_id": "discount_tool",
     "node_name": "apply_concession_discount",
     "action_taken": "DISCOUNT_CONCESSION_10PCT",
@@ -1276,11 +1463,11 @@
       "event_id": null
     },
     "reasoning": "Applied 10% instant concession (capped at 15% financial invariant). Reason: Payer requested discount",
-    "prev_entry_hash": "5ed8bdbe7c3ea1642cc1a46badfd6c39c8e643a68555cb3618c6e0c9b1769d35",
-    "entry_hash": "c54690dde8a6914dd88b84d60196887c2548a9fac0b4feac7ffd2d33e4ac7320"
+    "prev_entry_hash": "9cca79daebf00576f89a1a4a96c2372e9b73e54c59a7726a7ea57792f198c484",
+    "entry_hash": "bb10a36487762fd1dce27f6fde21916adc56ee5fae65583433c8b3c32143af4a"
   },
   {
-    "timestamp": "2026-09-01T14:28:49.756335+00:00",
+    "timestamp": "2026-09-01T19:26:55.747368+00:00",
     "event_id": "ptp_commitment",
     "node_name": "register_promise_to_pay",
     "action_taken": "PTP_SCHEDULED_OUTREACH_PAUSED",
@@ -1291,147 +1478,87 @@
       "event_id": null
     },
     "reasoning": "Customer confirmed payment commitment for Next Monday. Paused all dunning until T+24h after promised date.",
-    "prev_entry_hash": "c54690dde8a6914dd88b84d60196887c2548a9fac0b4feac7ffd2d33e4ac7320",
-    "entry_hash": "6be044871bbf9a135ab17c831b1ef9b5868ddd23287cb7a6f5f570df2c7d2be3"
+    "prev_entry_hash": "bb10a36487762fd1dce27f6fde21916adc56ee5fae65583433c8b3c32143af4a",
+    "entry_hash": "15632645b379fb881cc8cb21db596dd405dc910ee12afc93735accfc8b897f10"
   },
   {
-    "timestamp": "2026-09-01T14:29:19.966858+00:00",
-    "event_id": "evt_001",
-    "node_name": "memory_enrichment",
-    "action_taken": "Priors Loaded",
-    "details": {
-      "reliability": 0.95
-    },
-    "reasoning": "",
-    "prev_entry_hash": "6be044871bbf9a135ab17c831b1ef9b5868ddd23287cb7a6f5f570df2c7d2be3",
-    "entry_hash": "9eed923be140e17635eb6cf00bec0fc280cd7bc90f182a9977a9513d06d16069"
-  },
-  {
-    "timestamp": "2026-09-01T14:29:19.977640+00:00",
-    "event_id": "evt_001",
+    "timestamp": "2026-09-01T19:27:20.332283+00:00",
+    "event_id": "test_sub_ent_01",
     "node_name": "classify_root_cause",
-    "action_taken": "Diagnosed subscription_failed",
+    "action_taken": "Classified as subscription_failed (enterprise_white_glove)",
     "details": {
-      "confidence": 0.98
+      "root_cause": "subscription_failed",
+      "subscription_archetype": "enterprise_white_glove",
+      "confidence": 0.98,
+      "requires_hitl_escalation": true,
+      "grace_period_days": 21,
+      "allow_downgrade_offer": false,
+      "merchant_lifecycle_alert": "[Enterprise Alert] Renewal failed: \u20b935,000/mo subscription for Subscriber (do_not_honor). Automated messages paused. Review and approve direct executive outreach.",
+      "candidate_actions": [
+        {
+          "action_type": "enterprise_hitl_escalation",
+          "target_channel": "none",
+          "cost": 0.0,
+          "description": "Enterprise Renewal Notice for Subscriber: Invoice \u20b935,000 encountered an issuing bank decline (do_not_honor). Your Account Manager is reviewing this transaction."
+        },
+        {
+          "action_type": "do_nothing",
+          "target_channel": "none",
+          "cost": 0.0,
+          "description": "Do nothing (Natural settlement or respect customer disengagement)"
+        }
+      ]
     },
-    "reasoning": "",
-    "prev_entry_hash": "9eed923be140e17635eb6cf00bec0fc280cd7bc90f182a9977a9513d06d16069",
-    "entry_hash": "233cffff03c08835fb11519166e0dd453f05b0d4c5cf821082912a2aa38cb25c"
+    "reasoning": "High-value ENTERPRISE account (\u20b935,000/mo, 1mo tenure). Automated bot messaging suppressed to protect client relationship. Dispatched to Account Manager via Telegram HITL.",
+    "prev_entry_hash": "15632645b379fb881cc8cb21db596dd405dc910ee12afc93735accfc8b897f10",
+    "entry_hash": "2ed91380c37f10de5584c585cec710582aaa793f744f2c0c3f3fddff3d8f23a3"
   },
   {
-    "timestamp": "2026-09-01T14:29:20.009835+00:00",
-    "event_id": "evt_001",
-    "node_name": "score_policy_options",
-    "action_taken": "Ranked WhatsApp Payment Link",
-    "details": {
-      "ev": 4500.0
-    },
-    "reasoning": "",
-    "prev_entry_hash": "233cffff03c08835fb11519166e0dd453f05b0d4c5cf821082912a2aa38cb25c",
-    "entry_hash": "dd1891e58a74f45e61a99e5f68beada7a76d4a3aac9eda4c4f732a2bacad8f07"
-  },
-  {
-    "timestamp": "2026-09-01T14:29:20.039878+00:00",
-    "event_id": "evt_001",
+    "timestamp": "2026-09-01T19:27:20.363493+00:00",
+    "event_id": "test_sub_ent_01",
     "node_name": "check_guardrails",
-    "action_taken": "Guardrail ALLOW (RULE_ALL_GUARDRAILS_PASSED)",
+    "action_taken": "Guardrail ESCALATE (RULE_ENTERPRISE_WHITE_GLOVE_ESCALATION)",
     "details": {
-      "result": "ALLOW"
+      "rule": "RULE_ENTERPRISE_WHITE_GLOVE_ESCALATION",
+      "result": "ESCALATE",
+      "archetype": "enterprise_white_glove"
     },
-    "reasoning": "",
-    "prev_entry_hash": "dd1891e58a74f45e61a99e5f68beada7a76d4a3aac9eda4c4f732a2bacad8f07",
-    "entry_hash": "a6217a5c557b1ddc3f87a236f92b188af926b8eab87da1598c888fedec619907"
+    "reasoning": "Enterprise Tier Account / White-Glove contract requires Account Manager review before outreach.",
+    "prev_entry_hash": "2ed91380c37f10de5584c585cec710582aaa793f744f2c0c3f3fddff3d8f23a3",
+    "entry_hash": "e093b548dae26de55a2ecbc55476f7de0fb6ba08d35774c7ea8d4c2bd194c4fc"
   },
   {
-    "timestamp": "2026-09-01T14:29:20.069814+00:00",
-    "event_id": "evt_002",
-    "node_name": "memory_enrichment",
-    "action_taken": "Priors Loaded",
-    "details": {
-      "reliability": 0.8
-    },
-    "reasoning": "",
-    "prev_entry_hash": "a6217a5c557b1ddc3f87a236f92b188af926b8eab87da1598c888fedec619907",
-    "entry_hash": "d88c49932d34a8cb684764a919d67812e11321267e76233eed38a7f940de3f0f"
-  },
-  {
-    "timestamp": "2026-09-01T14:29:20.094369+00:00",
-    "event_id": "evt_002",
-    "node_name": "check_guardrails",
-    "action_taken": "Guardrail BLOCK",
-    "details": {
-      "result": "BLOCK"
-    },
-    "reasoning": "",
-    "prev_entry_hash": "d88c49932d34a8cb684764a919d67812e11321267e76233eed38a7f940de3f0f",
-    "entry_hash": "c477c58105e4538beb65da82b36f144ef4943ebbaab671eaaefbbf25ab94df08"
-  },
-  {
-    "timestamp": "2026-09-01T14:29:20.125918+00:00",
-    "event_id": "evt_003",
-    "node_name": "executor",
-    "action_taken": "WhatsApp Sent",
-    "details": {
-      "status": "delivered"
-    },
-    "reasoning": "",
-    "prev_entry_hash": "c477c58105e4538beb65da82b36f144ef4943ebbaab671eaaefbbf25ab94df08",
-    "entry_hash": "62a2f64795744bab54478b2600f193109c3dfc3ba090b7fa78b60b03d2c610fb"
-  },
-  {
-    "timestamp": "2026-09-01T14:29:20.152164+00:00",
-    "event_id": "evt_storage_test_001",
-    "node_name": "memory_enrichment",
-    "action_taken": "Priors Loaded",
-    "details": {
-      "reliability": 0.9
-    },
-    "reasoning": "",
-    "prev_entry_hash": "62a2f64795744bab54478b2600f193109c3dfc3ba090b7fa78b60b03d2c610fb",
-    "entry_hash": "52c76170f064673dabba5e3770f23d30bbd32c01a198dd8c5b4384fbd1ced3c6"
-  },
-  {
-    "timestamp": "2026-09-01T14:29:20.185454+00:00",
-    "event_id": "evt_storage_test_001",
-    "node_name": "check_guardrails",
-    "action_taken": "Guardrail ALLOW",
-    "details": {
-      "result": "ALLOW"
-    },
-    "reasoning": "",
-    "prev_entry_hash": "52c76170f064673dabba5e3770f23d30bbd32c01a198dd8c5b4384fbd1ced3c6",
-    "entry_hash": "662d4ac06f24713ed373532d24b997bc0012aae473bae8a661d09a1f32082166"
-  },
-  {
-    "timestamp": "2026-09-01T14:29:20.247859+00:00",
+    "timestamp": "2026-09-01T19:27:29.031420+00:00",
     "event_id": "evt_stop_01",
     "node_name": "check_guardrails",
     "action_taken": "Guardrail ESCALATE (RULE_MAX_CONTACT_FREQUENCY_EXCEEDED)",
     "details": {
       "rule": "RULE_MAX_CONTACT_FREQUENCY_EXCEEDED",
       "result": "ESCALATE",
-      "total_contacts": 4
+      "total_contacts": 4,
+      "limit": 2
     },
-    "reasoning": "Customer has already received 4 outreach attempts (limit=2). Escalating to human.",
-    "prev_entry_hash": "662d4ac06f24713ed373532d24b997bc0012aae473bae8a661d09a1f32082166",
-    "entry_hash": "6f66d1e3a553493ee59999926d0a44b116f4290e3aaee4aa2422dd026a93585b"
+    "reasoning": "Customer has already received 4 outreach attempts (merchant limit=2). Escalating to human.",
+    "prev_entry_hash": "e093b548dae26de55a2ecbc55476f7de0fb6ba08d35774c7ea8d4c2bd194c4fc",
+    "entry_hash": "d4be035c91595eb27ba52500e3e087b90c86a247498170913c1c55131ad5fdf3"
   },
   {
-    "timestamp": "2026-09-01T14:29:20.264549+00:00",
+    "timestamp": "2026-09-01T19:27:29.040208+00:00",
     "event_id": "evt_stop_03",
     "node_name": "check_guardrails",
     "action_taken": "Guardrail ESCALATE (RULE_HIGH_VALUE_THRESHOLD_ESCALATION)",
     "details": {
       "rule": "RULE_HIGH_VALUE_THRESHOLD_ESCALATION",
       "result": "ESCALATE",
-      "amount": 145000.0
+      "amount": 145000.0,
+      "threshold": 75000.0
     },
-    "reasoning": "Amount \u20b9145,000.00 >= \u20b9100,000.00. High financial impact requires Human-In-The-Loop approval.",
-    "prev_entry_hash": "6f66d1e3a553493ee59999926d0a44b116f4290e3aaee4aa2422dd026a93585b",
-    "entry_hash": "07e8c53e89a44065147b9f2609a6a8a939878f28e2c60bd655136e79e1e4e20e"
+    "reasoning": "Amount \u20b9145,000.00 >= merchant policy threshold \u20b975,000.00. High financial impact requires Human-In-The-Loop approval.",
+    "prev_entry_hash": "d4be035c91595eb27ba52500e3e087b90c86a247498170913c1c55131ad5fdf3",
+    "entry_hash": "7aea8ac703eee2cee2f8c0292f771061d269d5e7b48c1feb437e02bc8ea68e05"
   },
   {
-    "timestamp": "2026-09-01T14:29:20.304316+00:00",
+    "timestamp": "2026-09-01T19:27:29.073979+00:00",
     "event_id": "evt_stop_04",
     "node_name": "execute_action",
     "action_taken": "Silent Route Rerouted",
@@ -1443,11 +1570,11 @@
       "merchant_alert": "Route degraded. Auto-switched to HDFC secondary route. Zero customer contact."
     },
     "reasoning": "Silent payment route rerouted to secondary gateway without customer outreach.",
-    "prev_entry_hash": "07e8c53e89a44065147b9f2609a6a8a939878f28e2c60bd655136e79e1e4e20e",
-    "entry_hash": "2a81c2e1ec13ee9843bb5b01ad8dc257ad8058cf59c095d1fa369995c91d7590"
+    "prev_entry_hash": "7aea8ac703eee2cee2f8c0292f771061d269d5e7b48c1feb437e02bc8ea68e05",
+    "entry_hash": "3e802b731777346557a9933aff41a259962cf21964531d4eeb3cc2e8b4ab1653"
   },
   {
-    "timestamp": "2026-09-01T14:29:20.336261+00:00",
+    "timestamp": "2026-09-01T19:27:29.100122+00:00",
     "event_id": "evt_stop_05",
     "node_name": "execute_action",
     "action_taken": "PTP Scheduled Check Created",
@@ -1457,11 +1584,11 @@
       "action": "Outreach paused until promised date."
     },
     "reasoning": "Promise-to-pay registered for 2026-09-03. Outreach paused.",
-    "prev_entry_hash": "2a81c2e1ec13ee9843bb5b01ad8dc257ad8058cf59c095d1fa369995c91d7590",
-    "entry_hash": "41dd1c7459087100d867253e760fe70ef998f125bbe71f0d357d6f1106c28c12"
+    "prev_entry_hash": "3e802b731777346557a9933aff41a259962cf21964531d4eeb3cc2e8b4ab1653",
+    "entry_hash": "3bcdf61bb0685ce0f0004480eb6c190b343600c205e0895397b20799bf6edfd0"
   },
   {
-    "timestamp": "2026-09-01T14:29:20.369041+00:00",
+    "timestamp": "2026-09-01T19:27:29.126871+00:00",
     "event_id": "optout_+919820199999",
     "node_name": "consent_registry",
     "action_taken": "OMNICHANNEL_OPT_OUT_REGISTERED",
@@ -1470,14 +1597,14 @@
       "source_channel": "sms",
       "reason": "User texted STOP",
       "status": "PERMANENT_OPT_OUT",
-      "opted_out_at": "2026-09-01T14:29:20.367921+00:00"
+      "opted_out_at": "2026-09-01T19:27:29.126316+00:00"
     },
     "reasoning": "Permanent opt-out recorded from channel 'sms'. All future recovery outreach permanently blocked.",
-    "prev_entry_hash": "41dd1c7459087100d867253e760fe70ef998f125bbe71f0d357d6f1106c28c12",
-    "entry_hash": "65cd4146e0a0f71bbaf6be2cabdf2a10fa1d13c54d6a56b786f0e16b53b2d7f2"
+    "prev_entry_hash": "3bcdf61bb0685ce0f0004480eb6c190b343600c205e0895397b20799bf6edfd0",
+    "entry_hash": "e6e8aad45f49aea417e733dcb928d4404b8a33826a557421ed15172197503c2f"
   },
   {
-    "timestamp": "2026-09-01T14:29:20.403239+00:00",
+    "timestamp": "2026-09-01T19:27:29.160339+00:00",
     "event_id": "evt_stop_07",
     "node_name": "execute_action",
     "action_taken": "Email Recovery Dispatched (Razorpay Link)",
@@ -1494,11 +1621,11 @@
       "payment_link_id": "plink_eval_vtstop07"
     },
     "reasoning": "Direct email recovery link delivered to customer@example.com.",
-    "prev_entry_hash": "65cd4146e0a0f71bbaf6be2cabdf2a10fa1d13c54d6a56b786f0e16b53b2d7f2",
-    "entry_hash": "c96367774f70f200b858edc539dd5c8a2491443d60c9f45903ad644243fd34c0"
+    "prev_entry_hash": "e6e8aad45f49aea417e733dcb928d4404b8a33826a557421ed15172197503c2f",
+    "entry_hash": "17171e40799ec568e89ea47223aa83f4bce72817f8fd43479d5ccd5323df37b9"
   },
   {
-    "timestamp": "2026-09-01T14:29:20.509729+00:00",
+    "timestamp": "2026-09-01T19:27:29.199580+00:00",
     "event_id": "evt_stop_08",
     "node_name": "execute_action",
     "action_taken": "Telegram Send Failed (No Linked Account)",
@@ -1510,120 +1637,145 @@
       "discount_applied": 0.0
     },
     "reasoning": "Proactive Telegram recovery dispatched to customer cust_stop_08 (chat_id resolved from DB).",
-    "prev_entry_hash": "c96367774f70f200b858edc539dd5c8a2491443d60c9f45903ad644243fd34c0",
-    "entry_hash": "f67fb5b44ae0a2eef8f121df7d5bf05dafd713763d7e6d50eb8ddc70b7f5bcc0"
+    "prev_entry_hash": "17171e40799ec568e89ea47223aa83f4bce72817f8fd43479d5ccd5323df37b9",
+    "entry_hash": "6400a57e1e2af71d602379b8ad3bdbaa1a8f290c8dfc42c9cd8627bd5cb9be43"
   },
   {
-    "timestamp": "2026-09-01T14:31:56.862293+00:00",
-    "event_id": "test_order_race_20260901143152",
-    "node_name": "webhook_receiver",
-    "action_taken": "Queued Recovery Cancelled (Payment Captured)",
+    "timestamp": "2026-09-01T19:27:29.238889+00:00",
+    "event_id": "optout_cust_dnd_test_01",
+    "node_name": "consent_registry",
+    "action_taken": "OMNICHANNEL_OPT_OUT_REGISTERED",
     "details": {
-      "payment_id": "pay_test_20260901143152",
-      "order_id": "order_test_20260901143152",
-      "amount": 4999.0,
-      "duplicate_contacts_prevented": 1
+      "identifier": "cust_dnd_test_01",
+      "source_channel": "whatsapp",
+      "reason": "User sent STOP keyword",
+      "status": "PERMANENT_OPT_OUT",
+      "opted_out_at": "2026-09-01T19:27:29.237256+00:00"
     },
-    "reasoning": "Payment captured before outreach. Outreach aborted with 0 duplicate spam.",
-    "prev_entry_hash": "f67fb5b44ae0a2eef8f121df7d5bf05dafd713763d7e6d50eb8ddc70b7f5bcc0",
-    "entry_hash": "34d4e7653961ebd189fa73ebb21879dedd6e62606da322ff2776be1038583692"
+    "reasoning": "Permanent opt-out recorded from channel 'whatsapp'. All future recovery outreach permanently blocked.",
+    "prev_entry_hash": "6400a57e1e2af71d602379b8ad3bdbaa1a8f290c8dfc42c9cd8627bd5cb9be43",
+    "entry_hash": "45013667b952c16e41d2449a218f100cd5d82ffa91bb7afe660cd20b8e763ee8"
   },
   {
-    "timestamp": "2026-09-01T14:32:00.774155+00:00",
-    "event_id": "test_order_race_20260901143152",
-    "node_name": "execute_action",
-    "action_taken": "Outreach Aborted (Payment Captured Early)",
+    "timestamp": "2026-09-01T19:27:29.274613+00:00",
+    "event_id": "evt_test_consent",
+    "node_name": "check_guardrails",
+    "action_taken": "Guardrail BLOCK (RULE_OPT_OUT_ENFORCED)",
     "details": {
-      "event_id": "test_order_race_20260901143152",
-      "action_type": "whatsapp_payment_link",
-      "status": "cancelled_by_webhook"
+      "rule": "RULE_OPT_OUT_ENFORCED",
+      "result": "BLOCK",
+      "reason": "Customer opted out on 2026-09-01 via whatsapp (User sent STOP keyword)."
     },
-    "reasoning": "Outreach aborted immediately pre-send: payment.captured received before dispatch. Zero customer spam.",
-    "prev_entry_hash": "34d4e7653961ebd189fa73ebb21879dedd6e62606da322ff2776be1038583692",
-    "entry_hash": "d0e41552694d2ad866b71a665ca69bf7ba1cb657571b6aaf579f99fd77505eec"
+    "reasoning": "Customer opted out on 2026-09-01 via whatsapp (User sent STOP keyword).",
+    "prev_entry_hash": "45013667b952c16e41d2449a218f100cd5d82ffa91bb7afe660cd20b8e763ee8",
+    "entry_hash": "00b7f19668a69636512320a354efacf1433a8fa20c193e43e1fbe18848242e70"
   },
   {
-    "timestamp": "2026-09-01T14:32:49.165102+00:00",
-    "event_id": "discount_tool",
-    "node_name": "apply_concession_discount",
-    "action_taken": "DISCOUNT_CONCESSION_10PCT",
+    "timestamp": "2026-09-01T19:27:29.308865+00:00",
+    "event_id": "evt_001",
+    "node_name": "memory_enrichment",
+    "action_taken": "Priors Loaded",
     "details": {
-      "discount_percent": 10,
-      "reason": "Payer requested discount",
-      "customer_id": null,
-      "event_id": null
+      "reliability": 0.95
     },
-    "reasoning": "Applied 10% instant concession (capped at 15% financial invariant). Reason: Payer requested discount",
-    "prev_entry_hash": "d0e41552694d2ad866b71a665ca69bf7ba1cb657571b6aaf579f99fd77505eec",
-    "entry_hash": "6305f5578b64b5f0667f1bb6242d0b5daf4545100455f70e606723deb26487ec"
+    "reasoning": "",
+    "prev_entry_hash": "00b7f19668a69636512320a354efacf1433a8fa20c193e43e1fbe18848242e70",
+    "entry_hash": "a80b741bc9bf0336993375b5433bf2cf3505cb5c54dbb97c3375679e1a1b6b7d"
   },
   {
-    "timestamp": "2026-09-01T14:32:49.511827+00:00",
-    "event_id": "ptp_commitment",
-    "node_name": "register_promise_to_pay",
-    "action_taken": "PTP_SCHEDULED_OUTREACH_PAUSED",
+    "timestamp": "2026-09-01T19:27:29.333261+00:00",
+    "event_id": "evt_001",
+    "node_name": "classify_root_cause",
+    "action_taken": "Diagnosed subscription_failed",
     "details": {
-      "promised_date": "Next Monday",
-      "note": "Will settle on payday",
-      "customer_id": null,
-      "event_id": null
+      "confidence": 0.98
     },
-    "reasoning": "Customer confirmed payment commitment for Next Monday. Paused all dunning until T+24h after promised date.",
-    "prev_entry_hash": "6305f5578b64b5f0667f1bb6242d0b5daf4545100455f70e606723deb26487ec",
-    "entry_hash": "207404aa4e3ebcf5baa21180b5ff1d4c71c90a8aa9d541a14ed93abec9edd585"
+    "reasoning": "",
+    "prev_entry_hash": "a80b741bc9bf0336993375b5433bf2cf3505cb5c54dbb97c3375679e1a1b6b7d",
+    "entry_hash": "7e16fa8b24043ac5f5e5abd1fde7c8117a18b83b3195c47da43436268c318822"
   },
   {
-    "timestamp": "2026-09-01T16:49:16.619885+00:00",
-    "event_id": "evt_0250",
-    "node_name": "hitl_escalation",
-    "action_taken": "HITL_APPROVED_AND_EXECUTED",
+    "timestamp": "2026-09-01T19:27:29.362031+00:00",
+    "event_id": "evt_001",
+    "node_name": "score_policy_options",
+    "action_taken": "Ranked WhatsApp Payment Link",
     "details": {
-      "decision": "APPROVED",
-      "supervisor_note": "Supervisor authorization approved via dashboard for \u20b95,00,000",
-      "amount": 500000.0,
-      "channel_used": "whatsapp",
-      "payment_link": "https://rzp.io/i/evt_0250",
-      "payment_link_id": "plink_sim_evt_0250",
-      "dispatch_result": {
-        "success": true,
-        "channel": "whatsapp",
-        "provider": "simulation",
-        "message_id": "sim_3210_500000",
-        "recipient": "+919876543210",
-        "status": "simulated",
-        "body": "Hello Riya Dubey, reminder for invoice \u20b9500,000. Pay online: https://rzp.io/i/evt_0250",
-        "link": "https://rzp.io/i/evt_0250"
-      }
+      "ev": 4500.0
     },
-    "reasoning": "Supervisor approved \u20b9500,000 high-value recovery. Released 1-click Razorpay payment link via Whatsapp.",
-    "prev_entry_hash": "207404aa4e3ebcf5baa21180b5ff1d4c71c90a8aa9d541a14ed93abec9edd585",
-    "entry_hash": "9540fa9b53250f4ecd91f352ac03ff423ed98f4a3d96c51d883b544863dec44f"
+    "reasoning": "",
+    "prev_entry_hash": "7e16fa8b24043ac5f5e5abd1fde7c8117a18b83b3195c47da43436268c318822",
+    "entry_hash": "aa21b621f07f35396396b2a763b8ca577f39b0b6bf4c2f3354812f636fb6b834"
   },
   {
-    "timestamp": "2026-09-01T16:55:59.271384+00:00",
-    "event_id": "evt_0250",
-    "node_name": "hitl_escalation",
-    "action_taken": "HITL_APPROVED_AND_EXECUTED",
+    "timestamp": "2026-09-01T19:27:29.390360+00:00",
+    "event_id": "evt_001",
+    "node_name": "check_guardrails",
+    "action_taken": "Guardrail ALLOW (RULE_ALL_GUARDRAILS_PASSED)",
     "details": {
-      "decision": "APPROVED",
-      "supervisor_note": "Supervisor authorization approved via dashboard for \u20b95,00,000",
-      "amount": 500000.0,
-      "channel_used": "whatsapp",
-      "payment_link": "https://rzp.io/rzp/vsh9xCi",
-      "payment_link_id": "plink_TWqWPHiGP1wdCw",
-      "dispatch_result": {
-        "success": true,
-        "channel": "whatsapp",
-        "provider": "simulation",
-        "message_id": "sim_3210_500000",
-        "recipient": "+919876543210",
-        "status": "simulated",
-        "body": "Hello Riya Dubey, reminder for invoice \u20b9500,000. Pay online: https://rzp.io/rzp/vsh9xCi",
-        "link": "https://rzp.io/rzp/vsh9xCi"
-      }
+      "result": "ALLOW"
     },
-    "reasoning": "Supervisor approved \u20b9500,000 high-value recovery. Released 1-click Razorpay payment link via Whatsapp.",
-    "prev_entry_hash": "9540fa9b53250f4ecd91f352ac03ff423ed98f4a3d96c51d883b544863dec44f",
-    "entry_hash": "ceb792986fdc04db5fcd2e1b7769400c32c43cc27f65f56cd26da86c607d400e"
+    "reasoning": "",
+    "prev_entry_hash": "aa21b621f07f35396396b2a763b8ca577f39b0b6bf4c2f3354812f636fb6b834",
+    "entry_hash": "9ea93d0be465721a76885949e5c7cf84dd33032e36a49cf2d5e5ed5a88239c4a"
+  },
+  {
+    "timestamp": "2026-09-01T19:27:29.428125+00:00",
+    "event_id": "evt_002",
+    "node_name": "memory_enrichment",
+    "action_taken": "Priors Loaded",
+    "details": {
+      "reliability": 0.8
+    },
+    "reasoning": "",
+    "prev_entry_hash": "9ea93d0be465721a76885949e5c7cf84dd33032e36a49cf2d5e5ed5a88239c4a",
+    "entry_hash": "c98959c1ca0445111c42ef1c7b15fadc2a0ba940084886e4fb30bc5ae2345904"
+  },
+  {
+    "timestamp": "2026-09-01T19:27:29.459622+00:00",
+    "event_id": "evt_002",
+    "node_name": "check_guardrails",
+    "action_taken": "Guardrail BLOCK",
+    "details": {
+      "result": "BLOCK"
+    },
+    "reasoning": "",
+    "prev_entry_hash": "c98959c1ca0445111c42ef1c7b15fadc2a0ba940084886e4fb30bc5ae2345904",
+    "entry_hash": "86dade1cb930b5d0c1c626387e2634be19095a308038e20efd6eff72bdf7f2d7"
+  },
+  {
+    "timestamp": "2026-09-01T19:27:29.490998+00:00",
+    "event_id": "evt_003",
+    "node_name": "executor",
+    "action_taken": "WhatsApp Sent",
+    "details": {
+      "status": "delivered"
+    },
+    "reasoning": "",
+    "prev_entry_hash": "86dade1cb930b5d0c1c626387e2634be19095a308038e20efd6eff72bdf7f2d7",
+    "entry_hash": "8c44bf9ef59415849fd53be31a2fd1188e8b518116c9b8740c2b86802971d3d0"
+  },
+  {
+    "timestamp": "2026-09-01T19:27:29.516528+00:00",
+    "event_id": "evt_storage_test_001",
+    "node_name": "memory_enrichment",
+    "action_taken": "Priors Loaded",
+    "details": {
+      "reliability": 0.9
+    },
+    "reasoning": "",
+    "prev_entry_hash": "8c44bf9ef59415849fd53be31a2fd1188e8b518116c9b8740c2b86802971d3d0",
+    "entry_hash": "3a5a3e01372fabd06e8f2112acf420f9641c1080f5f30483ba5cba5e30df25dc"
+  },
+  {
+    "timestamp": "2026-09-01T19:27:29.544195+00:00",
+    "event_id": "evt_storage_test_001",
+    "node_name": "check_guardrails",
+    "action_taken": "Guardrail ALLOW",
+    "details": {
+      "result": "ALLOW"
+    },
+    "reasoning": "",
+    "prev_entry_hash": "3a5a3e01372fabd06e8f2112acf420f9641c1080f5f30483ba5cba5e30df25dc",
+    "entry_hash": "762c9f399e095a989a0777f300b70ae1cedb85666c78eb5e47cb7eef7e8199e6"
   }
 ]

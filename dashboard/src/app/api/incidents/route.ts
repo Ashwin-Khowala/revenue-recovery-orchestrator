@@ -82,6 +82,7 @@ export async function GET(request: Request) {
             }
           }
 
+          const dupBreaches = (e.history?.prior_contacts || 0) > 2 ? 1 : 0;
           return {
             id: e.event_id,
             customer: e.customer_name || `Customer ${e.customer_id}`,
@@ -96,7 +97,7 @@ export async function GET(request: Request) {
             archetype,
             maxAttempts: 2,
             currentAttempts: e.history?.prior_contacts || 0,
-            duplicateContactBreaches: 0,
+            duplicateContactBreaches: dupBreaches,
             link: e.metadata?.payment_link || `https://rzp.io/i/${(e.event_id || 'rec_plink').replace(/[^a-zA-Z0-9]/g, '').slice(-8)}`,
             createdAt: e.created_at,
           };
@@ -106,6 +107,7 @@ export async function GET(request: Request) {
         const totalRecovered = enriched.filter((i: any) => i.status === 'recovered').reduce((acc: number, i: any) => acc + i.amount, 0);
         const pendingHitl = enriched.filter((i: any) => i.status === 'pending_hitl').length;
         const marginSaved = enriched.filter((i: any) => i.archetype === 'comparison_window_shopping').reduce((acc: number, i: any) => acc + Math.round(i.amount * 0.15), 0);
+        const duplicateContactsCount = enriched.reduce((acc: number, i: any) => acc + (i.duplicateContactBreaches || 0), 0);
 
         return NextResponse.json({
           success: true,
@@ -114,7 +116,7 @@ export async function GET(request: Request) {
           total_recovered: totalRecovered,
           pending_hitl_count: pendingHitl,
           margin_saved_inr: marginSaved,
-          duplicate_contacts: 0,
+          duplicate_contacts: duplicateContactsCount,
           incidents: enriched,
         });
       }

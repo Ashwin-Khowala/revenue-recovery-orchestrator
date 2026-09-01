@@ -15,6 +15,7 @@ import {
   Layers,
   Sliders,
   Users,
+  AlertOctagon,
   ExternalLink,
 } from 'lucide-react';
 
@@ -85,6 +86,15 @@ export default function MerchantSidebar() {
       icon: <Layers className="w-4 h-4" />,
       activeStyle: 'bg-slate-100 text-slate-800 border border-slate-300 shadow-xs font-bold',
       iconColor: 'text-slate-600',
+    },
+    {
+      id: 'exceptions',
+      label: 'Exceptions & Stopping Rules',
+      icon: <AlertOctagon className="w-4 h-4" />,
+      activeStyle: 'bg-rose-50 text-rose-800 border border-rose-200 shadow-xs font-bold',
+      iconColor: 'text-rose-600',
+      badge: 'Audit',
+      badgeStyle: 'bg-rose-100 text-rose-800 border border-rose-300',
     },
   ];
 

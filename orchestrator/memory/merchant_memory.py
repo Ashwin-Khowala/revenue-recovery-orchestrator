@@ -55,22 +55,39 @@ def get_merchant_profile(merchant_id: str) -> Optional[Dict[str, Any]]:
 def get_merchant_policy(merchant_id: str) -> Dict[str, Any]:
     """
     Returns the merchant's configured contact policy.
-    Falls back to safe defaults if no profile found.
+    Checks data/merchant_policies/{merchant_id}.json first, then Supabase, then safe defaults.
     """
+    import json
+    policy_file = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "data",
+        "merchant_policies",
+        f"{merchant_id}.json",
+    )
+    if os.path.exists(policy_file):
+        try:
+            with open(policy_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.debug(f"Could not load {policy_file}: {e}")
+
     profile = get_merchant_profile(merchant_id)
     if profile and profile.get("contact_policy"):
         policy = profile["contact_policy"]
         if isinstance(policy, str):
-            import json
             policy = json.loads(policy)
         return policy
     
     # Safe defaults
     return {
+        "merchant_id": merchant_id,
         "max_whatsapp_per_case": 2,
         "max_email_per_case": 3,
+        "max_contacts_per_incident": 2,
         "voice_threshold_inr": 50000,
         "hitl_threshold_inr": 100000,
+        "quiet_window_hours": 24,
+        "allowed_channels": ["whatsapp", "voice", "telegram", "email"],
     }
 
 

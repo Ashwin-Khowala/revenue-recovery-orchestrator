@@ -237,12 +237,11 @@ def run_full_benchmark(holdout_path: str = "evals/labeled_holdout.json"):
 
     print(f"\n* COUNTERFACTUAL (Human approved every pause): ₹{m_cf['total_recovered']:,.2f} ({m_cf['recovery_rate_pct']}%) | Incremental: ₹{m_cf['incremental_recovered_vs_organic']:,.2f}", flush=True)
 
-    # Compute classifier accuracy on heldout set
+    # Compute classifier diagnostic agreement on heldout set
     correct_classifications = sum(
         1 for r in orch_results if r.get("classified_root_cause") == r.get("ground_truth_root_cause")
     )
-    accuracy = (correct_classifications / n) * 100
-    print(f"\nRoot-Cause Classifier Accuracy on Held-Out Set: {accuracy:.2f}% ({correct_classifications}/{n} exact matches)", flush=True)
+    print(f"\n[DIAGNOSTIC] Root-Cause Taxonomy Agreement on Held-Out Set: {correct_classifications}/{n} matches", flush=True)
     print(f"Zero Duplicate Contacts Guaranteed: {m_orch['duplicate_contacts'] == 0}\n", flush=True)
 
     # Export exceptions.json (every non-recovered event with exact reason)
@@ -282,7 +281,6 @@ def run_full_benchmark(holdout_path: str = "evals/labeled_holdout.json"):
             "orchestrator": m_orch,
             "counterfactual_hitl_approved": m_cf,
         },
-        "classifier_accuracy_pct": round(accuracy, 2),
     }
 
     out_file = "evals/last_run.json"

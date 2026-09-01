@@ -1,0 +1,17 @@
+{
+  "merchant_id": "merch_02",
+  "merchant_name": "Bharat Wholesale Pvt Ltd",
+  "hitl_threshold_inr": 100000.0,
+  "max_contacts_per_incident": 1,
+  "quiet_window_hours": 48,
+  "allowed_channels": [
+    "email"
+  ],
+  "business_hours_start": "10:00",
+  "business_hours_end": "18:00",
+  "timezone": "Asia/Kolkata",
+  "b2b_dispute_freeze_days": 60,
+  "max_whatsapp_per_case": 0,
+  "max_email_per_case": 1,
+  "voice_threshold_inr": 100000.0
+}

@@ -1,0 +1,20 @@
+{
+  "merchant_id": "merch_01",
+  "merchant_name": "TechGadgets India",
+  "hitl_threshold_inr": 75000.0,
+  "max_contacts_per_incident": 2,
+  "quiet_window_hours": 24,
+  "allowed_channels": [
+    "whatsapp",
+    "email",
+    "voice",
+    "telegram"
+  ],
+  "business_hours_start": "09:00",
+  "business_hours_end": "21:00",
+  "timezone": "Asia/Kolkata",
+  "b2b_dispute_freeze_days": 30,
+  "max_whatsapp_per_case": 2,
+  "max_email_per_case": 2,
+  "voice_threshold_inr": 40000.0
+}

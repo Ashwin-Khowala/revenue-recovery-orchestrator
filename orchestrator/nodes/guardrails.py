@@ -11,7 +11,7 @@ from orchestrator.audit import log_audit_entry
 
 logger = logging.getLogger("orchestrator.guardrails")
 
-# Hard system limits
+# Hard system defaults
 MAX_CONTACTS_PER_EVENT = 2
 HIGH_VALUE_THRESHOLD = 100000.0  # ₹1,00,000
 
@@ -20,15 +20,25 @@ def check_guardrails(state: RecoveryState) -> Dict[str, Any]:
     """
     Evaluates safety boundaries on the chosen recovery action.
     Returns guardrail_result: 'ALLOW', 'ESCALATE', or 'BLOCK'.
+    Enforces dynamic merchant policy (HITL cap, channel restrictions, max touches).
     """
+    from orchestrator.memory.merchant_memory import get_merchant_policy
+
     event_id = state.get("event_id", "unknown")
     amount = float(state.get("amount", 0.0))
+    merchant_id = state.get("merchant_id", "merch_01")
     root_cause = state.get("root_cause", "")
     chosen_action = state.get("chosen_action", {})
     channel = chosen_action.get("target_channel", "none")
     contact_count = state.get("contact_count", 0)
     prior_contacts = state.get("history", {}).get("prior_contacts", 0)
     metadata = state.get("metadata", {})
+
+    # Load dynamic merchant policy
+    merchant_policy = state.get("merchant_policy") or get_merchant_policy(merchant_id)
+    hitl_threshold = float(merchant_policy.get("hitl_threshold_inr") or merchant_policy.get("hitl_amount_threshold_inr") or HIGH_VALUE_THRESHOLD)
+    max_contacts_allowed = int(merchant_policy.get("max_contacts_per_incident") or MAX_CONTACTS_PER_EVENT)
+    allowed_channels = merchant_policy.get("allowed_channels") or ["whatsapp", "email", "voice", "telegram"]
 
     total_prior_contacts = contact_count + prior_contacts
 
@@ -110,17 +120,38 @@ def check_guardrails(state: RecoveryState) -> Dict[str, Any]:
         }
 
     # --------------------------------------------------------------------------
-    # Guardrail 3: Contact Frequency Cap (Max 2 Attempts)
+    # Guardrail 2.5: Merchant Allowed Channel Enforcement
     # --------------------------------------------------------------------------
-    if channel in ("whatsapp", "email") and total_prior_contacts >= MAX_CONTACTS_PER_EVENT:
-        rule = "RULE_MAX_CONTACT_FREQUENCY_EXCEEDED"
-        result = "ESCALATE"
-        reason = f"Customer has already received {total_prior_contacts} outreach attempts (limit={MAX_CONTACTS_PER_EVENT}). Escalating to human."
+    if channel not in ("none", "reroute", "scheduled_check") and channel not in allowed_channels:
+        rule = "RULE_MERCHANT_POLICY_CHANNEL_PROHIBITED"
+        result = "BLOCK"
+        reason = f"Channel '{channel}' is prohibited under merchant policy for {merchant_id} (allowed: {allowed_channels})."
         audit_entry = log_audit_entry(
             event_id=event_id,
             node_name="check_guardrails",
             action_taken=f"Guardrail {result} ({rule})",
-            details={"rule": rule, "result": result, "total_contacts": total_prior_contacts},
+            details={"rule": rule, "result": result, "channel": channel, "allowed": allowed_channels},
+            reasoning=reason,
+        )
+        return {
+            "guardrail_result": result,
+            "guardrail_rule_fired": rule,
+            "payment_status": "blocked",
+            "audit_trail": state.get("audit_trail", []) + [audit_entry],
+        }
+
+    # --------------------------------------------------------------------------
+    # Guardrail 3: Contact Frequency Cap (Dynamic Policy Limit)
+    # --------------------------------------------------------------------------
+    if channel in ("whatsapp", "email", "voice", "telegram") and total_prior_contacts >= max_contacts_allowed:
+        rule = "RULE_MAX_CONTACT_FREQUENCY_EXCEEDED"
+        result = "ESCALATE"
+        reason = f"Customer has already received {total_prior_contacts} outreach attempts (merchant limit={max_contacts_allowed}). Escalating to human."
+        audit_entry = log_audit_entry(
+            event_id=event_id,
+            node_name="check_guardrails",
+            action_taken=f"Guardrail {result} ({rule})",
+            details={"rule": rule, "result": result, "total_contacts": total_prior_contacts, "limit": max_contacts_allowed},
             reasoning=reason,
         )
         return {
@@ -130,17 +161,17 @@ def check_guardrails(state: RecoveryState) -> Dict[str, Any]:
         }
 
     # --------------------------------------------------------------------------
-    # Guardrail 4: High-Value Amount Threshold (> ₹1,00,000)
+    # Guardrail 4: High-Value Amount Threshold (Dynamic Merchant Cap)
     # --------------------------------------------------------------------------
-    if amount >= HIGH_VALUE_THRESHOLD and channel in ("whatsapp", "email"):
+    if amount >= hitl_threshold and channel in ("whatsapp", "email", "voice", "telegram"):
         rule = "RULE_HIGH_VALUE_THRESHOLD_ESCALATION"
         result = "ESCALATE"
-        reason = f"Amount ₹{amount:,.2f} >= ₹{HIGH_VALUE_THRESHOLD:,.2f}. High financial impact requires Human-In-The-Loop approval."
+        reason = f"Amount ₹{amount:,.2f} >= merchant policy threshold ₹{hitl_threshold:,.2f}. High financial impact requires Human-In-The-Loop approval."
         audit_entry = log_audit_entry(
             event_id=event_id,
             node_name="check_guardrails",
             action_taken=f"Guardrail {result} ({rule})",
-            details={"rule": rule, "result": result, "amount": amount},
+            details={"rule": rule, "result": result, "amount": amount, "threshold": hitl_threshold},
             reasoning=reason,
         )
         return {

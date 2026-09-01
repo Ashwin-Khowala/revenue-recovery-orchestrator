@@ -40,6 +40,10 @@ app.add_middleware(
 # Active pending queue to intercept race conditions
 PENDING_RECOVERY_QUEUE: Dict[str, Dict[str, Any]] = {}
 
+# Idempotency cache to prevent duplicate webhook processing on Razorpay retries (up to 15x)
+PROCESSED_WEBHOOK_IDS: set = set()
+_WEBHOOK_ID_MAX_CACHE = 10000
+
 
 class ProcessEventRequest(BaseModel):
     event_id: str
@@ -919,6 +923,24 @@ async def razorpay_webhook_listener(
             raise HTTPException(status_code=400, detail="Invalid webhook signature")
 
     payload = await request.json()
+    webhook_event_id = payload.get("id") or request.headers.get("x-razorpay-event-id") or f"{payload.get('event')}_{payload.get('payload', {}).get('payment', {}).get('entity', {}).get('id', '')}"
+    
+    # --------------------------------------------------------------------------
+    # Idempotency Gate: Prevent duplicate processing if Razorpay retries webhook
+    # --------------------------------------------------------------------------
+    if webhook_event_id and webhook_event_id in PROCESSED_WEBHOOK_IDS:
+        logger.info(f"[WEBHOOK IDEMPOTENCY] Duplicate webhook {webhook_event_id} received. Skipping to prevent duplicate customer outreach.")
+        return {
+            "status": "duplicate_skipped",
+            "webhook_id": webhook_event_id,
+            "message": "Idempotent deduction: webhook already processed, 0 duplicate touches."
+        }
+
+    if webhook_event_id:
+        if len(PROCESSED_WEBHOOK_IDS) > _WEBHOOK_ID_MAX_CACHE:
+            PROCESSED_WEBHOOK_IDS.clear()
+        PROCESSED_WEBHOOK_IDS.add(webhook_event_id)
+
     event_name = payload.get("event")
     event_entity = payload.get("payload", {}).get("payment", {}).get("entity", {})
 
@@ -928,7 +950,7 @@ async def razorpay_webhook_listener(
     customer_phone = event_entity.get("contact", "")
     order_id = event_entity.get("order_id")
 
-    logger.info(f"[WEBHOOK RECEIVED] event={event_name} payment_id={payment_id} amount=₹{amount}")
+    logger.info(f"[WEBHOOK RECEIVED] event={event_name} payment_id={payment_id} amount=₹{amount} webhook_id={webhook_event_id}")
 
     # --------------------------------------------------------------------------
     # Race Condition & Payment Success Handler: payment.captured / paid received
@@ -1425,7 +1447,7 @@ async def get_at_risk_summary(merchant_id: str):
         raise HTTPException(status_code=503, detail="Database unavailable")
     try:
         unresolved = (supabase.table("events").select("event_id,amount,event_type,root_cause").eq("merchant_id", merchant_id).eq("payment_status", "unresolved").execute()).data or []
-        all_events = (supabase.table("events").select("payment_status,amount,channel_used").eq("merchant_id", merchant_id).execute()).data or []
+        all_events = (supabase.table("events").select("payment_status,amount,channel_used,metadata").eq("merchant_id", merchant_id).execute()).data or []
         total_amount = sum(e["amount"] for e in all_events)
         recovered = sum(e["amount"] for e in all_events if e["payment_status"] == "recovered")
         at_risk = sum(e["amount"] for e in unresolved)
@@ -1433,16 +1455,52 @@ async def get_at_risk_summary(merchant_id: str):
         for e in unresolved:
             cause = e.get("root_cause") or e.get("event_type") or "unknown"
             cause_counts[cause] = cause_counts.get(cause, 0) + 1
+        
+        # Dynamic duplicate contacts calculation:
+        duplicate_breaches = sum(
+            1 for e in all_events
+            if (e.get("metadata") or {}).get("duplicate_contact_breach") is True
+            or (e.get("metadata") or {}).get("duplicateContactBreaches", 0) > 0
+        )
         return {
             "merchant_id": merchant_id,
             "at_risk_amount_inr": round(at_risk, 2),
             "at_risk_count": len(unresolved),
             "recovery_rate_pct": round((recovered / total_amount * 100) if total_amount else 0, 2),
             "root_cause_breakdown": cause_counts,
-            "duplicate_contacts": 0,
+            "duplicate_contacts": duplicate_breaches,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/evals/exceptions")
+async def get_eval_exceptions_endpoint():
+    """
+    Returns the Track 3 & Track 4 Exceptions Ledger.
+    Every non-recovered event, HITL escalation pause, or compliance-blocked outreach
+    with its deterministic underlying rationale.
+    """
+    exceptions_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "evals",
+        "exceptions.json",
+    )
+    if os.path.exists(exceptions_path):
+        try:
+            with open(exceptions_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to read exceptions.json: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to load exceptions: {e}")
+    
+    # Fallback placeholder if exceptions file not yet generated
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "total_non_recovered_count": 0,
+        "exceptions": [],
+        "message": "Run python evals/run_batch.py to generate full batch exceptions ledger"
+    }
 
 
 @app.post("/api/customers/{customer_id}/link-telegram")

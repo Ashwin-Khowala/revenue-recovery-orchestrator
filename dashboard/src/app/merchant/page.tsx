@@ -12,6 +12,7 @@ import B2BReceivablesView from '@/components/merchant/views/B2BReceivablesView';
 import MandatesSchemeView from '@/components/merchant/views/MandatesSchemeView';
 import PTPForecastView from '@/components/merchant/views/PTPForecastView';
 import DeclineTaxonomyView from '@/components/merchant/views/DeclineTaxonomyView';
+import ExceptionsView from '@/components/merchant/views/ExceptionsView';
 import PlanOfActionModal from '@/components/merchant/layout/PlanOfActionModal';
 import NotificationToastCenter from '@/components/merchant/layout/NotificationToastCenter';
 import AIChatBot from '@/components/AIChatBot';
@@ -75,6 +76,7 @@ function MerchantDashboardContent() {
             {mainView === 'mandates_scheme' && <MandatesSchemeView />}
             {mainView === 'ptp_forecast' && <PTPForecastView />}
             {mainView === 'decline_taxonomy' && <DeclineTaxonomyView />}
+            {mainView === 'exceptions' && <ExceptionsView />}
           </main>
 
           {/* 4-Tab Forensic Customer 360 Inspection Slide-Over Drawer */}
