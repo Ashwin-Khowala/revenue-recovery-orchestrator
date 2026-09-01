@@ -531,8 +531,8 @@ export default function AIChatBot({
       const fallbackReply =
         role === 'merchant'
           ? isEnglish
-            ? '**Financial Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 customer accounts\n• **Recovered:** ₹44,075 with 0 duplicate spam contacts\n• **Awaiting Approval:** ₹1,45,000 for TechMatrix Corp'
-            : '**Financial Summary:**\n\n• **Total At-Risk:** ₹2,45,998 across 6 accounts\n• **Recovered:** ₹44,075 (0 duplicate spam contacts)\n• **Pending Approval:** ₹1,45,000 TechMatrix Corp'
+            ? '**Financial Recovery Status:**\n\n• **Active Mode:** Live Recovery Engine\n• **Compliance:** 0 duplicate contacts enforced\n• **Safety:** Human approval required for amounts ≥ ₹1,00,000'
+            : '**Financial Recovery Status:**\n\n• **Active Mode:** Live Recovery Engine\n• **Compliance:** 0 duplicate spam contacts\n• **Safety:** ₹1,00,000+ amounts ke liye human approval mandatory hai'
           : isEnglish
           ? `Your payment of ₹${amount.toLocaleString('en-IN')} is currently pending. You can apply a 5% concession discount or schedule a payment date.`
           : `Aapka ₹${amount.toLocaleString('en-IN')} ka payment pending hai. Aap 5% discount le sakte hain ya date schedule kar sakte hain.`;
@@ -684,8 +684,8 @@ export default function AIChatBot({
       const fallback =
         role === 'merchant'
           ? isEnglish
-            ? 'Total at-risk revenue is ₹2,45,998 with ₹44,075 recovered and zero duplicate contacts.'
-            : 'Total ₹2,45,998 at-risk revenue hai, ₹44,075 recover ho chuka hai aur strictly 0 duplicate spam contacts hain.'
+            ? 'Active Recovery Engine is operating with zero duplicate contacts and strict amount caps.'
+            : 'Active Recovery Engine strictly 0 duplicate contacts aur high-value safety caps ke sath active hai.'
           : isEnglish
           ? `Your payment of ₹${amount.toLocaleString('en-IN')} is currently pending. Would you like a 5% discount?`
           : `Aapka ₹${amount.toLocaleString('en-IN')} ka payment pending hai. Kya aap 5% discount lena chahenge?`;

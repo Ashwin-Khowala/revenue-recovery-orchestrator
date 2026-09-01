@@ -1,0 +1,41 @@
+{
+  "verified_at": "2026-09-01T14:31:52.721479+00:00",
+  "incident_id": "test_order_race_20260901143152",
+  "test_amount_inr": 4999.0,
+  "steps": [
+    {
+      "step": 1,
+      "action": "create_payment_link",
+      "payment_link_id": "plink_TWo4E2ACN7CLzD",
+      "short_url": "https://rzp.io/rzp/ivuhHdx",
+      "amount": 4999.0
+    },
+    {
+      "step": 2,
+      "action": "enqueue_recovery",
+      "event_id": "test_order_race_20260901143152",
+      "queue_status": "pending_send"
+    },
+    {
+      "step": 3,
+      "action": "webhook_arbitration",
+      "payment_id": "pay_test_20260901143152",
+      "was_cancelled": true,
+      "audit_entry_hash": "34d4e7653961ebd189fa73ebb21879dedd6e62606da322ff2776be1038583692"
+    },
+    {
+      "step": 4,
+      "action": "execute_action_check",
+      "channel_used": "none",
+      "payment_status": "cancelled_by_webhook",
+      "contacts_incremented": 0,
+      "zero_duplicate_contacts_verified": true
+    },
+    {
+      "step": 5,
+      "action": "verify_audit_chain",
+      "is_chain_valid": true,
+      "entries_count": 2
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "cust_stop_02": [
+    {
+      "channel": "whatsapp",
+      "track_name": "checkout_abandonment",
+      "event_id": "evt_prior",
+      "timestamp": "2026-09-01T10:25:43.006608+00:00"
+    },
+    {
+      "channel": "whatsapp",
+      "track_name": "checkout_abandonment",
+      "event_id": "evt_prior",
+      "timestamp": "2026-09-01T10:26:27.602111+00:00"
+    },
+    {
+      "channel": "whatsapp",
+      "track_name": "checkout_abandonment",
+      "event_id": "evt_prior",
+      "timestamp": "2026-09-01T10:28:49.447231+00:00"
+    }
+  ],
+  "cust_stop_07": [
+    {
+      "channel": "email",
+      "track_name": "subscription_failed",
+      "event_id": "evt_stop_07",
+      "timestamp": "2026-09-01T14:25:43.145632+00:00"
+    },
+    {
+      "channel": "email",
+      "track_name": "subscription_failed",
+      "event_id": "evt_stop_07",
+      "timestamp": "2026-09-01T14:26:27.728535+00:00"
+    },
+    {
+      "channel": "email",
+      "track_name": "subscription_failed",
+      "event_id": "evt_stop_07",
+      "timestamp": "2026-09-01T14:28:49.565849+00:00"
+    },
+    {
+      "channel": "email",
+      "track_name": "subscription_failed",
+      "event_id": "evt_stop_07",
+      "timestamp": "2026-09-01T14:29:20.401606+00:00"
+    }
+  ],
+  "cust_01": [
+    {
+      "channel": "email",
+      "track_name": "subscription_failed",
+      "event_id": "evt_wa_fail_01",
+      "timestamp": "2026-09-01T14:27:04.289663+00:00"
+    }
+  ],
+  "cust_0003": [
+    {
+      "channel": "email",
+      "track_name": "receivable_overdue",
+      "event_id": "test_temporal_high_val",
+      "timestamp": "2026-09-01T14:27:49.029119+00:00"
+    }
+  ],
+  "cust_throttled_99": [
+    {
+      "channel": "whatsapp",
+      "track_name": "subscriptions",
+      "event_id": "evt_1",
+      "timestamp": "2026-08-26T14:28:18.935709+00:00"
+    },
+    {
+      "channel": "email",
+      "track_name": "b2b_receivables",
+      "event_id": "evt_2",
+      "timestamp": "2026-08-28T14:28:18.936422+00:00"
+    },
+    {
+      "channel": "whatsapp",
+      "track_name": "checkout_funnel",
+      "event_id": "evt_3",
+      "timestamp": "2026-08-30T14:28:18.937048+00:00"
+    }
+  ],
+  "cust_stop_cooldown_27fb7f01": [
+    {
+      "channel": "whatsapp",
+      "track_name": "checkout_abandonment",
+      "event_id": "evt_prior",
+      "timestamp": "2026-09-01T10:29:20.257898+00:00"
+    }
+  ]
+}

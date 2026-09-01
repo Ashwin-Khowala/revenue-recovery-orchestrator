@@ -2,13 +2,21 @@
 Unit Tests for Cryptographic SHA-256 Audit Trail Chaining & Verification
 """
 
+import os
+import json
 import pytest
-from orchestrator.audit import log_audit_entry, create_audit_entry, verify_audit_chain
+from orchestrator.audit import (
+    log_audit_entry,
+    create_audit_entry,
+    verify_audit_chain,
+    load_audit_chain_from_storage,
+    verify_audit_chain_from_storage,
+    AUDIT_FILE_PATH,
+)
 
 
 def test_audit_chain_validity():
     """Verify that sequentially logged audit entries form a mathematically valid SHA-256 chain."""
-    entries = []
     e1 = log_audit_entry("evt_001", "memory_enrichment", "Priors Loaded", {"reliability": 0.95})
     e2 = log_audit_entry("evt_001", "classify_root_cause", "Diagnosed subscription_failed", {"confidence": 0.98})
     e3 = log_audit_entry("evt_001", "score_policy_options", "Ranked WhatsApp Payment Link", {"ev": 4500.0})
@@ -38,3 +46,16 @@ def test_create_audit_entry_alias():
     entry = create_audit_entry("evt_003", "executor", "WhatsApp Sent", {"status": "delivered"})
     assert entry["event_id"] == "evt_003"
     assert "entry_hash" in entry
+
+
+def test_audit_sidecar_persistence_and_loading():
+    """Verify that entries persist to JSON sidecar and can be verified from storage."""
+    event_id = "evt_storage_test_001"
+    e1 = log_audit_entry(event_id, "memory_enrichment", "Priors Loaded", {"reliability": 0.90})
+    e2 = log_audit_entry(event_id, "check_guardrails", "Guardrail ALLOW", {"result": "ALLOW"})
+
+    stored = load_audit_chain_from_storage(event_id=event_id)
+    assert len(stored) >= 2
+    assert stored[-1]["event_id"] == event_id
+    assert stored[-1]["action_taken"] == "Guardrail ALLOW"
+    assert verify_audit_chain_from_storage() is True

@@ -14,6 +14,7 @@ import {
   Scale,
   Sparkles,
   CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -144,234 +145,204 @@ export default function PortfolioOptimizerPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Toast */}
-        {savedToast && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2 animate-fade-in shadow-xs">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Optimized EV Policy parameters successfully deployed to active recovery rules engine!</span>
+      <main className="max-w-7xl mx-auto p-6 space-y-6 animate-fade-in pb-12">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D4D4D4] pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-[#2B2B2B] tracking-tight">EV Policy Hyper-Parameter Tuning</h1>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                Deterministic Optimizer
+              </span>
+            </div>
+            <p className="text-xs text-[#666666] mt-0.5">
+              Dynamically recalibrate expected value formulas to maximize net recovered revenue.
+            </p>
+          </div>
+          <button
+            onClick={handleApplyParameters}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0C2340] text-white text-xs font-semibold rounded-lg hover:bg-[#14335A] transition shadow-xs self-start sm:self-auto cursor-pointer"
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>Deploy Parameters</span>
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-24 text-slate-400 gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="text-sm font-medium">Fetching portfolio metrics...</span>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {savedToast && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2 animate-fade-in shadow-xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Optimized EV Policy parameters successfully deployed to active recovery rules engine!</span>
+              </div>
+            )}
+
+            {/* Metric Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white border border-[#D4D4D4] p-4 rounded-xl shadow-xs">
+                <div className="text-[11px] font-bold text-[#666666] uppercase tracking-wider">Total At-Risk Exposure</div>
+                <div className="text-2xl font-bold text-[#2B2B2B] mt-1 font-mono">
+                  ₹{atRiskTotal.toLocaleString('en-IN')}
+                </div>
+                <div className="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-amber-600" />
+                  <span>Active Recovery Window</span>
+                </div>
+              </div>
+
+              <div className="bg-white border border-[#D4D4D4] p-4 rounded-xl shadow-xs">
+                <div className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Observed Direct Recovery</div>
+                <div className="text-2xl font-bold text-emerald-800 mt-1 font-mono">
+                  {summary?.recovery_rate_pct ?? 26.4}%
+                </div>
+                <div className="text-[11px] text-emerald-700 font-medium mt-0.5 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  <span>Safe Automated Recovery</span>
+                </div>
+              </div>
+
+              <div className="bg-white border border-[#D4D4D4] p-4 rounded-xl shadow-xs">
+                <div className="text-[11px] font-bold text-blue-800 uppercase tracking-wider">Projected Policy Lift</div>
+                <div className="text-2xl font-bold text-blue-800 mt-1 font-mono">
+                  +{simulatedLift}%
+                </div>
+                <div className="text-[11px] text-blue-700 font-medium mt-0.5">
+                  +₹{projectedExtraRecovery.toLocaleString('en-IN')} Expected Net Value
+                </div>
+              </div>
+
+              <div className="bg-white border border-[#D4D4D4] p-4 rounded-xl shadow-xs">
+                <div className="text-[11px] font-bold text-[#666666] uppercase tracking-wider">Compliance Breaches</div>
+                <div className="text-2xl font-bold text-[#2B2B2B] mt-1 font-mono">0</div>
+                <div className="text-[11px] text-slate-500 font-medium mt-0.5 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                  <span>100% Guardrail Invariant</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Dynamic EV Policy Tuning Box */}
+            <div className="bg-white border border-[#D4D4D4] rounded-2xl p-6 shadow-xs space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
+                <div>
+                  <h2 className="text-sm font-bold text-[#2B2B2B] inline-flex items-center gap-1.5">
+                    <Sliders className="w-4 h-4 text-blue-600" />
+                    <span>Dynamic EV Policy Parameter Tuning</span>
+                  </h2>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-slate-100 text-[#2B2B2B] border border-[#D4D4D4] text-[11px] font-bold font-mono">
+                  EV = P(Recovery) × Amount - Discount - Friction
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Slider 1: Micro-Discount */}
+                <div className="bg-[#FAFAFA] border border-[#E5E5E5] p-4 rounded-xl space-y-2">
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-[#2B2B2B]">Cart Drop-off Discount:</span>
+                    <span className="px-2 py-0.5 rounded bg-white border border-[#D4D4D4] font-mono text-blue-700">
+                      {discountParam}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    step="1"
+                    value={discountParam}
+                    onChange={e => setDiscountParam(Number(e.target.value))}
+                    className="w-full accent-[#2B2B2B] cursor-pointer"
+                  />
+                </div>
+
+                {/* Slider 2: HITL Escalation Cap */}
+                <div className="bg-[#FAFAFA] border border-[#E5E5E5] p-4 rounded-xl space-y-2">
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-[#2B2B2B]">HITL Escalation Cap:</span>
+                    <span className="px-2 py-0.5 rounded bg-white border border-[#D4D4D4] font-mono text-amber-800">
+                      ₹{hitlThreshold.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="25000"
+                    max="200000"
+                    step="25000"
+                    value={hitlThreshold}
+                    onChange={e => setHitlThreshold(Number(e.target.value))}
+                    className="w-full accent-[#2B2B2B] cursor-pointer"
+                  />
+                </div>
+
+                {/* Slider 3: Quiet Hours */}
+                <div className="bg-[#FAFAFA] border border-[#E5E5E5] p-4 rounded-xl space-y-2">
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-[#2B2B2B]">Anti-Spam Quiet Window:</span>
+                    <span className="px-2 py-0.5 rounded bg-white border border-[#D4D4D4] font-mono text-indigo-700">
+                      {quietHours} Hours
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="12"
+                    max="48"
+                    step="6"
+                    value={quietHours}
+                    onChange={e => setQuietHours(Number(e.target.value))}
+                    className="w-full accent-[#2B2B2B] cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Charts Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white p-5 rounded-2xl border border-[#D4D4D4] shadow-xs space-y-4">
+                <h3 className="text-xs font-bold text-[#2B2B2B] uppercase tracking-wider">At-Risk Cases by Root Cause</h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={85}
+                        paddingAngle={4}
+                        dataKey="value"
+                      >
+                        {pieData.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={PALETTE[index % PALETTE.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend wrapperStyle={{ fontSize: '11px' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-2xl border border-[#D4D4D4] shadow-xs space-y-4">
+                <h3 className="text-xs font-bold text-[#2B2B2B] uppercase tracking-wider">Channel Recovery Success (%)</h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={channelComparison} layout="vertical">
+                      <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} />
+                      <YAxis dataKey="channel" type="category" width={120} tick={{ fontSize: 10 }} />
+                      <Tooltip />
+                      <Bar dataKey="success" fill="#2B2B2B" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
           </div>
         )}
-
-        {/* Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white border border-[#D4D4D4] p-4 rounded-xl shadow-xs">
-            <div className="text-[11px] font-bold text-[#666666] uppercase tracking-wider">Total At-Risk Exposure</div>
-            <div className="text-2xl font-bold text-[#2B2B2B] mt-1 font-mono">
-              ₹{atRiskTotal.toLocaleString('en-IN')}
-            </div>
-            <div className="text-[11px] text-amber-700 font-medium mt-0.5 flex items-center gap-1">
-              <Clock className="w-3 h-3 text-amber-600" />
-              <span>Active Recovery Window</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-[#D4D4D4] p-4 rounded-xl shadow-xs">
-            <div className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Observed Recovery Rate</div>
-            <div className="text-2xl font-bold text-emerald-800 mt-1 font-mono">
-              {summary?.recovery_rate_pct || 75.8}%
-            </div>
-            <div className="text-[11px] text-emerald-700 font-medium mt-0.5 flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" />
-              <span>+26.9% Absolute Lift vs Rules</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-[#D4D4D4] p-4 rounded-xl shadow-xs">
-            <div className="text-[11px] font-bold text-blue-800 uppercase tracking-wider">Projected Policy Lift</div>
-            <div className="text-2xl font-bold text-blue-800 mt-1 font-mono">
-              +{simulatedLift}%
-            </div>
-            <div className="text-[11px] text-blue-700 font-medium mt-0.5">
-              +₹{projectedExtraRecovery.toLocaleString('en-IN')} Expected Net Value
-            </div>
-          </div>
-
-          <div className="bg-white border border-[#D4D4D4] p-4 rounded-xl shadow-xs">
-            <div className="text-[11px] font-bold text-[#666666] uppercase tracking-wider">Compliance Breaches</div>
-            <div className="text-2xl font-bold text-[#2B2B2B] mt-1 font-mono">0</div>
-            <div className="text-[11px] text-slate-500 font-medium mt-0.5 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-emerald-600" />
-              <span>100% Guardrail Invariant</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Dynamic EV Policy Tuning Box */}
-        <div className="bg-white border border-[#D4D4D4] rounded-2xl p-6 shadow-xs space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-2">
-            <div>
-              <h2 className="text-sm font-bold text-[#2B2B2B] inline-flex items-center gap-1.5">
-                <Sliders className="w-4 h-4 text-blue-600" />
-                <span>Dynamic EV Policy Parameter Tuning</span>
-              </h2>
-              <p className="text-xs text-[#666666] mt-0.5">
-                Tune deterministic parameters and model expected net revenue yield (EV = P × Amount - Discount - Friction) in real time.
-              </p>
-            </div>
-            <span className="px-3 py-1 rounded-full bg-slate-100 text-[#2B2B2B] border border-[#D4D4D4] text-[11px] font-bold font-mono">
-              EV = P(Recovery) × Amount - Discount - Friction
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Slider 1: Micro-Discount */}
-            <div className="bg-[#FAFAFA] border border-[#E5E5E5] p-4 rounded-xl space-y-2">
-              <div className="flex justify-between items-center text-xs font-bold">
-                <span className="text-[#2B2B2B]">Cart Drop-off Discount:</span>
-                <span className="px-2 py-0.5 rounded bg-white border border-[#D4D4D4] font-mono text-blue-700">
-                  {discountParam}%
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="1"
-                value={discountParam}
-                onChange={e => setDiscountParam(Number(e.target.value))}
-                className="w-full accent-[#2B2B2B] cursor-pointer"
-              />
-              <p className="text-[11px] text-[#666666] leading-tight">
-                Micro-discounts on high-intent checkouts boost recovery probability without margin destruction.
-              </p>
-            </div>
-
-            {/* Slider 2: HITL Escalation Cap */}
-            <div className="bg-[#FAFAFA] border border-[#E5E5E5] p-4 rounded-xl space-y-2">
-              <div className="flex justify-between items-center text-xs font-bold">
-                <span className="text-[#2B2B2B]">HITL Escalation Cap:</span>
-                <span className="px-2 py-0.5 rounded bg-white border border-[#D4D4D4] font-mono text-amber-800">
-                  ₹{hitlThreshold.toLocaleString('en-IN')}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="25000"
-                max="200000"
-                step="25000"
-                value={hitlThreshold}
-                onChange={e => setHitlThreshold(Number(e.target.value))}
-                className="w-full accent-[#2B2B2B] cursor-pointer"
-              />
-              <p className="text-[11px] text-[#666666] leading-tight">
-                Invoices above this threshold trigger mandatory human approval via Telegram alert.
-              </p>
-            </div>
-
-            {/* Slider 3: Quiet Hours */}
-            <div className="bg-[#FAFAFA] border border-[#E5E5E5] p-4 rounded-xl space-y-2">
-              <div className="flex justify-between items-center text-xs font-bold">
-                <span className="text-[#2B2B2B]">Anti-Spam Quiet Window:</span>
-                <span className="px-2 py-0.5 rounded bg-white border border-[#D4D4D4] font-mono text-indigo-700">
-                  {quietHours} Hours
-                </span>
-              </div>
-              <input
-                type="range"
-                min="12"
-                max="48"
-                step="6"
-                value={quietHours}
-                onChange={e => setQuietHours(Number(e.target.value))}
-                className="w-full accent-[#2B2B2B] cursor-pointer"
-              />
-              <p className="text-[11px] text-[#666666] leading-tight">
-                Enforces quiet cooldown between customer contacts to minimize friction penalties.
-              </p>
-            </div>
-          </div>
-
-          {/* Simulation Output Banner */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
-            <div className="space-y-1">
-              <div className="text-[11px] text-blue-700 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                <span>Simulated Policy Expected Yield</span>
-              </div>
-              <div className="text-xs text-[#2B2B2B] leading-relaxed">
-                Under tuned policy parameters: Expected Recovery lifts by{' '}
-                <strong className="text-blue-700 font-bold">+{simulatedLift}%</strong> (yielding{' '}
-                <strong className="text-emerald-800 font-bold">+₹{projectedExtraRecovery.toLocaleString('en-IN')}</strong>{' '}
-                net recovered revenue) with 0 duplicate spam penalty.
-              </div>
-            </div>
-            <button
-              onClick={handleApplyParameters}
-              className="px-4 py-2 rounded-lg bg-[#2B2B2B] hover:bg-black text-white text-xs font-bold transition-all shrink-0 shadow-xs"
-            >
-              Deploy Policy Parameters &rarr;
-            </button>
-          </div>
-        </div>
-
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Chart 1: Root Cause Distribution */}
-          <div className="bg-white p-5 rounded-2xl border border-[#D4D4D4] shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-[#2B2B2B] uppercase tracking-wider">At-Risk Cases by Root Cause</h3>
-              <span className="text-[11px] text-[#666666]">6-Class Diagnostic Breakdown</span>
-            </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={85}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {pieData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={PALETTE[index % PALETTE.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: '#FFFFFF',
-                      border: '1px solid #D4D4D4',
-                      borderRadius: '8px',
-                      color: '#2B2B2B',
-                      fontSize: '11px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '11px' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Chart 2: Channel Recovery Rates */}
-          <div className="bg-white p-5 rounded-2xl border border-[#D4D4D4] shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-[#2B2B2B] uppercase tracking-wider">Channel Recovery Success (%)</h3>
-              <span className="text-[11px] text-[#666666]">Empirical Channel Effectiveness</span>
-            </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={channelComparison} layout="vertical">
-                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: '#666666' }} />
-                  <YAxis dataKey="channel" type="category" width={120} tick={{ fontSize: 10, fill: '#2B2B2B' }} />
-                  <Tooltip
-                    contentStyle={{
-                      background: '#FFFFFF',
-                      border: '1px solid #D4D4D4',
-                      borderRadius: '8px',
-                      color: '#2B2B2B',
-                      fontSize: '11px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                    }}
-                  />
-                  <Bar dataKey="success" fill="#2B2B2B" radius={[0, 4, 4, 0]} name="Recovery Success (%)" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
       </main>
 
       {/* Floating AI Copilot Toggle */}

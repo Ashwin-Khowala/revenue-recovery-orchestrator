@@ -107,10 +107,20 @@ def create_recovery_payment_link(
                     "sandbox_adapted": "true" if effective_amount_paise != amount_in_paise else "false",
                 },
                 "expire_by": expire_by,
-                "reference_id": f"rec_{reference_id[:30]}",
+                "reference_id": f"rec_{reference_id.replace('-', '').replace('_', '')[:16]}_{int(time.time())}",
             }
 
-            link = client.payment_link.create(payload)
+            try:
+                link = client.payment_link.create(payload)
+            except Exception as first_err:
+                if "already exists" in str(first_err).lower():
+                    # Retry with random entropy suffix
+                    import uuid
+                    payload["reference_id"] = f"rec_{uuid.uuid4().hex[:20]}"
+                    link = client.payment_link.create(payload)
+                else:
+                    raise first_err
+
             logger.info("Created real Razorpay Payment Link: %s (Short URL: %s)", link.get("id"), link.get("short_url"))
             return {
                 "success": True,

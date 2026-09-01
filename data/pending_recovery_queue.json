@@ -1,0 +1,49 @@
+{
+  "updated_at": "2026-09-01T14:31:54.151538+00:00",
+  "records": {
+    "test_order_race_20260901141703": {
+      "event_id": "test_order_race_20260901141703",
+      "event_type": "subscription_failed",
+      "amount": 4999.0,
+      "customer_id": "cust_techcorp_01",
+      "customer_name": "Priya Sharma (TechCorp AP)",
+      "customer_phone": "+919820144102",
+      "customer_email": "payer@example.com",
+      "razorpay_ref": "plink_TWnoZnuDsUXczf",
+      "metadata": {
+        "order_id": "order_test_20260901141703",
+        "payment_link_id": "plink_TWnoZnuDsUXczf"
+      },
+      "status": "cancelled_by_webhook",
+      "enqueued_at": "2026-09-01T14:17:05.234805+00:00",
+      "updated_at": "2026-09-01T14:17:05.237327+00:00",
+      "cancellation_reason": "Payment captured (pay_test_20260901141703) before automated outreach dispatch",
+      "cancelled_at": "2026-09-01T14:17:05.237327+00:00"
+    },
+    "test_order_race_20260901143152": {
+      "event_id": "test_order_race_20260901143152",
+      "event_type": "subscription_failed",
+      "amount": 4999.0,
+      "customer_id": "cust_techcorp_01",
+      "customer_name": "Priya Sharma (TechCorp AP)",
+      "customer_phone": "+919820144102",
+      "customer_email": "payer@example.com",
+      "razorpay_ref": "plink_TWo4E2ACN7CLzD",
+      "metadata": {
+        "order_id": "order_test_20260901143152",
+        "payment_link_id": "plink_TWo4E2ACN7CLzD"
+      },
+      "status": "cancelled_by_webhook",
+      "enqueued_at": "2026-09-01T14:31:54.149980+00:00",
+      "updated_at": "2026-09-01T14:31:54.150728+00:00",
+      "cancellation_reason": "Payment captured (pay_test_20260901143152) before automated outreach dispatch",
+      "cancelled_at": "2026-09-01T14:31:54.150728+00:00"
+    }
+  },
+  "aliases": {
+    "plink_TWnoZnuDsUXczf": "test_order_race_20260901141703",
+    "order_test_20260901141703": "test_order_race_20260901141703",
+    "plink_TWo4E2ACN7CLzD": "test_order_race_20260901143152",
+    "order_test_20260901143152": "test_order_race_20260901143152"
+  }
+}

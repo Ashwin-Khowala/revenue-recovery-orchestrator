@@ -16,9 +16,67 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env.local"), overrid
 
 logger = logging.getLogger("orchestrator.audit")
 
+AUDIT_FILE_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "data",
+    "audit_ledger.json",
+)
+
 _supabase_client = None
 _langfuse_client = None
-_last_entry_hash: str = "GENESIS"  # chain anchor
+_last_entry_hash: str = "GENESIS"
+_initialized: bool = False
+
+
+def _init_last_entry_hash() -> None:
+    """Initializes the latest hash anchor from DB or local JSON sidecar on boot."""
+    global _last_entry_hash, _initialized
+    if _initialized:
+        return
+    _initialized = True
+
+    # 1. Try Supabase
+    if os.getenv("DISABLE_AUDIT_DB", "false").lower() not in ("1", "true", "yes"):
+        client = _get_supabase_client()
+        if client:
+            try:
+                res = client.table("audit_log").select("entry_hash").order("created_at", desc=True).limit(1).execute()
+                if res.data and len(res.data) > 0 and res.data[0].get("entry_hash"):
+                    _last_entry_hash = res.data[0]["entry_hash"]
+                    logger.info(f"Initialized audit chain head from Supabase: {_last_entry_hash[:12]}...")
+                    return
+            except Exception as e:
+                logger.debug(f"Could not load audit head from Supabase: {e}")
+
+    # 2. Try JSON sidecar
+    if os.path.exists(AUDIT_FILE_PATH):
+        try:
+            with open(AUDIT_FILE_PATH, "r", encoding="utf-8") as f:
+                entries = json.load(f)
+                if entries and isinstance(entries, list) and len(entries) > 0:
+                    _last_entry_hash = entries[-1].get("entry_hash", "GENESIS")
+                    logger.info(f"Initialized audit chain head from local sidecar: {_last_entry_hash[:12]}...")
+                    return
+        except Exception as e:
+            logger.debug(f"Could not load audit head from local sidecar: {e}")
+
+
+def _save_entry_to_sidecar(entry: Dict[str, Any]) -> None:
+    """Appends audit entry to local JSON sidecar."""
+    try:
+        os.makedirs(os.path.dirname(AUDIT_FILE_PATH), exist_ok=True)
+        entries = []
+        if os.path.exists(AUDIT_FILE_PATH):
+            try:
+                with open(AUDIT_FILE_PATH, "r", encoding="utf-8") as f:
+                    entries = json.load(f)
+            except Exception:
+                entries = []
+        entries.append(entry)
+        with open(AUDIT_FILE_PATH, "w", encoding="utf-8") as f:
+            json.dump(entries, f, indent=2)
+    except Exception as e:
+        logger.warning(f"Could not persist audit entry to sidecar: {e}")
 
 
 def _get_supabase_client():
@@ -68,9 +126,10 @@ def log_audit_entry(
     reasoning: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Creates an audit entry structure and persists to Supabase and Langfuse Cloud.
+    Creates an audit entry structure and persists to Supabase, Langfuse Cloud, and local sidecar.
     """
     global _last_entry_hash
+    _init_last_entry_hash()
     
     entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -95,7 +154,10 @@ def log_audit_entry(
     
     logger.info(f"[AUDIT] [{node_name}] event={event_id} action={action_taken}")
 
-    # 1. Persist to Supabase
+    # 1. Persist to local sidecar file
+    _save_entry_to_sidecar(entry)
+
+    # 2. Persist to Supabase
     if os.getenv("DISABLE_AUDIT_DB", "false").lower() not in ("1", "true", "yes"):
         client = _get_supabase_client()
         if client:
@@ -112,13 +174,11 @@ def log_audit_entry(
             except Exception as e:
                 logger.debug(f"Could not persist audit log to Supabase: {e}")
 
-
-    # 2. Trace to Langfuse Cloud (v4 SDK create_event & flush)
+    # 3. Trace to Langfuse Cloud (v4 SDK create_event & flush)
     if os.getenv("DISABLE_AUDIT_DB", "false").lower() not in ("1", "true", "yes") and os.getenv("ENVIRONMENT") != "batch_eval":
         lf = _get_langfuse_client()
         if lf:
             try:
-                # Deterministic 32-char hex trace ID groups all nodes for the same event into 1 unified Trace
                 trace_id_hex = hashlib.md5(event_id.encode()).hexdigest()
                 lf.create_event(
                     trace_context={"trace_id": trace_id_hex},
@@ -145,12 +205,44 @@ def log_audit_entry(
             except Exception as e:
                 logger.warning(f"Could not send trace to Langfuse: {e}")
 
-
     return entry
 
 
 # Alias for backward compatibility and test scripts
 create_audit_entry = log_audit_entry
+
+
+def load_audit_chain_from_storage(event_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Loads audit entries from local sidecar or Supabase."""
+    entries = []
+    if os.path.exists(AUDIT_FILE_PATH):
+        try:
+            with open(AUDIT_FILE_PATH, "r", encoding="utf-8") as f:
+                entries = json.load(f)
+        except Exception:
+            entries = []
+
+    if not entries:
+        client = _get_supabase_client()
+        if client:
+            try:
+                q = client.table("audit_log").select("*")
+                if event_id:
+                    q = q.eq("event_id", event_id)
+                res = q.order("created_at", desc=False).execute()
+                entries = res.data or []
+            except Exception:
+                pass
+
+    if event_id:
+        return [e for e in entries if e.get("event_id") == event_id]
+    return entries
+
+
+def verify_audit_chain_from_storage(event_id: Optional[str] = None) -> bool:
+    """Verifies audit chain integrity directly from persisted storage."""
+    entries = load_audit_chain_from_storage(event_id=event_id)
+    return verify_audit_chain(entries)
 
 
 def verify_audit_chain(entries: List[Dict[str, Any]]) -> bool:

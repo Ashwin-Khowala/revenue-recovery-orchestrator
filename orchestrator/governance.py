@@ -27,8 +27,21 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env.local"), overrid
 logger = logging.getLogger("orchestrator.governance")
 
 # Global System Compliance Constants
+# Global System Compliance Constants
 MAX_CROSS_TRACK_WEEKLY_CONTACTS = 3   # Max touches across ALL tracks in rolling 7 days
 MIN_QUIET_HOURS_BETWEEN_TOUCHES = 24  # Mandatory spacing between consecutive touches
+
+TOUCHES_FILE_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "data",
+    "customer_contact_history.json",
+)
+
+OPTOUTS_FILE_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "data",
+    "omnichannel_optouts.json",
+)
 
 
 # =============================================================================
@@ -39,9 +52,33 @@ class CrossTrackThrottler:
     """
     Prevents over-dunning when a single customer has simultaneous incidents across
     different tracks (e.g. failed subscription + abandoned cart + overdue invoice).
+    Persists touch records to data/customer_contact_history.json for restart safety.
     """
 
     _in_memory_touches: Dict[str, List[Dict[str, Any]]] = {}
+    _loaded: bool = False
+
+    @classmethod
+    def _load_from_disk(cls) -> None:
+        if cls._loaded:
+            return
+        cls._loaded = True
+        if os.path.exists(TOUCHES_FILE_PATH):
+            try:
+                with open(TOUCHES_FILE_PATH, "r", encoding="utf-8") as f:
+                    cls._in_memory_touches = json.load(f)
+                logger.info(f"Loaded {len(cls._in_memory_touches)} customer touch history records from sidecar.")
+            except Exception as e:
+                logger.warning(f"Could not load customer contact history sidecar: {e}")
+
+    @classmethod
+    def _save_to_disk(cls) -> None:
+        try:
+            os.makedirs(os.path.dirname(TOUCHES_FILE_PATH), exist_ok=True)
+            with open(TOUCHES_FILE_PATH, "w", encoding="utf-8") as f:
+                json.dump(cls._in_memory_touches, f, indent=2)
+        except Exception as e:
+            logger.warning(f"Could not persist customer contact history sidecar: {e}")
 
     @classmethod
     def record_touch(
@@ -53,6 +90,7 @@ class CrossTrackThrottler:
         timestamp: Optional[datetime] = None,
     ) -> None:
         """Records an outbound customer outreach event across any track."""
+        cls._load_from_disk()
         now = timestamp or datetime.now(timezone.utc)
         if customer_id not in cls._in_memory_touches:
             cls._in_memory_touches[customer_id] = []
@@ -63,6 +101,7 @@ class CrossTrackThrottler:
             "event_id": event_id,
             "timestamp": now.isoformat(),
         })
+        cls._save_to_disk()
 
     @classmethod
     def evaluate_outreach_permission(
@@ -76,7 +115,7 @@ class CrossTrackThrottler:
         Evaluates whether an outbound message is permitted under rolling 7-day cross-track caps.
         Returns: (is_permitted, reason_message)
         """
-        # In production, check Supabase events / audit_log
+        cls._load_from_disk()
         now = datetime.now(timezone.utc)
         cutoff_7d = now - timedelta(days=7)
 
@@ -120,9 +159,33 @@ class OmnichannelConsentRegistry:
     Centralized, permanent opt-out registry.
     An opt-out on ANY channel (WhatsApp, Voice, SMS, Email) propagates instantly
     to ALL recovery tracks and channels.
+    Persists to data/omnichannel_optouts.json for durability.
     """
 
     _opted_out_identifiers: Dict[str, Dict[str, Any]] = {}
+    _loaded: bool = False
+
+    @classmethod
+    def _load_from_disk(cls) -> None:
+        if cls._loaded:
+            return
+        cls._loaded = True
+        if os.path.exists(OPTOUTS_FILE_PATH):
+            try:
+                with open(OPTOUTS_FILE_PATH, "r", encoding="utf-8") as f:
+                    cls._opted_out_identifiers = json.load(f)
+                logger.info(f"Loaded {len(cls._opted_out_identifiers)} opt-out records from sidecar.")
+            except Exception as e:
+                logger.warning(f"Could not load opt-out sidecar: {e}")
+
+    @classmethod
+    def _save_to_disk(cls) -> None:
+        try:
+            os.makedirs(os.path.dirname(OPTOUTS_FILE_PATH), exist_ok=True)
+            with open(OPTOUTS_FILE_PATH, "w", encoding="utf-8") as f:
+                json.dump(cls._opted_out_identifiers, f, indent=2)
+        except Exception as e:
+            logger.warning(f"Could not persist opt-out sidecar: {e}")
 
     @classmethod
     def register_opt_out(
@@ -132,6 +195,7 @@ class OmnichannelConsentRegistry:
         reason: str = "User sent regulatory STOP / DND keyword",
     ) -> Dict[str, Any]:
         """Registers permanent opt-out across all channels and tracks."""
+        cls._load_from_disk()
         clean_id = identifier.strip().lower()
         now_iso = datetime.now(timezone.utc).isoformat()
 
@@ -143,6 +207,7 @@ class OmnichannelConsentRegistry:
             "opted_out_at": now_iso,
         }
         cls._opted_out_identifiers[clean_id] = record
+        cls._save_to_disk()
 
         log_audit_entry(
             event_id=f"optout_{clean_id}",
@@ -156,6 +221,7 @@ class OmnichannelConsentRegistry:
     @classmethod
     def is_opted_out(cls, customer_id: str, phone: Optional[str] = None, email: Optional[str] = None) -> Tuple[bool, Optional[str]]:
         """Checks if a customer has opted out via any identifier."""
+        cls._load_from_disk()
         for target in (customer_id, phone, email):
             if target:
                 clean_target = target.strip().lower()

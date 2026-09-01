@@ -1,0 +1,60 @@
+{
+  "synthetic": true,
+  "description": "Deterministic Synthetic Demo Fixture for Interactive Reviewer Walkthrough",
+  "characters": [
+    {
+      "id": "demo_01",
+      "customer_name": "TechMatrix Corp",
+      "contact_person": "Priya Sharma (AP)",
+      "amount": 145000.0,
+      "event_type": "receivable_overdue",
+      "status": "pending_hitl",
+      "reason": "Amount ₹1,45,000 >= ₹1,00,000 cap requires Human-In-The-Loop approval"
+    },
+    {
+      "id": "demo_02",
+      "customer_name": "Kavita Iyer",
+      "contact_person": "Kavita Iyer",
+      "amount": 52000.0,
+      "event_type": "promise_to_pay",
+      "status": "paused_ptp",
+      "reason": "Promise-to-Pay scheduled. Outreach paused until promise date"
+    },
+    {
+      "id": "demo_03",
+      "customer_name": "Ananya Verma",
+      "contact_person": "Ananya Verma",
+      "amount": 28500.0,
+      "event_type": "mandate_auth_failed",
+      "status": "auto_recovering",
+      "reason": "RBI Mandate > ₹15,000 AFA Re-Auth link dispatched"
+    },
+    {
+      "id": "demo_04",
+      "customer_name": "Aarav Sharma",
+      "contact_person": "Aarav Sharma",
+      "amount": 12000.0,
+      "event_type": "payment_degraded",
+      "status": "recovered",
+      "reason": "Bank route failure silently rerouted to backup gateway (0 customer contact)"
+    },
+    {
+      "id": "demo_05",
+      "customer_name": "Rohan Mehta",
+      "contact_person": "Rohan Mehta",
+      "amount": 3499.0,
+      "event_type": "checkout_abandoned",
+      "status": "auto_recovering",
+      "reason": "Margin Shield active: 0% discount enforced for window shopper"
+    },
+    {
+      "id": "demo_06",
+      "customer_name": "Apex Logistics B2B",
+      "contact_person": "Vikram Singh",
+      "amount": 26500.0,
+      "event_type": "receivable_overdue",
+      "status": "pending_hitl",
+      "reason": "Commercial dispute on line items. Automated dunning halted; routed to Account Executive"
+    }
+  ]
+}

@@ -1,0 +1,411 @@
+{
+  "generated_at": "2026-09-01T14:23:11.767599+00:00",
+  "total_non_recovered_count": 45,
+  "exceptions": [
+    {
+      "event_id": "evt_0415",
+      "amount": 250000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_payment_reminder",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "evt_0418",
+      "amount": 120000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_payment_reminder",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "evt_0421",
+      "amount": 120000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_payment_reminder",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "evt_0432",
+      "amount": 1499.0,
+      "root_cause": "checkout_abandoned",
+      "action_taken": "standard_cart_recovery",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "evt_0434",
+      "amount": 39620.0,
+      "root_cause": "mandate_auth_failed",
+      "action_taken": "whatsapp_mandate_afa_link",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "evt_0435",
+      "amount": 120000.0,
+      "root_cause": "subscription_failed",
+      "action_taken": "enterprise_hitl_escalation",
+      "channel": "none",
+      "guardrail_result": "ALLOW",
+      "reason": "LOW_CONVERSION_OUTREACH (none outreach uncompleted)"
+    },
+    {
+      "event_id": "evt_0449",
+      "amount": 15999.0,
+      "root_cause": "subscription_failed",
+      "action_taken": "smart_subscription_retry_link",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "evt_0451",
+      "amount": 125000.0,
+      "root_cause": "subscription_failed",
+      "action_taken": "enterprise_hitl_escalation",
+      "channel": "none",
+      "guardrail_result": "ALLOW",
+      "reason": "LOW_CONVERSION_OUTREACH (none outreach uncompleted)"
+    },
+    {
+      "event_id": "evt_0452",
+      "amount": 25000.0,
+      "root_cause": "subscription_failed",
+      "action_taken": "enterprise_hitl_escalation",
+      "channel": "none",
+      "guardrail_result": "ALLOW",
+      "reason": "LOW_CONVERSION_OUTREACH (none outreach uncompleted)"
+    },
+    {
+      "event_id": "evt_0454",
+      "amount": 500000.0,
+      "root_cause": "subscription_failed",
+      "action_taken": "enterprise_hitl_escalation",
+      "channel": "none",
+      "guardrail_result": "ALLOW",
+      "reason": "LOW_CONVERSION_OUTREACH (none outreach uncompleted)"
+    },
+    {
+      "event_id": "evt_0455",
+      "amount": 120000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_payment_reminder",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "evt_0463",
+      "amount": 500000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_reminder",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "evt_0466",
+      "amount": 2999.0,
+      "root_cause": "payment_degraded",
+      "action_taken": "silent_route_reroute",
+      "channel": "reroute",
+      "guardrail_result": "ALLOW",
+      "reason": "LOW_CONVERSION_OUTREACH (reroute outreach uncompleted)"
+    },
+    {
+      "event_id": "evt_0470",
+      "amount": 500000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_payment_reminder",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "evt_0478",
+      "amount": 250000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_ptp_capture",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "evt_0483",
+      "amount": 250000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_ptp_request",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "evt_0485",
+      "amount": 250000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_ptp_request",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "evt_0498",
+      "amount": 500000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_reminder",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "evt_0499",
+      "amount": 250000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_payment_reminder",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0000",
+      "amount": 1299.0,
+      "root_cause": "payment_degraded",
+      "action_taken": "silent_route_reroute",
+      "channel": "none",
+      "guardrail_result": "BLOCK",
+      "reason": "GUARDRAIL_BLOCKED (RULE_OPT_OUT_ENFORCED)"
+    },
+    {
+      "event_id": "adv_0002",
+      "amount": 64820.0,
+      "root_cause": "mandate_auth_failed",
+      "action_taken": "whatsapp_mandate_afa_link",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0005",
+      "amount": 8999.0,
+      "root_cause": "subscription_failed",
+      "action_taken": "smart_subscription_retry_link",
+      "channel": "none",
+      "guardrail_result": "BLOCK",
+      "reason": "GUARDRAIL_BLOCKED (RULE_OPT_OUT_ENFORCED)"
+    },
+    {
+      "event_id": "adv_0007",
+      "amount": 120000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_followup",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0008",
+      "amount": 145000.0,
+      "root_cause": "mandate_auth_failed",
+      "action_taken": "whatsapp_mandate_afa_link",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0010",
+      "amount": 500000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_ptp_request",
+      "channel": "none",
+      "guardrail_result": "BLOCK",
+      "reason": "GUARDRAIL_BLOCKED (RULE_OPT_OUT_ENFORCED)"
+    },
+    {
+      "event_id": "adv_0015",
+      "amount": 63348.0,
+      "root_cause": "mandate_auth_failed",
+      "action_taken": "whatsapp_mandate_afa_link",
+      "channel": "none",
+      "guardrail_result": "BLOCK",
+      "reason": "GUARDRAIL_BLOCKED (RULE_OPT_OUT_ENFORCED)"
+    },
+    {
+      "event_id": "adv_0016",
+      "amount": 48000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_ptp_request",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0017",
+      "amount": 51534.0,
+      "root_cause": "mandate_auth_failed",
+      "action_taken": "whatsapp_mandate_afa_link",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0020",
+      "amount": 1299.0,
+      "root_cause": "promise_to_pay",
+      "action_taken": "scheduled_check",
+      "channel": "none",
+      "guardrail_result": "BLOCK",
+      "reason": "GUARDRAIL_BLOCKED (RULE_OPT_OUT_ENFORCED)"
+    },
+    {
+      "event_id": "adv_0022",
+      "amount": 25000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_followup",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0023",
+      "amount": 145000.0,
+      "root_cause": "mandate_auth_failed",
+      "action_taken": "whatsapp_mandate_afa_link",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0025",
+      "amount": 2999.0,
+      "root_cause": "checkout_abandoned",
+      "action_taken": "standard_cart_recovery",
+      "channel": "none",
+      "guardrail_result": "BLOCK",
+      "reason": "GUARDRAIL_BLOCKED (RULE_OPT_OUT_ENFORCED)"
+    },
+    {
+      "event_id": "adv_0027",
+      "amount": 1499.0,
+      "root_cause": "payment_degraded",
+      "action_taken": "silent_route_reroute",
+      "channel": "reroute",
+      "guardrail_result": "ALLOW",
+      "reason": "LOW_CONVERSION_OUTREACH (reroute outreach uncompleted)"
+    },
+    {
+      "event_id": "adv_0028",
+      "amount": 145000.0,
+      "root_cause": "checkout_abandoned",
+      "action_taken": "standard_cart_recovery",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0030",
+      "amount": 499.0,
+      "root_cause": "promise_to_pay",
+      "action_taken": "scheduled_check",
+      "channel": "none",
+      "guardrail_result": "BLOCK",
+      "reason": "GUARDRAIL_BLOCKED (RULE_OPT_OUT_ENFORCED)"
+    },
+    {
+      "event_id": "adv_0032",
+      "amount": 33859.0,
+      "root_cause": "mandate_auth_failed",
+      "action_taken": "whatsapp_mandate_afa_link",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0035",
+      "amount": 4999.0,
+      "root_cause": "payment_degraded",
+      "action_taken": "silent_route_reroute",
+      "channel": "none",
+      "guardrail_result": "BLOCK",
+      "reason": "GUARDRAIL_BLOCKED (RULE_OPT_OUT_ENFORCED)"
+    },
+    {
+      "event_id": "adv_0037",
+      "amount": 8999.0,
+      "root_cause": "subscription_failed",
+      "action_taken": "smart_subscription_retry_link",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0038",
+      "amount": 145000.0,
+      "root_cause": "checkout_abandoned",
+      "action_taken": "standard_cart_recovery",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0040",
+      "amount": 500000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_ptp_request",
+      "channel": "none",
+      "guardrail_result": "BLOCK",
+      "reason": "GUARDRAIL_BLOCKED (RULE_OPT_OUT_ENFORCED)"
+    },
+    {
+      "event_id": "adv_0042",
+      "amount": 15999.0,
+      "root_cause": "subscription_failed",
+      "action_taken": "smart_subscription_retry_link",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0043",
+      "amount": 145000.0,
+      "root_cause": "receivable_overdue",
+      "action_taken": "whatsapp_ptp_request",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0045",
+      "amount": 1999.0,
+      "root_cause": "promise_to_pay",
+      "action_taken": "scheduled_reconciliation_check",
+      "channel": "none",
+      "guardrail_result": "BLOCK",
+      "reason": "GUARDRAIL_BLOCKED (RULE_OPT_OUT_ENFORCED)"
+    },
+    {
+      "event_id": "adv_0047",
+      "amount": 8999.0,
+      "root_cause": "checkout_abandoned",
+      "action_taken": "standard_cart_recovery",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    },
+    {
+      "event_id": "adv_0048",
+      "amount": 145000.0,
+      "root_cause": "checkout_abandoned",
+      "action_taken": "standard_cart_recovery",
+      "channel": "none",
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
+    }
+  ]
+}

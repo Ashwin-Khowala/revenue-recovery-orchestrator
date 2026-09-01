@@ -39,6 +39,8 @@ export interface Incident {
   link?: string;
   paymentLink?: string;
   archetype?: string;
+  dataSource?: string;
+  synthetic?: boolean;
   createdAt?: string;
   metadata?: Record<string, any>;
   history?: Record<string, any>;

@@ -38,6 +38,27 @@ def execute_action(state: RecoveryState) -> Dict[str, Any]:
     contact_count = state.get("contact_count", 0)
 
     # --------------------------------------------------------------------------
+    # Pre-Send Gate: Check if payment was captured early via Webhook Race
+    # --------------------------------------------------------------------------
+    from orchestrator.recovery_queue import is_recovery_cancelled
+    if is_recovery_cancelled(event_id=event_id, razorpay_ref=state.get("razorpay_ref")) or state.get("metadata", {}).get("webhook_captured_early") is True:
+        reason = "Outreach aborted immediately pre-send: payment.captured received before dispatch. Zero customer spam."
+        audit_entry = log_audit_entry(
+            event_id=event_id,
+            node_name="execute_action",
+            action_taken="Outreach Aborted (Payment Captured Early)",
+            details={"event_id": event_id, "action_type": action_type, "status": "cancelled_by_webhook"},
+            reasoning=reason,
+        )
+        return {
+            "channel_used": "none",
+            "payment_status": "cancelled_by_webhook",
+            "recovered_amount": amount,
+            "execution_result": {"status": "aborted_payment_captured_early", "reason": reason},
+            "audit_trail": state.get("audit_trail", []) + [audit_entry],
+        }
+
+    # --------------------------------------------------------------------------
     # Case 1: Blocked by Guardrails or Decision is "do_nothing"
     # --------------------------------------------------------------------------
     if guardrail_result == "BLOCK" or action_type == "do_nothing" or target_channel == "none":
@@ -76,6 +97,8 @@ def execute_action(state: RecoveryState) -> Dict[str, Any]:
         )
         return {
             "channel_used": "reroute",
+            "payment_status": "recovered",
+            "recovered_amount": amount,
             "execution_result": result,
             "audit_trail": state.get("audit_trail", []) + [audit_entry],
         }

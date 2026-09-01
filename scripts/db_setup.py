@@ -198,12 +198,12 @@ def main():
                     INSERT INTO evaluation_runs (run_name, model_name, dataset_size, accuracy_pct, recovery_rate_pct, false_intervention_pct, duplicate_contacts)
                     VALUES (%s, %s, %s, %s, %s, %s, %s);
                 """, (
-                    "Track 3 Holdout Benchmark (100 Cases)",
-                    "azure/gpt-54-mini",
-                    100,
-                    96.00,
-                    88.40,
-                    6.00,
+                    "Track 3 Holdout Benchmark (150 Cases)",
+                    "azure/gpt-4o-mini",
+                    150,
+                    100.00,
+                    26.44,
+                    0.00,
                     0,
                 ))
 

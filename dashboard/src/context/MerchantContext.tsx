@@ -101,8 +101,14 @@ export function MerchantProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         const list = Array.isArray(data) ? data : data?.incidents;
+        const dataSource = data?.dataSource || 'LIVE_DATABASE';
         if (Array.isArray(list) && list.length > 0) {
-          setIncidents(list);
+          const tagged = list.map((i: any) => ({
+            ...i,
+            dataSource,
+            synthetic: dataSource === 'SYNTHETIC_FALLBACK' || i.synthetic,
+          }));
+          setIncidents(tagged);
           return;
         }
       }
@@ -172,7 +178,7 @@ export function MerchantProvider({ children }: { children: ReactNode }) {
   const stats: MerchantStats = {
     totalAtRisk: incidents.filter(i => i.status !== 'recovered').reduce((acc, i) => acc + i.amount, 0),
     totalRecovered: incidents.filter(i => i.status === 'recovered').reduce((acc, i) => acc + i.amount, 0),
-    marginShielded: 24500,
+    marginShielded: incidents.filter(i => i.archetype === 'comparison_window_shopping').reduce((acc, i) => acc + Math.round(i.amount * 0.15), 0),
     pendingHitlCount: incidents.filter(i => i.status === 'pending_hitl').length,
     recoveryRate: Math.round(
       (incidents.filter(i => i.status === 'recovered').length / (incidents.length || 1)) * 100
