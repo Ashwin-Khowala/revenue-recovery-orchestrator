@@ -3,21 +3,18 @@
 import React, { useState } from 'react';
 import { useMerchant } from '@/context/MerchantContext';
 import {
-  ShieldCheck,
-  Zap,
-  CheckCircle2,
   X,
   Copy,
   Check,
-  Send,
   Sparkles,
   Bot,
-  AlertTriangle,
   ArrowRight,
-  ExternalLink,
-  Phone,
+  ShieldAlert,
   MessageSquare,
-  Lock,
+  Send,
+  Clock,
+  Link as LinkIcon,
+  CheckCircle2,
 } from 'lucide-react';
 
 export default function PlanOfActionModal() {
@@ -25,7 +22,6 @@ export default function PlanOfActionModal() {
     planModalIncident,
     setPlanModalIncident,
     handleApproveHitl,
-    sendingChannel,
     addToast,
   } = useMerchant();
 
@@ -54,16 +50,16 @@ export default function PlanOfActionModal() {
     setActiveStep(1);
 
     try {
-      await new Promise(r => setTimeout(r, 400));
+      await new Promise(r => setTimeout(r, 350));
       setActiveStep(2);
-      await new Promise(r => setTimeout(r, 400));
+      await new Promise(r => setTimeout(r, 350));
       setActiveStep(3);
 
       await handleApproveHitl(inc);
 
       addToast({
-        title: 'Plan Executed Successfully',
-        message: `Dispatched recovery outreach for ${inc.customer} (₹${inc.amount.toLocaleString('en-IN')}) via WhatsApp & mirrored to Telegram @razorpaytestbot.`,
+        title: 'Recovery Plan Dispatched',
+        message: `Approved outreach for ${inc.customer} (₹${inc.amount.toLocaleString('en-IN')}) via WhatsApp and mirrored to Telegram @razorpaytestbot.`,
         type: 'success',
         channel: 'WhatsApp + Telegram',
         link: recoveryLink,
@@ -72,8 +68,8 @@ export default function PlanOfActionModal() {
       setPlanModalIncident(null);
     } catch (err) {
       addToast({
-        title: 'Execution Error',
-        message: `Failed to execute recovery plan: ${err}`,
+        title: 'Execution Failed',
+        message: `Could not execute recovery plan: ${err}`,
         type: 'error',
       });
     } finally {
@@ -84,195 +80,176 @@ export default function PlanOfActionModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fade-in">
-      <div className="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white border border-slate-200 rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4.5 border-b border-slate-100 bg-white flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-xs">
-              <Bot className="w-5 h-5" />
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+              <Bot className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-slate-900">
-                  Autonomous Recovery Plan of Action
-                </h3>
+                <h3 className="text-sm font-bold text-slate-900">Recovery Plan of Action</h3>
                 {isHighValue && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
-                    HITL ESCALATION (≥₹1L)
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                    High Value (&ge; ₹1L)
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                Deterministic policy & guardrail verification before customer dispatch
+              <p className="text-xs text-slate-500">
+                Review and authorize agent recovery actions before sending.
               </p>
             </div>
           </div>
 
           <button
             onClick={() => setPlanModalIncident(null)}
-            className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-5 custom-scrollbar text-xs">
-          {/* Incident Summary Card */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {/* Content */}
+        <div className="p-6 overflow-y-auto space-y-5 custom-scrollbar">
+          {/* Top Summary Banner */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between gap-4">
             <div>
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Customer</span>
-              <span className="text-sm font-bold text-slate-900 mt-0.5 block truncate">{inc.customer}</span>
-              <span className="text-[11px] text-slate-500">{inc.customerPhone || '+91 98201 44102'}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-slate-900">{inc.customer}</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100/70 text-blue-700 capitalize">
+                  {(inc.rootCause || inc.archetype || 'Payment Failed').replace(/_/g, ' ')}
+                </span>
+              </div>
+              <div className="text-xs text-slate-500 mt-1 flex items-center gap-3">
+                <span>{inc.customerPhone || '+91 98201 44102'}</span>
+                <span>•</span>
+                <span>Reliability: <strong className="text-slate-700">{reliability}%</strong> on-time</span>
+              </div>
             </div>
 
-            <div>
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">At-Risk Amount</span>
-              <span className="text-sm font-bold text-emerald-700 mt-0.5 block">
+            <div className="text-right shrink-0">
+              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">At-Risk</div>
+              <div className="text-lg font-bold text-emerald-600">
                 ₹{inc.amount.toLocaleString('en-IN')}
-              </span>
-              <span className="text-[11px] text-slate-500">INR Net Recovery</span>
-            </div>
-
-            <div>
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Root Cause</span>
-              <span className="text-xs font-bold text-blue-700 mt-1 block capitalize truncate">
-                {(inc.rootCause || inc.archetype || 'Payment Failed').replace(/_/g, ' ')}
-              </span>
-              <span className="text-[11px] text-slate-500">94% Confidence</span>
-            </div>
-
-            <div>
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Payer Reliability</span>
-              <span className="text-sm font-bold text-indigo-700 mt-0.5 block">{reliability}% On-Time</span>
-              <span className="text-[11px] text-emerald-700 font-semibold">Optimal: WhatsApp</span>
+              </div>
             </div>
           </div>
 
-          {/* 4-Step Action Plan */}
+          {/* Stepped Timeline */}
           <div>
-            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
-              Proposed 4-Step Execution Workflow
-            </h4>
+            <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
+              Execution Timeline
+            </div>
 
-            <div className="space-y-2.5">
+            <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
               {/* Step 1 */}
-              <div className={`p-3.5 rounded-xl border transition-all ${
-                activeStep === 1 
-                  ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-100 shadow-xs' 
-                  : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
-              }`}>
-                <div className="flex items-start gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
-                    activeStep === 1 ? 'bg-blue-600 text-white animate-pulse' : 'bg-blue-50 text-blue-700 border border-blue-200'
-                  }`}>
-                    1
+              <div className="relative">
+                <div className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                  activeStep === 1 
+                    ? 'bg-blue-600 text-white ring-4 ring-blue-100' 
+                    : 'bg-white border-2 border-slate-300 text-slate-600'
+                }`}>
+                  1
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-3 hover:border-slate-300 transition-all">
+                  <div className="text-xs font-bold text-slate-900">Mint Razorpay 1-Click Payment Link</div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    Dynamic checkout link with 5% margin shield applied.
                   </div>
-                  <div className="flex-1">
-                    <span className="font-bold text-slate-900 text-xs block">Mint HMAC-Signed Razorpay 1-Click Checkout Link</span>
-                    <span className="text-[11px] text-slate-500 block mt-0.5 leading-relaxed">
-                      Generates dynamic payment reference (<code className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded">{recoveryLink.slice(0, 32)}...</code>) with 5% margin shield applied.
+                  <div className="mt-2 flex items-center justify-between bg-slate-50 rounded-md px-2.5 py-1.5 border border-slate-200">
+                    <span className="text-[11px] font-mono text-slate-600 truncate max-w-[320px]">
+                      {recoveryLink}
                     </span>
+                    <button
+                      onClick={handleCopyLink}
+                      className="text-[11px] text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 shrink-0 ml-2"
+                    >
+                      {copiedLink ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedLink ? 'Copied' : 'Copy'}</span>
+                    </button>
                   </div>
                 </div>
               </div>
 
               {/* Step 2 */}
-              <div className={`p-3.5 rounded-xl border transition-all ${
-                activeStep === 2 
-                  ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-100 shadow-xs' 
-                  : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
-              }`}>
-                <div className="flex items-start gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
-                    activeStep === 2 ? 'bg-blue-600 text-white animate-pulse' : 'bg-blue-50 text-blue-700 border border-blue-200'
-                  }`}>
-                    2
-                  </div>
-                  <div className="flex-1">
-                    <span className="font-bold text-slate-900 text-xs block">Dispatch Interactive WhatsApp Recovery Template</span>
-                    <span className="text-[11px] text-slate-500 block mt-0.5 leading-relaxed">
-                      Sends personalized Hinglish nudge with 1-click UPI/Card checkout button and RBI AFA consent instructions.
+              <div className="relative">
+                <div className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                  activeStep === 2 
+                    ? 'bg-blue-600 text-white ring-4 ring-blue-100' 
+                    : 'bg-white border-2 border-slate-300 text-slate-600'
+                }`}>
+                  2
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-3 hover:border-slate-300 transition-all">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-900">Dispatch Interactive WhatsApp Nudge</span>
+                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                      WhatsApp
                     </span>
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    Sends personalized recovery message with 1-click payment CTA.
                   </div>
                 </div>
               </div>
 
               {/* Step 3 */}
-              <div className={`p-3.5 rounded-xl border transition-all ${
-                activeStep === 3 
-                  ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-100 shadow-xs' 
-                  : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
-              }`}>
-                <div className="flex items-start gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
-                    activeStep === 3 ? 'bg-blue-600 text-white animate-pulse' : 'bg-blue-50 text-blue-700 border border-blue-200'
-                  }`}>
-                    3
-                  </div>
-                  <div className="flex-1">
-                    <span className="font-bold text-slate-900 text-xs block">Mirror Operational Receipt to Telegram Merchant Bot</span>
-                    <span className="text-[11px] text-slate-500 block mt-0.5 leading-relaxed">
-                      Broadcasts live verification receipt with inline payment button to registered admin chat (<code className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded">@razorpaytestbot</code>).
+              <div className="relative">
+                <div className={`absolute -left-6 top-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                  activeStep === 3 
+                    ? 'bg-blue-600 text-white ring-4 ring-blue-100' 
+                    : 'bg-white border-2 border-slate-300 text-slate-600'
+                }`}>
+                  3
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-3 hover:border-slate-300 transition-all">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-900">Mirror Receipt to Merchant Admin</span>
+                    <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                      Telegram @razorpaytestbot
                     </span>
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    Live operational broadcast with inline verification receipt.
                   </div>
                 </div>
               </div>
 
               {/* Step 4 */}
-              <div className="p-3.5 rounded-xl border bg-white border-slate-200 hover:border-slate-300 shadow-xs">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
-                    4
-                  </div>
-                  <div className="flex-1">
-                    <span className="font-bold text-slate-900 text-xs block">24-Hour Cooldown & Webhook Race Arbitrator</span>
-                    <span className="text-[11px] text-slate-500 block mt-0.5 leading-relaxed">
-                      Enforces 24h quiet period. If <code className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded">payment.captured</code> webhook arrives before customer clicks, outreach is instantly aborted (0 duplicate spam).
-                    </span>
+              <div className="relative">
+                <div className="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-white border-2 border-slate-300 text-slate-600 flex items-center justify-center text-[10px] font-bold">
+                  4
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-3 hover:border-slate-300 transition-all">
+                  <div className="text-xs font-bold text-slate-900">24-Hour Cooldown & Webhook Race Arbitrator</div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    Enforces 24h quiet window. If payment arrives before customer clicks, outreach is cancelled (0 duplicate spam).
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Quick Copy Link Box */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 min-w-0">
-              <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="text-[11px] text-slate-700 truncate font-mono">{recoveryLink}</span>
-            </div>
-            <button
-              onClick={handleCopyLink}
-              className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shrink-0 border border-slate-200 transition-colors shadow-xs"
-            >
-              {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
-              <span>{copiedLink ? 'Copied' : 'Copy Link'}</span>
-            </button>
-          </div>
         </div>
 
-        {/* Footer Actions */}
-        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between gap-3">
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/60 flex items-center justify-between gap-3">
           <button
             onClick={() => setPlanModalIncident(null)}
-            className="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-colors shadow-xs"
+            className="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold transition-colors"
           >
             Cancel / Reject
           </button>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleExecute}
-              disabled={isExecuting}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-all disabled:opacity-50"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-blue-200" />
-              <span>{isExecuting ? 'Executing Plan...' : 'Authorize & Execute Plan'}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          <button
+            onClick={handleExecute}
+            disabled={isExecuting}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-all disabled:opacity-50"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-blue-200" />
+            <span>{isExecuting ? 'Executing Plan...' : 'Authorize & Execute Plan'}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     </div>
