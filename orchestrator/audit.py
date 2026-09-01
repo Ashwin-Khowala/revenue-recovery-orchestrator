@@ -40,11 +40,13 @@ def _init_last_entry_hash() -> None:
         client = _get_supabase_client()
         if client:
             try:
-                res = client.table("audit_log").select("entry_hash").order("created_at", desc=True).limit(1).execute()
-                if res.data and len(res.data) > 0 and res.data[0].get("entry_hash"):
-                    _last_entry_hash = res.data[0]["entry_hash"]
-                    logger.info(f"Initialized audit chain head from Supabase: {_last_entry_hash[:12]}...")
-                    return
+                res = client.table("audit_log").select("details").order("created_at", desc=True).limit(1).execute()
+                if res.data and len(res.data) > 0:
+                    d = res.data[0].get("details") or {}
+                    if isinstance(d, dict) and d.get("entry_hash"):
+                        _last_entry_hash = d["entry_hash"]
+                        logger.info(f"Initialized audit chain head from Supabase: {_last_entry_hash[:12]}...")
+                        return
             except Exception as e:
                 logger.debug(f"Could not load audit head from Supabase: {e}")
 
@@ -162,14 +164,15 @@ def log_audit_entry(
         client = _get_supabase_client()
         if client:
             try:
+                db_details = dict(details)
+                db_details["entry_hash"] = entry_hash
+                db_details["prev_entry_hash"] = entry["prev_entry_hash"]
                 client.table("audit_log").insert({
                     "event_id": event_id,
                     "node_name": node_name,
                     "action_taken": action_taken,
-                    "details": details,
+                    "details": db_details,
                     "reasoning": reasoning or "",
-                    "entry_hash": entry_hash,
-                    "prev_entry_hash": entry["prev_entry_hash"],
                 }).execute()
             except Exception as e:
                 logger.debug(f"Could not persist audit log to Supabase: {e}")

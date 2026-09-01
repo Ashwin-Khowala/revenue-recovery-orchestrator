@@ -403,19 +403,74 @@ def _generate_agent_reply(user_text: str, chat_id: str, user_name: str = "") -> 
         }
         return reply, keyboard
 
-    # Promise-to-pay callbacks
-    if text_lower.startswith("promise_to_pay"):
+    # 1. Ask for Promise-to-pay date selection
+    if text_lower == "promise_to_pay" or text_lower.startswith("promise_to_pay:"):
+        evt_id = text_lower.split(":", 1)[-1] if ":" in text_lower else event_id
+        reply = (
+            f"📅 <b>Schedule Promise-to-Pay for {cust_name}</b>\n\n"
+            f"• <b>Outstanding Balance:</b> ₹{total_due:,.0f}\n"
+            f"• <b>Incident Ref:</b> <code>{evt_id}</code>\n\n"
+            "When would you like to schedule your payment?\n"
+            "Tap an option below, or reply with your preferred date (e.g., <i>\"Tomorrow\"</i>, <i>\"Friday\"</i>, <i>\"15th Sept\"</i>):"
+        )
+        keyboard = {
+            "inline_keyboard": [
+                [
+                    {"text": "Tomorrow", "callback_data": f"set_ptp:Tomorrow:{evt_id}"},
+                    {"text": "In 3 Days", "callback_data": f"set_ptp:In 3 Days:{evt_id}"},
+                ],
+                [
+                    {"text": "This Friday", "callback_data": f"set_ptp:This Friday:{evt_id}"},
+                    {"text": "Next Monday", "callback_data": f"set_ptp:Next Monday:{evt_id}"},
+                ],
+                [
+                    {"text": "In 7 Days", "callback_data": f"set_ptp:In 7 Days:{evt_id}"},
+                ],
+                [
+                    {"text": f"Pay ₹{total_due:,.0f} Now Instead", "url": payment_link},
+                ],
+            ]
+        }
+        return reply, keyboard
+
+    # 2. Confirm chosen Promise-to-pay date from inline button
+    if text_lower.startswith("set_ptp:"):
+        parts = user_text.split(":")
+        chosen_date = parts[1] if len(parts) > 1 else "In 3 Days"
+        evt_id = parts[2] if len(parts) > 2 else event_id
+
         from orchestrator.tools.customer_tools import register_promise_to_pay
         register_promise_to_pay(
-            promised_date="Next Monday",
-            note=f"PTP requested via Telegram by {cust_name}",
+            promised_date=chosen_date,
+            note=f"PTP scheduled for {chosen_date} via Telegram by {cust_name}",
+            customer_id=ctx["customer_id"],
+            event_id=evt_id,
+        )
+        reply = (
+            f"<b>✅ [CONFIRMED] Promise-to-Pay Registered for {cust_name}!</b>\n\n"
+            f"• <b>Scheduled Date:</b> <b>{chosen_date}</b>\n"
+            f"• <b>Outstanding Amount:</b> ₹{total_due:,.0f}\n"
+            f"• <b>Status:</b> All automated reminders and calls are now <b>paused</b> until {chosen_date}.\n"
+            "• We will re-check on your scheduled date.\n\n"
+            "You can still settle anytime before then:"
+        )
+        return reply, {"inline_keyboard": [[{"text": f"Pay ₹{total_due:,.0f} Anytime", "url": payment_link}]]}
+
+    # 3. Natural language date / promise detection from chat text
+    if any(k in text_lower for k in ("will pay", "pay on", "pay by", "kal ", "kal", "parso", "next monday", "this friday", "in 3 days", "in 7 days", "tomorrow")):
+        from orchestrator.tools.customer_tools import register_promise_to_pay
+        chosen_date = user_text.strip()
+        register_promise_to_pay(
+            promised_date=chosen_date,
+            note=f"PTP promised via Telegram: \"{user_text}\" by {cust_name}",
             customer_id=ctx["customer_id"],
             event_id=event_id,
         )
         reply = (
-            f"<b>[CONFIRMED] Promise-to-Pay Registered for {cust_name}!</b>\n\n"
+            f"<b>✅ [CONFIRMED] Promise-to-Pay Registered for {cust_name}!</b>\n\n"
+            f"• <b>Committed Date:</b> <b>{chosen_date}</b>\n"
             f"• <b>Outstanding Amount:</b> ₹{total_due:,.0f}\n"
-            "• <b>Status:</b> All automated reminders and calls are now <b>paused</b>.\n"
+            f"• <b>Status:</b> All automated outreach and calls are now <b>paused</b> until your promised date.\n"
             "• We will re-check on your scheduled date.\n\n"
             "You can still settle anytime before then:"
         )
