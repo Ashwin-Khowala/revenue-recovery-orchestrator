@@ -159,6 +159,25 @@ EVENTS: dict[str, dict] = {
         "ground_truth_root_cause": "mandate_auth_failed",
         "expected_channel": "whatsapp",
     },
+    "promise_to_pay": {
+        "event_id": "de_evt_007",
+        "event_type": "promise_to_pay",
+        "amount": 12000.0,
+        "merchant_id": "merch_01",
+        "customer_id": "cust_de_007",
+        "customer_name": "Rohan Gupta",
+        "customer_email": "rohan@example.com",
+        "customer_phone": "+919876543201",
+        "history": {"prior_contacts": 1, "prior_payment_success_rate": 0.85, "customer_avg_days_late": 2},
+        "metadata": {
+            "promised_payment_date": "2026-09-05",
+            "inbound_channel": "voice",
+            "last_interaction": "Customer committed to pay on 5th September post salary",
+        },
+        "ground_truth_root_cause": "promise_to_pay",
+        "expected_action": "pause_outreach",
+        "expected_channel": "none",
+    },
 }
 
 
@@ -241,6 +260,7 @@ class TestClassificationCorrectness:
         "subscription_failed",
         "receivable_overdue",
         "mandate_auth_failed",
+        "promise_to_pay",
     ])
     def test_root_cause_classification(self, category: str) -> None:
         event = EVENTS[category]
@@ -273,6 +293,7 @@ class TestInterventionAppropriateness:
         "subscription_failed",
         "receivable_overdue",
         "mandate_auth_failed",
+        "promise_to_pay",
     ])
     def test_intervention_quality(self, category: str) -> None:
         event = EVENTS[category]

@@ -43,11 +43,6 @@ export default function PTPForecastView() {
   const getPtpDate = (p: any, idx: number) => {
     if (p.metadata?.promised_pay_date) return p.metadata.promised_pay_date;
     if (p.promisedDate) return p.promisedDate;
-    if (p.createdAt) {
-      const d = new Date(p.createdAt);
-      d.setDate(d.getDate() + ((idx % 4) + 2));
-      return d.toISOString().split('T')[0];
-    }
     const d = new Date();
     d.setDate(d.getDate() + ((idx % 4) + 2));
     return d.toISOString().split('T')[0];
@@ -141,10 +136,24 @@ export default function PTPForecastView() {
                     <div className="text-[10px] text-[#666666] font-mono capitalize">{p.archetype?.replace(/_/g, ' ')}</div>
                   </td>
                   <td className="py-3 px-4">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                      <span>{p.status === 'paused_ptp' ? 'Outreach Paused' : p.status}</span>
-                    </span>
+                    {(() => {
+                      const dateStr = getPtpDate(p, idx);
+                      const isPast = new Date(dateStr) < new Date(new Date().toDateString());
+                      if (isPast) {
+                        return (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                            <AlertCircle className="w-3 h-3 text-amber-600" />
+                            <span>Past Due (Follow-Up Active)</span>
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <span>Outreach Paused (Active PTP)</span>
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="py-3 px-4 text-right">
                     <button

@@ -100,12 +100,13 @@ async def test_temporal_hitl_escalation_and_approval():
             ],
             workflow_runner=UnsandboxedWorkflowRunner(),
         ):
+            import uuid
             high_value_event = {
-                "event_id": "test_temporal_high_val",
+                "event_id": f"test_temporal_high_val_{uuid.uuid4().hex[:6]}",
                 "event_type": "invoice.overdue",
                 "amount": 145000.0,  # Exceeds ₹1,00,000 threshold
                 "currency": "INR",
-                "customer_id": "cust_0003",
+                "customer_id": f"cust_temp_hitl_{uuid.uuid4().hex[:6]}",
                 "merchant_id": "merch_01",
                 "razorpay_ref": "inv_high_001",
                 "history": {"prior_payment_success_rate": 0.40},

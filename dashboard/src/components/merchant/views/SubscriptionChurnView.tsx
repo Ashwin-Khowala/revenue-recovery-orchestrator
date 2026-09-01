@@ -21,7 +21,7 @@ export default function SubscriptionChurnView() {
   const displayList = subIncidents.length > 0 ? subIncidents : incidents.slice(0, 6);
 
   const mrrAtRisk = displayList.reduce((acc, i) => acc + i.amount, 0);
-  const activeGraceCount = displayList.filter(i => i.archetype === 'involuntary_churn_engaged' || i.status === 'auto_recovering').length;
+  const activeGraceCount = displayList.filter(i => i.archetype !== 'voluntary_churn_dormant').length;
 
   const handleTriggerFridayPaydayRetry = (inc: any) => {
     handleSendWhatsApp(inc);
@@ -150,10 +150,17 @@ export default function SubscriptionChurnView() {
                     <div className="text-xs font-medium text-[#2B2B2B] truncate">{inc.evRankedStrategy}</div>
                   </td>
                   <td className="py-3 px-4">
-                    <span className="inline-flex items-center gap-1 text-emerald-800 font-semibold text-[11px] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      14-Day Active Grace
-                    </span>
+                    {inc.archetype === 'voluntary_churn_dormant' ? (
+                      <span className="inline-flex items-center gap-1 text-slate-700 font-semibold text-[11px] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                        <Clock className="w-3.5 h-3.5 text-slate-500" />
+                        Kill Switch (Off-Ramp)
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-emerald-800 font-semibold text-[11px] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        14-Day Active Grace
+                      </span>
+                    )}
                   </td>
                   <td className="py-3 px-4 text-right">
                     <div className="flex items-center justify-end gap-2">

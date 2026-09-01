@@ -285,6 +285,7 @@ class ActionDispatchRequest(BaseModel):
 async def send_whatsapp_action(req: ActionDispatchRequest):
     """
     Dispatches a WhatsApp recovery payment link with 1-click Razorpay checkout.
+    Also mirrors to Telegram operations channel for real-time live review.
     """
     from orchestrator.channels.whatsapp import send_whatsapp_recovery
     link = f"https://rzp.io/i/{req.customer_name.lower().replace(' ', '')[:6]}_{int(req.amount)}"
@@ -296,6 +297,19 @@ async def send_whatsapp_action(req: ActionDispatchRequest):
         recovery_link=link,
         root_cause="subscription_failed",
     )
+
+    # Mirror to Telegram for live reviewer confirmation
+    try:
+        from orchestrator.channels.telegram import send_telegram_recovery
+        send_telegram_recovery(
+            customer_name=req.customer_name,
+            amount=req.amount,
+            recovery_link=link,
+            root_cause=req.strategy or "subscription_failed",
+        )
+    except Exception as te:
+        logger.debug(f"Telegram mirror failed: {te}")
+
     return result
 
 
@@ -405,6 +419,19 @@ async def approve_hitl_endpoint(req: HitlApprovalRequest):
             recovery_link=recovery_link,
             root_cause="receivable_overdue",
         )
+
+    # Always notify active Telegram Merchant Operations chats as well
+    if channel != "telegram":
+        try:
+            from orchestrator.channels.telegram import send_telegram_recovery
+            send_telegram_recovery(
+                customer_name=customer_name,
+                amount=amount,
+                recovery_link=recovery_link,
+                root_cause="receivable_overdue",
+            )
+        except Exception as te:
+            logger.debug(f"Telegram admin broadcast failed: {te}")
 
     # 3. Log cryptographic SHA-256 audit entry
     audit_entry = log_audit_entry(
@@ -904,9 +931,9 @@ async def razorpay_webhook_listener(
     logger.info(f"[WEBHOOK RECEIVED] event={event_name} payment_id={payment_id} amount=₹{amount}")
 
     # --------------------------------------------------------------------------
-    # Race Condition Handler: payment.captured received
+    # Race Condition & Payment Success Handler: payment.captured / paid received
     # --------------------------------------------------------------------------
-    if event_name == "payment.captured":
+    if event_name in ("payment.captured", "order.paid", "payment_link.paid", "payment.authorized"):
         from orchestrator.recovery_queue import cancel_recovery_by_webhook
 
         notes = event_entity.get("notes", {})

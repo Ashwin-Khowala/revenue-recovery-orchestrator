@@ -4,7 +4,10 @@ Starts simultaneously:
 1. FastAPI Backend (Port 8000)
 2. Next.js Dashboard (Port 3000)
 3. Two-Way Telegram Recovery Bot (@razorpaytestbot)
-Handles automatic port freeing and graceful shutdown of all processes on Ctrl+C.
+Features:
+- Automatic port cleanup before start
+- High-Availability Auto-Restart: Monitors children and automatically restarts any process that crashes
+- Graceful shutdown on Ctrl+C
 """
 
 import sys
@@ -36,6 +39,40 @@ def free_port(port: int):
             pass
 
 
+def start_backend():
+    free_port(8000)
+    backend_cmd = [
+        sys.executable,
+        "-m",
+        "uvicorn",
+        "orchestrator.webhook:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+    ]
+    return subprocess.Popen(backend_cmd, cwd=ROOT_DIR)
+
+
+def start_frontend():
+    free_port(3000)
+    is_windows = sys.platform.startswith("win")
+    npm_cmd = "npm.cmd" if is_windows else "npm"
+    return subprocess.Popen(
+        f"{npm_cmd} run dev" if is_windows else ["npm", "run", "dev"],
+        cwd=DASHBOARD_DIR,
+        shell=is_windows,
+    )
+
+
+def start_telegram_bot():
+    return subprocess.Popen(
+        [sys.executable, "-m", "orchestrator.channels.telegram_bot"],
+        cwd=ROOT_DIR,
+    )
+
+
 def main():
     print("=" * 70)
     print("STARTING RAZORPAY REVENUE RECOVERY ORCHESTRATOR")
@@ -43,6 +80,7 @@ def main():
     print("  • FastAPI Backend API:    http://localhost:8000")
     print("  • Next.js Dashboard UI:   http://localhost:3000")
     print("  • Telegram Recovery Bot:  @razorpaytestbot (Long-Polling Active)")
+    print("  • Auto-Restart Mode:      ENABLED (Self-healing on crash/edit)")
     print("=" * 70)
     print("Press Ctrl+C anytime to stop all servers cleanly.\n")
 
@@ -52,73 +90,61 @@ def main():
     free_port(3000)
     time.sleep(0.5)
 
-    processes = []
+    services = {
+        "FastAPI Backend": {"start": start_backend, "proc": None, "last_restart": 0},
+        "Next.js Frontend": {"start": start_frontend, "proc": None, "last_restart": 0},
+        "Telegram Bot Worker": {"start": start_telegram_bot, "proc": None, "last_restart": 0},
+    }
 
     try:
-        # 1. Start FastAPI Backend
-        print("[1/3] Starting FastAPI Backend on port 8000...")
-        backend_cmd = [
-            sys.executable,
-            "-m",
-            "uvicorn",
-            "orchestrator.webhook:app",
-            "--host",
-            "0.0.0.0",
-            "--port",
-            "8000",
-            "--reload",
-        ]
-        p_backend = subprocess.Popen(backend_cmd, cwd=ROOT_DIR)
-        processes.append(("FastAPI Backend", p_backend))
-
-        # 2. Start Next.js Dashboard
-        print("[2/3] Starting Next.js Dashboard on port 3000...")
-        is_windows = sys.platform.startswith("win")
-        npm_cmd = "npm.cmd" if is_windows else "npm"
-        p_frontend = subprocess.Popen(
-            f"{npm_cmd} run dev" if is_windows else ["npm", "run", "dev"],
-            cwd=DASHBOARD_DIR,
-            shell=is_windows,
-        )
-        processes.append(("Next.js Frontend", p_frontend))
-
-        # 3. Start Telegram Bot Worker
-        print("[3/3] Starting Telegram Bot Worker on @razorpaytestbot...")
-        p_tg = subprocess.Popen(
-            [sys.executable, "-m", "orchestrator.channels.telegram_bot"],
-            cwd=ROOT_DIR,
-        )
-        processes.append(("Telegram Bot Worker", p_tg))
+        # Start initial services
+        for name, svc in services.items():
+            print(f"[START] Launching {name}...")
+            svc["proc"] = svc["start"]()
+            svc["last_restart"] = time.time()
 
         print("\n[READY] All 3 services are running! Open http://localhost:3000 in your browser.\n")
 
-        # Keep parent alive and monitor children
-        dead_notified = set()
+        # Supervisor loop with auto-restart
         while True:
-            time.sleep(1)
-            for name, p in processes:
-                if p.poll() is not None and name not in dead_notified:
-                    dead_notified.add(name)
-                    print(f"[WARNING] Process {name} exited with code {p.returncode}")
+            time.sleep(2)
+            now = time.time()
+            for name, svc in services.items():
+                p = svc["proc"]
+                if p and p.poll() is not None:
+                    code = p.returncode
+                    # Debounce rapid restarts (at least 3s between restarts)
+                    if now - svc["last_restart"] >= 3:
+                        print(f"\n[AUTO-RESTART] Service '{name}' exited (code {code}). Auto-restarting now...")
+                        try:
+                            svc["proc"] = svc["start"]()
+                            svc["last_restart"] = now
+                            print(f"[AUTO-RESTART] Successfully restarted '{name}'.\n")
+                        except Exception as e:
+                            print(f"[ERROR] Failed to auto-restart '{name}': {e}")
 
     except KeyboardInterrupt:
         print("\n[SHUTDOWN] Stopping all servers...")
-        for name, p in processes:
-            print(f"  Terminating {name}...")
-            try:
-                if sys.platform.startswith("win"):
-                    p.terminate()
-                else:
-                    p.send_signal(signal.SIGINT)
-            except Exception:
-                pass
+        for name, svc in services.items():
+            p = svc["proc"]
+            if p:
+                print(f"  Terminating {name}...")
+                try:
+                    if sys.platform.startswith("win"):
+                        p.terminate()
+                    else:
+                        p.send_signal(signal.SIGINT)
+                except Exception:
+                    pass
 
         time.sleep(1)
-        for name, p in processes:
-            try:
-                p.kill()
-            except Exception:
-                pass
+        for name, svc in services.items():
+            p = svc["proc"]
+            if p:
+                try:
+                    p.kill()
+                except Exception:
+                    pass
         print("[SUCCESS] All processes shut down cleanly.")
 
 
