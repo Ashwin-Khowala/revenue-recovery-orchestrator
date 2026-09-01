@@ -355,3 +355,313 @@ def get_payment_link(
         "amount_inr": amount,
         "message": f"Secure Razorpay 1-click payment link generated: {url} (Payable: ₹{amount:,.2f})",
     }
+
+
+# =============================================================================
+# NEW TOOLS — Critical gaps closed
+# =============================================================================
+
+def get_payment_history(
+    customer_id: str = "cust_0001",
+    limit: int = 10,
+) -> Dict[str, Any]:
+    """
+    Returns the last N payment episodes for a customer: date, amount, outcome, channel used.
+    Answers: "Show my payment history", "What have I paid before?", "When was my last payment?"
+
+    Args:
+        customer_id: Customer identifier (e.g. 'cust_0001')
+        limit: Number of history records to return (default 10)
+    """
+    logger.info(f"[TOOL] get_payment_history: {customer_id} (limit={limit})")
+    episodes = []
+    try:
+        from orchestrator.memory import get_episodic_history
+        raw = get_episodic_history(customer_id, limit=limit)
+        for ep in raw:
+            episodes.append({
+                "date": ep.get("timestamp", "")[:10] if ep.get("timestamp") else ep.get("date", "N/A"),
+                "amount_inr": float(ep.get("amount", 0)),
+                "outcome": ep.get("outcome", "unknown"),
+                "channel": ep.get("channel", "N/A"),
+                "event_type": ep.get("event_type", "N/A"),
+            })
+    except Exception as e:
+        logger.warning(f"Payment history episodic fetch error: {e}")
+
+    # Supabase events fallback
+    if not episodes:
+        try:
+            from orchestrator.audit import _get_supabase_client
+            supabase = _get_supabase_client()
+            if supabase:
+                rows = supabase.table("events").select(
+                    "created_at,amount,payment_status,event_type,optimal_action"
+                ).eq("customer_id", customer_id).order("created_at", desc=True).limit(limit).execute().data or []
+                for r in rows:
+                    episodes.append({
+                        "date": (r.get("created_at") or "")[:10],
+                        "amount_inr": float(r.get("amount") or 0),
+                        "outcome": r.get("payment_status", "unknown"),
+                        "channel": r.get("optimal_action", "N/A"),
+                        "event_type": r.get("event_type", "N/A"),
+                    })
+        except Exception as e:
+            logger.warning(f"Payment history Supabase fallback error: {e}")
+
+    total_paid = sum(e["amount_inr"] for e in episodes if e["outcome"] in ("recovered", "captured", "paid"))
+    on_time_count = sum(1 for e in episodes if e["outcome"] in ("recovered", "captured", "paid"))
+
+    return {
+        "tool": "get_payment_history",
+        "customer_id": customer_id,
+        "records": episodes,
+        "count": len(episodes),
+        "total_paid_inr": total_paid,
+        "on_time_count": on_time_count,
+        "message": (
+            f"Payment History for {customer_id}: {len(episodes)} records found. "
+            f"On-time settlements: {on_time_count}. Total paid: ₹{total_paid:,.2f}."
+        ),
+    }
+
+
+def get_invoice_aging(
+    customer_id: str = "cust_0001",
+    event_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Returns how many days overdue a customer's invoice is, the original due date,
+    and aging bucket (current/30d/60d/90d+).
+    Answers: "How overdue am I?", "When was my payment due?", "How many days late?"
+
+    Args:
+        customer_id: Customer identifier
+        event_id: Optional specific incident ID
+    """
+    import datetime as dt
+    logger.info(f"[TOOL] get_invoice_aging: {customer_id}")
+    try:
+        from orchestrator.audit import _get_supabase_client
+        supabase = _get_supabase_client()
+        if supabase:
+            query = supabase.table("events").select("*")
+            if event_id:
+                query = query.eq("event_id", event_id)
+            else:
+                query = query.eq("customer_id", customer_id).neq("payment_status", "recovered")
+            rows = query.order("created_at", desc=True).limit(1).execute().data or []
+            if rows:
+                row = rows[0]
+                created_raw = row.get("created_at", "")
+                amount = float(row.get("amount") or 0)
+                status = row.get("payment_status", "unresolved")
+                event_type = row.get("event_type", "N/A")
+
+                # Calculate days overdue
+                try:
+                    created_dt = dt.datetime.fromisoformat(created_raw.replace("Z", "+00:00"))
+                    now_dt = dt.datetime.now(dt.timezone.utc)
+                    days_overdue = (now_dt - created_dt).days
+                except Exception:
+                    days_overdue = 0
+
+                if days_overdue <= 0:
+                    bucket = "Current (not yet overdue)"
+                elif days_overdue <= 30:
+                    bucket = "0–30 days overdue"
+                elif days_overdue <= 60:
+                    bucket = "31–60 days overdue"
+                elif days_overdue <= 90:
+                    bucket = "61–90 days overdue"
+                else:
+                    bucket = "90+ days overdue (critical)"
+
+                return {
+                    "tool": "get_invoice_aging",
+                    "customer_id": customer_id,
+                    "event_id": row.get("event_id"),
+                    "amount_inr": amount,
+                    "status": status,
+                    "event_type": event_type,
+                    "days_overdue": days_overdue,
+                    "created_date": created_raw[:10] if created_raw else "N/A",
+                    "aging_bucket": bucket,
+                    "message": (
+                        f"Invoice of ₹{amount:,.2f} ({event_type}) is {days_overdue} days overdue. "
+                        f"Aging bucket: {bucket}. Status: {status}."
+                    ),
+                }
+    except Exception as e:
+        logger.warning(f"Invoice aging query error: {e}")
+
+    return {
+        "tool": "get_invoice_aging",
+        "customer_id": customer_id,
+        "days_overdue": 0,
+        "aging_bucket": "Current",
+        "message": "Invoice aging data not available. Please contact support for details.",
+    }
+
+
+def get_subscription_plan_details(
+    customer_id: str = "cust_0001",
+) -> Dict[str, Any]:
+    """
+    Returns subscription plan name, billing cycle, amount, grace period status, and next retry window.
+    Answers: "What plan am I on?", "When does my subscription renew?", "Is my account active?"
+
+    Args:
+        customer_id: Customer identifier
+    """
+    logger.info(f"[TOOL] get_subscription_plan_details: {customer_id}")
+    try:
+        from orchestrator.memory import get_customer_profile
+        from orchestrator.audit import _get_supabase_client
+
+        profile = get_customer_profile(customer_id) or {}
+        supabase = _get_supabase_client()
+        sub_event = None
+        if supabase:
+            rows = supabase.table("events").select("*").eq("customer_id", customer_id).eq(
+                "event_type", "subscription_failed"
+            ).order("created_at", desc=True).limit(1).execute().data or []
+            if rows:
+                sub_event = rows[0]
+
+        amount = float(sub_event.get("amount", 0)) if sub_event else float(profile.get("avg_transaction_value", 4999))
+        status = sub_event.get("payment_status", "active") if sub_event else "active"
+        customer_name = profile.get("name", customer_id)
+        reliability = profile.get("payment_reliability", 0.94)
+
+        # Derive plan tier from amount
+        if amount >= 25000:
+            plan_name = "Enterprise Pro"
+            billing_cycle = "Annual"
+        elif amount >= 5000:
+            plan_name = "Business Growth"
+            billing_cycle = "Monthly"
+        elif amount >= 999:
+            plan_name = "Starter Plus"
+            billing_cycle = "Monthly"
+        else:
+            plan_name = "Basic Plan"
+            billing_cycle = "Monthly"
+
+        grace_active = status in ("paused_ptp", "auto_recovering", "subscription_failed")
+
+        return {
+            "tool": "get_subscription_plan_details",
+            "customer_id": customer_id,
+            "customer_name": customer_name,
+            "plan_name": plan_name,
+            "billing_cycle": billing_cycle,
+            "amount_inr": amount,
+            "account_status": status,
+            "grace_period_active": grace_active,
+            "payment_reliability_pct": round(reliability * 100, 1),
+            "message": (
+                f"{customer_name} is on the **{plan_name}** plan (₹{amount:,.2f}/{billing_cycle}). "
+                f"Account status: {status}. "
+                f"{'14-day grace period is currently active — your access is NOT interrupted.' if grace_active else 'Account is active and in good standing.'}"
+            ),
+        }
+    except Exception as e:
+        logger.warning(f"Subscription plan lookup error: {e}")
+
+    return {
+        "tool": "get_subscription_plan_details",
+        "customer_id": customer_id,
+        "plan_name": "Starter Plus",
+        "billing_cycle": "Monthly",
+        "amount_inr": 4999.0,
+        "account_status": "active",
+        "grace_period_active": False,
+        "message": "Your subscription plan details could not be loaded. Please contact support.",
+    }
+
+
+def escalate_to_human(
+    customer_id: str = "cust_0001",
+    customer_name: str = "Customer",
+    reason: str = "Customer requested human agent",
+    event_id: Optional[str] = None,
+    amount: float = 0.0,
+) -> Dict[str, Any]:
+    """
+    Immediately stops all automated outreach, logs an escalation, and dispatches
+    a Telegram alert to merchant admins to contact the customer.
+    Triggers on: 'speak to a human', 'call me', 'I want a person', 'manager', 'escalate'.
+
+    Args:
+        customer_id: Customer identifier
+        customer_name: Customer name for the alert
+        reason: Why escalation was triggered
+        event_id: Optional incident ID
+        amount: Amount involved
+    """
+    logger.info(f"[TOOL] escalate_to_human: {customer_id} — {reason}")
+
+    ticket_id = f"ESC-{customer_id[-4:]}-{event_id[-4:] if event_id else '0000'}"
+
+    try:
+        from orchestrator.audit import log_audit_entry, _get_supabase_client
+        supabase = _get_supabase_client()
+
+        # Pause all automated outreach for this customer
+        if supabase:
+            q = supabase.table("events").update({"payment_status": "human_escalated"})
+            if event_id:
+                q.eq("event_id", event_id).execute()
+            else:
+                q.eq("customer_id", customer_id).execute()
+
+        log_audit_entry(
+            event_id=event_id or customer_id,
+            node_name="escalate_to_human",
+            action_taken="HUMAN_ESCALATION_TRIGGERED",
+            details={
+                "customer_id": customer_id,
+                "customer_name": customer_name,
+                "reason": reason,
+                "ticket_id": ticket_id,
+                "amount": amount,
+            },
+            reasoning=f"Customer explicitly requested human agent. All automated outreach paused immediately. Ticket {ticket_id} created.",
+        )
+
+        # Dispatch Telegram alert to merchant admins
+        try:
+            from orchestrator.channels.telegram_bot import _get_fallback_merchant_chats, _send_message
+            merchant_chats = _get_fallback_merchant_chats()
+            for chat_id in merchant_chats[:2]:
+                _send_message(
+                    chat_id=chat_id,
+                    text=(
+                        f"🚨 <b>HUMAN ESCALATION REQUEST</b>\n\n"
+                        f"• <b>Customer:</b> {customer_name} (<code>{customer_id}</code>)\n"
+                        f"• <b>Ticket:</b> <code>{ticket_id}</code>\n"
+                        f"• <b>Amount:</b> ₹{amount:,.0f}\n"
+                        f"• <b>Reason:</b> {reason}\n\n"
+                        "All automated outreach has been <b>paused</b>. Please contact this customer directly."
+                    ),
+                )
+        except Exception as tg_err:
+            logger.warning(f"Telegram escalation alert failed: {tg_err}")
+
+    except Exception as e:
+        logger.warning(f"Escalation DB/audit error: {e}")
+
+    return {
+        "tool": "escalate_to_human",
+        "status": "escalated",
+        "ticket_id": ticket_id,
+        "customer_id": customer_id,
+        "outreach_paused": True,
+        "message": (
+            f"[ESCALATED] Your request has been noted, {customer_name}. "
+            f"Ticket {ticket_id} has been created and a Razorpay representative will contact you shortly. "
+            "All automated reminders are now paused."
+        ),
+    }
+

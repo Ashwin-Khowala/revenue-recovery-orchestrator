@@ -13,7 +13,9 @@ True Native Gemini Live Experience:
     - B2B Corporate Receivables (get_b2b_aging_and_receivables_summary, resolve_b2b_process_blocker, route_b2b_dispute_to_human)
     - Checkout Funnel & Margin Shield (get_checkout_funnel_metrics)
     - Subscription Churn Guard (get_subscription_churn_analysis)
-    - Instant Concessions & Promise Registrations (apply_concession_discount, register_promise_to_pay, get_payment_link)
+    - Instant Concessions, PTP, Payment Links (apply_concession_discount, register_promise_to_pay, get_payment_link)
+    - Customer Account Intelligence (get_customer_intelligence, get_payment_history, get_invoice_aging, get_subscription_plan_details)
+    - Human Escalation with Telegram Alert (escalate_to_human)
     - Supervisor High-Value Approvals (approve_high_value_invoice)
   • Seamless multilingual mirroring: naturally responds in the user's language (English, Hindi, Hinglish)
   • Persistent session with conversation memory across reconnects
@@ -83,8 +85,12 @@ def build_system_instruction(
             "REAL-TIME TOOL INVOCATION RULES (MANDATORY):\n"
             "1. SETTLEMENT CONCESSION: If customer asks for a discount, waiver, or concession, call `apply_concession_discount`.\n"
             "2. PROMISE-TO-PAY: If customer states when they will pay (e.g. 'I will pay on Monday / tomorrow'), call `register_promise_to_pay`.\n"
-            "3. PAYMENT LINK: If customer asks for a link to pay, call `get_payment_link`.\n"
-            "4. ACCOUNT INTELLIGENCE: If customer asks about past invoices or status, call `get_customer_intelligence`.\n"
+            "3. PAYMENT LINK: If customer asks for a link to pay or how to pay, call `get_payment_link`.\n"
+            "4. ACCOUNT INTELLIGENCE: If customer asks about their account status or current invoice, call `get_customer_intelligence`.\n"
+            "5. PAYMENT HISTORY: If customer asks about past payments, previous transactions, or payment records, call `get_payment_history`.\n"
+            "6. INVOICE AGING: If customer asks how overdue they are, their due date, or days late, call `get_invoice_aging`.\n"
+            "7. SUBSCRIPTION PLAN: If customer asks what plan they are on, when their subscription renews, or if their account is active, call `get_subscription_plan_details`.\n"
+            "8. HUMAN ESCALATION: If customer says 'speak to a human', 'I want a person', 'manager', 'representative', 'call me', 'escalate', or expresses frustration, IMMEDIATELY call `escalate_to_human`. Do NOT attempt to handle this yourself.\n"
         )
         context_str = f"Payer Name: {customer_name} | Pending Amount: ₹{amount:,.2f} | Root Cause: {root_cause}"
 
@@ -575,10 +581,38 @@ def _run_sync_fallback_turn(
             dynamic_url = tool_res.get("payment_url") or f"https://rzp.io/i/{customer_id[-6:]}_{int(amount)}"
             reply = f"Here is your secure 1-click Razorpay payment link: {dynamic_url} (Payable: ₹{amount:,.2f})."
 
+        elif any(k in lower_text for k in ("human", "person", "agent", "manager", "representative", "speak to", "call me", "escalate", "frustrated", "someone")):
+            tool_res = execute_tool("escalate_to_human", {"customer_id": customer_id, "customer_name": customer_name, "reason": user_speech, "amount": amount})
+            executed_tools.append(tool_res)
+            reply = tool_res.get("message", f"Escalation ticket {tool_res.get('ticket_id', 'ESC-0000')} created. A representative will contact you shortly.")
+
+        elif any(k in lower_text for k in ("history", "past payment", "what have i paid", "previous", "last payment", "my payments", "payment record")):
+            tool_res = execute_tool("get_payment_history", {"customer_id": customer_id, "limit": 10})
+            executed_tools.append(tool_res)
+            records = tool_res.get("records", [])
+            if records:
+                lines = "\n".join(f"• {r.get('date', 'N/A')}: ₹{r.get('amount_inr', 0):,.2f} — {r.get('outcome', 'N/A')} ({r.get('channel', 'N/A')})" for r in records[:5])
+                reply = f"**Your Payment History (last {len(records)} records):**\n{lines}\n\n**Total settled:** ₹{tool_res.get('total_paid_inr', 0):,.2f}"
+            else:
+                reply = "No payment history found for your account. Please contact support if you believe this is incorrect."
+
+        elif any(k in lower_text for k in ("overdue", "how late", "how many days", "when was it due", "due date", "days late")):
+            tool_res = execute_tool("get_invoice_aging", {"customer_id": customer_id})
+            executed_tools.append(tool_res)
+            days = tool_res.get("days_overdue", 0)
+            bucket = tool_res.get("aging_bucket", "Current")
+            amt = tool_res.get("amount_inr", amount)
+            reply = f"Your invoice of ₹{amt:,.2f} is **{days} days overdue** ({bucket}). I can help you settle now with a 1-click payment link or schedule a future date."
+
+        elif any(k in lower_text for k in ("plan", "subscription", "what am i on", "my plan", "account active", "renew", "active", "tier")):
+            tool_res = execute_tool("get_subscription_plan_details", {"customer_id": customer_id})
+            executed_tools.append(tool_res)
+            reply = tool_res.get("message", f"Your subscription details: Plan {tool_res.get('plan_name', 'Starter Plus')}, ₹{tool_res.get('amount_inr', 4999):,.2f}/{tool_res.get('billing_cycle', 'Monthly')}.")
+
         else:
             tool_res = execute_tool("get_customer_intelligence", {"customer_id": customer_id})
             executed_tools.append(tool_res)
-            reply = f"Namaste {customer_name}! Your invoice of ₹{amount:,.2f} is currently pending. I can offer an instant 5% settlement discount or schedule a payment date for you."
+            reply = f"Namaste {customer_name}! Your invoice of ₹{amount:,.2f} is currently pending. I can offer an instant 5% settlement discount, show your plan details, or schedule a payment date for you."
 
     return {
         "success": True,

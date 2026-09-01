@@ -12,6 +12,10 @@ from orchestrator.tools.customer_tools import (
     apply_concession_discount,
     register_promise_to_pay,
     get_payment_link,
+    get_payment_history,
+    get_invoice_aging,
+    get_subscription_plan_details,
+    escalate_to_human,
 )
 from orchestrator.tools.merchant_tools import (
     get_merchant_financial_overview,
@@ -41,6 +45,10 @@ ALL_TOOLS_MAP: Dict[str, Callable[..., Any]] = {
     "apply_concession_discount": apply_concession_discount,
     "register_promise_to_pay": register_promise_to_pay,
     "get_payment_link": get_payment_link,
+    "get_payment_history": get_payment_history,
+    "get_invoice_aging": get_invoice_aging,
+    "get_subscription_plan_details": get_subscription_plan_details,
+    "escalate_to_human": escalate_to_human,
     "get_merchant_financial_overview": get_merchant_financial_overview,
     "get_at_risk_incidents": get_at_risk_incidents,
     "approve_high_value_invoice": approve_high_value_invoice,
@@ -65,12 +73,20 @@ PAYER_TOOL_NAMES = [
     "register_promise_to_pay",
     "get_payment_link",
     "get_customer_intelligence",
+    "get_payment_history",
+    "get_invoice_aging",
+    "get_subscription_plan_details",
+    "escalate_to_human",
 ]
 
 MERCHANT_TOOL_NAMES = [
     "get_merchant_financial_overview",
     "get_at_risk_incidents",
     "get_customer_intelligence",
+    "get_payment_history",
+    "get_invoice_aging",
+    "get_subscription_plan_details",
+    "escalate_to_human",
     "approve_high_value_invoice",
     "lookup_decline_code",
     "get_checkout_funnel_metrics",
@@ -402,6 +418,67 @@ OPENAI_TOOL_SCHEMAS: List[Dict[str, Any]] = [
                     "customer_name": {"type": "string", "description": "Customer Name"},
                 },
                 "required": ["customer_wording"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_payment_history",
+            "description": "Returns the last N payment episodes for a customer: date, amount, outcome, and channel. Use when a customer asks 'Show my payment history', 'What have I paid?', or 'When was my last payment?'",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_id": {"type": "string", "description": "Customer ID (e.g. 'cust_0001')"},
+                    "limit": {"type": "integer", "description": "Number of records to return (default 10)", "default": 10},
+                },
+                "required": ["customer_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_invoice_aging",
+            "description": "Returns how many days overdue a customer's invoice is and which aging bucket (0-30d, 31-60d, 61-90d, 90d+). Use when asked 'How overdue am I?', 'When was my payment due?', 'How many days late am I?'",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_id": {"type": "string", "description": "Customer ID"},
+                    "event_id": {"type": "string", "description": "Optional specific incident ID"},
+                },
+                "required": ["customer_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_subscription_plan_details",
+            "description": "Returns subscription plan name, billing cycle, amount, grace period status. Use when asked 'What plan am I on?', 'When does my subscription renew?', 'Is my account active?'",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_id": {"type": "string", "description": "Customer ID (e.g. 'cust_0001')"},
+                },
+                "required": ["customer_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "escalate_to_human",
+            "description": "Immediately pauses all automated outreach and routes the customer to a human agent with a Telegram alert to merchant admins. CALL THIS when the customer says: 'speak to a human', 'I want a person', 'call me', 'escalate', 'manager', 'representative', 'I want to speak to someone', or expresses frustration.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_id": {"type": "string", "description": "Customer ID"},
+                    "customer_name": {"type": "string", "description": "Customer's name"},
+                    "reason": {"type": "string", "description": "Why the escalation was triggered"},
+                    "amount": {"type": "number", "description": "Amount involved in INR"},
+                },
+                "required": ["customer_id", "reason"],
             },
         },
     },
