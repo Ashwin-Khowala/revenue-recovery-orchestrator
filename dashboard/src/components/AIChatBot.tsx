@@ -116,7 +116,7 @@ export default function AIChatBot({
 
     const step3 = setTimeout(() => {
       setThinkingStep(4);
-      setCurrentToolExecuting('Gemini 3.1 Live Audio Synthesis');
+      setCurrentToolExecuting('Gemini Live Audio Synthesis');
     }, 2200);
 
     return () => {
@@ -290,7 +290,7 @@ export default function AIChatBot({
               if (t.tool === 'apply_concession_discount') {
                 onToolAction({ tool: t.tool, updatedAmount: t.updated_amount });
               } else if (t.tool === 'register_promise_to_pay') {
-                onToolAction({ tool: t.tool, promisedDate: t.promised_date || 'Next Monday' });
+                onToolAction({ tool: t.tool, promisedDate: t.promised_date });
               } else if (t.tool === 'approve_high_value_invoice') {
                 onToolAction({ tool: t.tool, approved: true });
               }
@@ -517,7 +517,7 @@ export default function AIChatBot({
             if (t.tool === 'apply_concession_discount') {
               onToolAction({ tool: t.tool, updatedAmount: t.updated_amount });
             } else if (t.tool === 'register_promise_to_pay') {
-              onToolAction({ tool: t.tool, promisedDate: t.promised_date || 'Next Monday' });
+              onToolAction({ tool: t.tool, promisedDate: t.promised_date });
             } else if (t.tool === 'approve_high_value_invoice') {
               onToolAction({ tool: t.tool, approved: true });
             }

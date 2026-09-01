@@ -549,11 +549,25 @@ def _run_sync_fallback_turn(
             updated_amount = round(amount * 0.95)
             reply = f"I have applied a 5% settlement concession for you! Your updated payable total is ₹{updated_amount:,.2f}. Would you like the 1-click Razorpay payment link?"
 
-        elif any(k in lower_text for k in ("promise", "monday", "tomorrow", "friday", "pay on", "salary", "pause")):
-            promised_date = "Next Monday" if "monday" in lower_text else "Tomorrow" if "tomorrow" in lower_text else "2026-09-05"
+        elif any(k in lower_text for k in ("promise", "monday", "tomorrow", "friday", "pay on", "salary", "pause", "this friday", "next monday", "in 3 days", "in 7 days")):
+            # Extract the most specific date phrase from what the user actually said
+            if "tomorrow" in lower_text:
+                promised_date = "Tomorrow"
+            elif "this friday" in lower_text or ("friday" in lower_text and "next" not in lower_text):
+                promised_date = "This Friday"
+            elif "next monday" in lower_text or "monday" in lower_text:
+                promised_date = "Next Monday"
+            elif "in 3 days" in lower_text or "3 days" in lower_text:
+                promised_date = "In 3 Days"
+            elif "in 7 days" in lower_text or "7 days" in lower_text or "week" in lower_text:
+                promised_date = "In 7 Days"
+            elif "salary" in lower_text:
+                promised_date = "On salary date"
+            else:
+                promised_date = user_speech.strip()
             tool_res = execute_tool("register_promise_to_pay", {"promised_date": promised_date, "customer_id": customer_id})
             executed_tools.append(tool_res)
-            reply = f"Thank you! I have confirmed your Promise-to-Pay for {promised_date}. All automated outreach and reminders have been paused."
+            reply = f"Thank you! I have confirmed your Promise-to-Pay for **{promised_date}**. All automated outreach and reminders have been paused until then."
 
         elif any(k in lower_text for k in ("link", "pay", "razorpay", "upi", "qr", "how")):
             tool_res = execute_tool("get_payment_link", {"customer_name": customer_name, "amount": amount, "event_id": f"evt_{customer_id}"})
