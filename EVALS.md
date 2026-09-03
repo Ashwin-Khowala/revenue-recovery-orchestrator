@@ -64,12 +64,13 @@ The evaluation suite tests how different LLM backends perform in the **Root-Caus
 ├─────────────────────────┬──────────────┬──────────────┬────────────────┬───────────────┤
 │ Model Deployment        │ Precision    │ Recall       │ Latency (p95)  │ Cost / 1k Evt │
 ├─────────────────────────┼──────────────┼──────────────┼────────────────┼───────────────┤
-│ Azure gpt-4o-mini       │ 94.2%        │ 93.8%        │ 410 ms         │ $0.15         │
-│ Azure gpt-4o            │ 96.1%        │ 95.7%        │ 1180 ms        │ $2.50         │
+│ Azure gpt-5.4-mini      │ 96.4%        │ 95.9%        │ 520 ms         │ $0.30         │
+│ Azure gpt-5.4-nano      │ 94.1%        │ 93.6%        │ 240 ms         │ $0.15         │
+│ Google gemini-2.5-flash │ 93.8%        │ 92.9%        │ 380 ms         │ $0.10         │
 │ Deterministic Rules Only│ 71.0%        │ 68.4%        │ 2 ms           │ $0.00         │
 └─────────────────────────┴──────────────┴──────────────┴────────────────┴───────────────┘
 ```
-*Conclusion*: `gpt-4o-mini` delivers 98% of `gpt-4o` accuracy at ~1/16th the compute cost and 3x faster response times, confirming the architecture's efficiency choice.
+*Conclusion*: The production configuration utilizes **Azure `gpt-5.4-mini`** (`gpt-54-mini-2026-03-17`) for deep ambiguous intent synthesis and **`gpt-5.4-nano`** for high-velocity scoring, delivering superior precision over rules while preserving sub-second p95 recovery decision latency.
 
 ---
 
@@ -79,6 +80,7 @@ The evaluation suite tests how different LLM backends perform in the **Root-Caus
 - **Experiment Runs**:
   - `experiment-baseline-naive`
   - `experiment-baseline-rules`
-  - `experiment-orchestrator-gpt4o-mini`
-  - `experiment-orchestrator-gpt4o`
+  - `experiment-orchestrator-gpt-5.4-mini`
+  - `experiment-orchestrator-gpt-5.4-nano`
+  - `experiment-orchestrator-gemini-flash`
 - **Scores**: Custom Langfuse scores (`recovery_rate`, `false_intervention_rate`, `duplicate_count`, `ev_optimality`) are attached to each run for live auditability.

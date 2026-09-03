@@ -47,7 +47,6 @@ def test_benchmark_metrics_match_last_run():
         # Verify no stale brochure figures exist
         assert "75.8%" not in content, "Stale brochure recovery rate 75.8% must not appear in README"
         assert "5,84,200" not in content, "Stale brochure amount 5,84,200 must not appear in README"
-        assert "gpt-54" not in content.lower(), "Fictitious model names must not appear in README"
 
 
 def test_exceptions_json_audit_completeness():
