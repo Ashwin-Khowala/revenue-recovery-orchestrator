@@ -48,14 +48,19 @@ flowchart TD
     N3 -- "ESCALATE (>= ₹1L)" --> N5["Node 5: hitl_escalation<br/>(Telegram Admin Alert -> LangGraph interrupt())"]
     N3 -- "BLOCK" --> N4
     
-    N5 -. "Admin Approve / Reject<br/>Command(resume=...)" .-> N4
+    N5 -. "Admin Approve / Reject<br/>Command(resume=True)" .-> N4
     N4 --> N6["Node 6: outcome_tracker<br/>(Razorpay Webhook Reconciler & Dedup Arbitrator)"]
     N6 --> FIN([🏁 END / Settlement Complete])
 
-    classDef nodeStyle fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
-    classDef branchStyle fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#f8fafc;
-    class N0,N1,N2,N4,N5,N6 nodeStyle;
-    class N3 branchStyle;
+    classDef nodeStyle fill:#1e293b,stroke:#38bdf8,stroke-width:1.5px,color:#f8fafc;
+    classDef gateStyle fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#f8fafc;
+    classDef hitlStyle fill:#451a03,stroke:#f97316,stroke-width:2px,color:#fed7aa;
+    classDef execStyle fill:#064e3b,stroke:#10b981,stroke-width:1.5px,color:#ecfdf5;
+
+    class INGEST,FIN,N0,N1,N2,N6 nodeStyle;
+    class N3 gateStyle;
+    class N5 hitlStyle;
+    class N4 execStyle;
 ```
 
 ```

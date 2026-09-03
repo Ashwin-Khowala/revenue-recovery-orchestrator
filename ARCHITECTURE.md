@@ -7,131 +7,123 @@ The **Revenue Recovery Intelligence Platform** is architected around a fundament
 2. **Deterministic Reasoning Sub-Step (LangGraph + EV Engine)**: Owns failure root-cause classification (rules-first + LLM fallback), deterministic Expected Value (EV) calculation, and hard financial guardrails.
 3. **Exact Structured Relational Memory (PostgreSQL via Prisma)**: Manages customer priors (54,779 historical episodes) and merchant contact policies using exact relational queries rather than fuzzy semantic vector recall.
 
+### Figure 1: End-to-End Recovery Platform Pipeline
+
 ```mermaid
-flowchart TB
-    %% =========================================================================
-    %% 1. INGESTION & EVENT SOURCES
-    %% =========================================================================
-    subgraph INGESTION["1. Multi-Source Ingestion & Failure Telemetry"]
-        E1["⚡ Razorpay Webhooks<br/>(payment.failed, order.paid, captured)"]
-        E2["🛒 Checkout Drop-Off Telemetry<br/>(15-60 min step latency, form errors)"]
-        E3["🔄 Subscription Failures<br/>(RBI >₹15,000 AFA, mandate decline)"]
-        E4["📑 B2B Receivables<br/>(Net-30/60 overdue corporate invoices)"]
-        E5["🤝 Promise-to-Pay (PTP)<br/>(Customer payment commitments)"]
+flowchart TD
+    %% ─────────────────────────────────────────────────────────────
+    %% STAGE 1: INGESTION
+    %% ─────────────────────────────────────────────────────────────
+    subgraph S1["⚡ 1. Multi-Source Ingestion & Telemetry"]
+        direction LR
+        I1["Razorpay Webhooks<br/>(payment.failed, captured)"]
+        I2["Checkout Drop-Off<br/>(15–60 min cart latency)"]
+        I3["Subscriptions & Mandates<br/>(RBI >₹15k AFA declines)"]
+        I4["B2B Overdue Invoices<br/>(Net-30/60 terms)"]
     end
 
-    %% =========================================================================
-    %% 2. DURABLE WORKFLOW OUTER LOOP
-    %% =========================================================================
-    subgraph DURABLE["2. Durable Orchestration Loop (Temporal SDK & Inngest)"]
-        WF["⚙️ RevenueRecoveryWorkflow<br/>(Multi-Day Saga & Crash Recovery)"]
-        TIMER["⏳ Durable Timers<br/>(24h quiet spacing, 72h PTP pause)"]
-        RACE_QUEUE["🛡️ Persistent Arbitration Queue<br/>(pending_recovery_queue.json)"]
+    %% ─────────────────────────────────────────────────────────────
+    %% STAGE 2: 4-TIER MEMORY LAYER
+    %% ─────────────────────────────────────────────────────────────
+    subgraph S2["🧠 2. 4-Tier Stateful Memory Layer (PostgreSQL + Sidecars)"]
+        direction LR
+        M1["Tier 1: Customer Profile<br/>(Reliability, Risk Score, Language)"]
+        M2["Tier 2: 54,779 Episodes<br/>(Past Recovery Outcomes)"]
+        M3["Tier 3: Merchant Policy<br/>(HITL Caps, Allowed Channels)"]
+        M4["Tier 4: Omnichannel Consent<br/>(Global Opt-Outs, 7d Spacing)"]
     end
 
-    %% =========================================================================
-    %% 3. 4-TIER STATEFUL RELATIONAL MEMORY
-    %% =========================================================================
-    subgraph MEMORY["3. 4-Tier Stateful Relational Memory Layer (Postgres + Sidecars)"]
-        T1["👤 Tier 1: Customer Profile<br/>(Reliability Score, Default Risk, Preferred Channel)"]
-        T2["📚 Tier 2: 54,779 Historical Episodes<br/>(Past Recovery Outcomes, Average Days Late)"]
-        T3["🏢 Tier 3: Merchant Contact Policies<br/>(Custom HITL Cap, Allowed Channels, Max Touches)"]
-        T4["🔕 Tier 4: Omnichannel Consent & DND<br/>(Global Opt-Outs, 7-Day Cross-Track Spacing)"]
-    end
+    %% ─────────────────────────────────────────────────────────────
+    %% STAGE 3: DECISION ENGINE (LANGGRAPH)
+    %% ─────────────────────────────────────────────────────────────
+    subgraph S3["🤖 3. Supervisory Decision Engine (LangGraph 7-Node StateGraph)"]
+        N0["Node 0: memory_enrichment<br/>(Pulls behavioral priors & policy)"]
+        N1["Node 1: classify_root_cause<br/>(Hybrid: 30+ Error Rules + Azure OpenAI)"]
+        N2["Node 2: score_policy_options<br/>(Deterministic EV Engine + 'Do Nothing' Scored)"]
+        N3{"Node 3: check_guardrails<br/>(₹1L Ceiling • 2-Contact Max • 24h Cooldown)"}
+        
+        N5["Node 5: hitl_escalation<br/>(Telegram Alert -> LangGraph interrupt())"]
+        N4["Node 4: execute_action<br/>(Pre-Send Race Check -> Dispatch Link)"]
+        N6["Node 6: outcome_tracker<br/>(Razorpay Webhook Reconciler & Dedup Arbitrator)"]
 
-    %% =========================================================================
-    %% 4. LANGGRAPH SUPERVISORY DECISION GRAPH (7 NODES)
-    %% =========================================================================
-    subgraph GRAPH["4. Supervisory AI Decision Engine (LangGraph StateGraph)"]
-        direction TB
-
-        N0["Node 0: memory_enrichment<br/>• Pulls Customer Profile & 54k History<br/>• Retrieves Merchant Contact Policy<br/>• Synthesizes Memory Context Narrative"]
-
-        N1["Node 1: classify_root_cause<br/>• PII Redaction Engine (PAN, Card, Phone, Email)<br/>• 30+ Code Deterministic Decline Taxonomy<br/>• Azure OpenAI gpt-4o-mini Fallback<br/>• Output: 1 of 6 Root-Cause Classes"]
-
-        N2["Node 2: score_policy_options<br/>• Deterministic Mathematical EV Engine<br/>• EV = P(rec|hist) × Amount - Cost - Friction - Risk<br/>• 'Do Nothing' Scored as 1st-Class Decision"]
-
-        N3{"Node 3: check_guardrails<br/>Enforces 8 Compliance Invariants:<br/>1. ₹1,00,000 High-Value Threshold<br/>2. Max 2 Contacts per Incident<br/>3. 24h Quiet Window (CrossTrackThrottler)<br/>4. Bank Degradation -> 0 Customer Noise<br/>5. Omnichannel Permanent Opt-Out<br/>6. Voluntary Churn Dunning Kill-Switch<br/>7. Dispute Isolation<br/>8. TRAI Voice Hours (09:00 - 21:00 IST)"}
-
-        N5["Node 5: hitl_escalation<br/>• Interactive Telegram Alert to Merchant Admin<br/>• LangGraph interrupt() Pauses Thread<br/>• Awaits Admin Approve / Reject Signal<br/>• Replay-Safe Resumption"]
-
-        N4["Node 4: execute_action<br/>• Pre-Send Webhook Race Check<br/>• WhatsApp Dispatch (Razorpay Link)<br/>• Failover to Resend Transactional Email<br/>• Plivo AI Telephony (Hinglish)<br/>• Silent Infrastructure Route Reroute"]
-
-        N6["Node 6: outcome_tracker<br/>• Razorpay Webhook Reconciler<br/>• Dedup Arbitrator (0 Duplicate Guarantee)<br/>• Counterfactual Attribution (P >= 0.40)"]
-
-        %% Graph Edges
-        N0 --> N1
-        N1 --> N2
-        N2 --> N3
+        N0 --> N1 --> N2 --> N3
         N3 -- "ALLOW" --> N4
-        N3 -- "ESCALATE (>= ₹1L)" --> N5
-        N3 -- "BLOCK (Quiet/Opt-Out)" --> N4
-        N5 -. "Command(resume=True)" .-> N4
+        N3 -- "ESCALATE (≥ ₹1,00,000)" --> N5
+        N3 -- "BLOCK" --> N4
+        N5 -. "Admin Approve / Reject<br/>Command(resume=True)" .-> N4
         N4 --> N6
     end
 
-    %% =========================================================================
-    %% 5. EXECUTION CHANNELS & INFRASTRUCTURE
-    %% =========================================================================
-    subgraph CHANNELS["5. Multi-Channel Execution & Payment Settlement"]
-        CH_WA["💬 WhatsApp Utility Template<br/>(Direct Smart Resume Link)"]
-        CH_EM["📧 Resend Email API<br/>(Fallback Transactional Invoice)"]
-        CH_VOICE["📞 Plivo Voice Telephony<br/>(Conversational Hinglish Call)"]
-        CH_REROUTE["🔀 Gateway Silent Switch<br/>(Zero-Contact HDFC/ICICI Route)"]
-        CH_RZP["💳 Razorpay Test Mode API<br/>(plink_... Authentic Checkout Links)"]
+    %% ─────────────────────────────────────────────────────────────
+    %% STAGE 4: EXECUTION & CONTROL SURFACES
+    %% ─────────────────────────────────────────────────────────────
+    subgraph S4["🚀 4. Multi-Channel Execution & Control Surfaces"]
+        direction LR
+        CH_WA["💬 WhatsApp Utility<br/>(1-Click Checkout Link)"]
+        CH_EM["📧 Resend Email API<br/>(Transactional Invoice)"]
+        CH_VOICE["📞 Plivo AI Telephony<br/>(Hinglish Recovery Call)"]
+        CH_REROUTE["🔀 Silent Gateway Reroute<br/>(Zero Customer Contact)"]
     end
 
-    %% =========================================================================
-    %% 6. CRYPTOGRAPHIC AUDIT & OBSERVABILITY
-    %% =========================================================================
-    subgraph AUDIT["6. Cryptographic Audit Trail & Observability"]
-        LEDGER["🔐 SHA-256 Chained Hash Ledger<br/>(entry_hash = SHA256(prev_hash + data))<br/>data/audit_ledger.json + Supabase DB"]
-        LANGFUSE["🔭 Langfuse Cloud Tracing<br/>(Node Latency, Token Usage, Cost)"]
-        EXCEPTIONS["📋 evals/exceptions.json<br/>(Structured Non-Recovery Audit Cases)"]
+    subgraph S5["🔐 5. Cryptographic Audit & Merchant Surfaces"]
+        direction LR
+        AUDIT["🔐 SHA-256 Chained Ledger<br/>(entry_hash = SHA256(prev + data))"]
+        DASH["🖥️ Next.js Merchant Dashboard<br/>(Live Case Files • Policy Optimizer)"]
+        VOICE_COPILOT["🎙️ Gemini Live Copilot<br/>(Multilingual Voice Supervisor)"]
     end
 
-    %% =========================================================================
-    %% 7. CONTROL SURFACES & FRONTENDS
-    %% =========================================================================
-    subgraph UI["7. Merchant & Operator Control Surfaces"]
-        DASH["🖥️ Next.js 14 Merchant Dashboard<br/>(/merchant • At-Risk Summary • 3-Block Case File)"]
-        OPTIMIZER["🎛️ Dynamic Policy Optimizer<br/>(/merchant/optimizer • Live EV Sliders)"]
-        COPILOT["🎙️ Gemini Live Multilingual Voice Copilot<br/>(English / Hindi / Hinglish • Live Tools)"]
-        TELEGRAM["📱 Telegram Operations Center<br/>(Merchant Alerts & Two-Way Approval)"]
+    %% Pipeline Flow
+    S1 ==> S2
+    S2 ==> N0
+    N4 ==> S4
+    N6 ==> S5
+
+    classDef stageStyle fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
+    classDef nodeStyle fill:#1e293b,stroke:#38bdf8,stroke-width:1.5px,color:#f8fafc;
+    classDef gateStyle fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#f8fafc;
+    classDef hitlStyle fill:#451a03,stroke:#f97316,stroke-width:2px,color:#fed7aa;
+    classDef execStyle fill:#064e3b,stroke:#10b981,stroke-width:1.5px,color:#ecfdf5;
+    classDef auditStyle fill:#2e1065,stroke:#a855f7,stroke-width:1.5px,color:#f3e8ff;
+
+    class S1,S2,S3,S4,S5 stageStyle;
+    class N0,N1,N2,N6 nodeStyle;
+    class N3 gateStyle;
+    class N5 hitlStyle;
+    class N4,CH_WA,CH_EM,CH_VOICE,CH_REROUTE execStyle;
+    class AUDIT,DASH,VOICE_COPILOT auditStyle;
+```
+
+### Figure 2: Webhook Race-Condition Arbitration Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as 👤 Customer
+    participant Gateway as 🏦 Razorpay Gateway
+    participant Ingestion as ⚡ Event Ingestion
+    participant Queue as 🛡️ Active Recovery Queue
+    participant Engine as 🤖 LangGraph Engine
+    participant Channel as 💬 WhatsApp / Email
+    participant Ledger as 🔐 SHA-256 Ledger
+
+    Note over Ingestion,Engine: T0: Payment Fails
+    Gateway->>Ingestion: webhook: payment.failed (evt_001)
+    Ingestion->>Queue: Register pending recovery action (evt_001)
+    Ingestion->>Engine: Run recovery graph (classify -> score EV -> guardrails)
+    
+    rect rgb(30, 41, 59)
+        Note over Customer,Gateway: RACE CONDITION: Customer self-serves or retries organically
+        Customer->>Gateway: Successful Payment Checkout (order_synth_001)
+        Gateway->>Ingestion: webhook: payment.captured (order_synth_001)
+        Ingestion->>Queue: cancel_pending_action(order_synth_001)
+        Queue-->>Ingestion: Status: CANCELLED (0 duplicate contacts)
     end
 
-    %% =========================================================================
-    %% SYSTEM-WIDE FLOW CONNECTIONS
-    %% =========================================================================
-    INGESTION --> WF
-    WF --> RACE_QUEUE
-    WF --> N0
-
-    MEMORY <--> N0
-    MEMORY <--> N1
-    MEMORY <--> N3
-
-    N4 --> CHANNELS
-    CHANNELS --> CH_RZP
-    CH_RZP -. "payment.captured webhook" .-> RACE_QUEUE
-    RACE_QUEUE -. "Pre-send Cancel" .-> N4
-
-    %% Cross-cutting audit logging
-    N0 -. "log_audit_entry" .-> LEDGER
-    N1 -. "log_audit_entry" .-> LEDGER
-    N2 -. "log_audit_entry" .-> LEDGER
-    N3 -. "log_audit_entry" .-> LEDGER
-    N4 -. "log_audit_entry" .-> LEDGER
-    N5 -. "log_audit_entry" .-> LEDGER
-    N6 -. "log_audit_entry" .-> LEDGER
-    N6 --> EXCEPTIONS
-
-    GRAPH -. "Traces" .-> LANGFUSE
-    N6 --> WF
-    WF --> DASH
-    DASH <--> COPILOT
-    N5 <--> TELEGRAM
-    DASH <--> OPTIMIZER
+    Note over Engine,Channel: Pre-Send Race Check
+    Engine->>Queue: is_action_still_pending(evt_001)?
+    Queue-->>Engine: False (Captured prior to outreach)
+    Engine->>Ledger: log_audit_entry("PRE_SEND_RACE_CANCELLED", duplicate_count=0)
+    Note over Engine,Channel: Outreach aborted; customer never spammed
 ```
 
 ---
