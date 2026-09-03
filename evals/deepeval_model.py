@@ -52,7 +52,7 @@ class AzureOpenAIDeepEvalModel(DeepEvalBaseLLM):
         self.deployment_name = (
             deployment_name
             or os.getenv("DEEPEVAL_JUDGE_MODEL")
-            or os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini")
+            or os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-54-mini")
         )
 
         self.temperature = temperature
@@ -201,7 +201,11 @@ AzureDeepEvalModel = AzureOpenAIDeepEvalModel
 
 def get_judge_model(model_name: Optional[str] = None) -> DeepEvalBaseLLM:
     """Factory helper to obtain a configured judge model."""
-    name = model_name or os.getenv("DEEPEVAL_JUDGE_MODEL", "gpt-4o-mini")
+    name = (
+        model_name
+        or os.getenv("DEEPEVAL_JUDGE_MODEL")
+        or os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-54-mini")
+    )
     if "gemini" in name.lower():
         return GeminiDeepEvalModel(model_name=name)
     return AzureOpenAIDeepEvalModel(deployment_name=name)
