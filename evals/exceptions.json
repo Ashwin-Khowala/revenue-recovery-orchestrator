@@ -1,24 +1,15 @@
 {
-  "generated_at": "2026-09-01T19:24:09.948985+00:00",
-  "total_non_recovered_count": 53,
+  "generated_at": "2026-09-03T20:45:45.970506+00:00",
+  "total_non_recovered_count": 49,
   "exceptions": [
-    {
-      "event_id": "evt_0402",
-      "amount": 73015.0,
-      "root_cause": "mandate_auth_failed",
-      "action_taken": "whatsapp_mandate_afa_link",
-      "channel": "none",
-      "guardrail_result": "BLOCK",
-      "reason": "GUARDRAIL_BLOCKED (RULE_CROSS_TRACK_24H_QUIET_THROTTLED)"
-    },
     {
       "event_id": "evt_0403",
       "amount": 25000.0,
       "root_cause": "receivable_overdue",
       "action_taken": "email_ptp_request",
       "channel": "none",
-      "guardrail_result": "BLOCK",
-      "reason": "GUARDRAIL_BLOCKED (RULE_CROSS_TRACK_24H_QUIET_THROTTLED)"
+      "guardrail_result": "ESCALATE",
+      "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
     },
     {
       "event_id": "evt_0405",
@@ -27,34 +18,7 @@
       "action_taken": "whatsapp_mandate_afa_link",
       "channel": "none",
       "guardrail_result": "BLOCK",
-      "reason": "GUARDRAIL_BLOCKED (RULE_CROSS_TRACK_24H_QUIET_THROTTLED)"
-    },
-    {
-      "event_id": "evt_0406",
-      "amount": 51233.0,
-      "root_cause": "mandate_auth_failed",
-      "action_taken": "whatsapp_mandate_afa_link",
-      "channel": "none",
-      "guardrail_result": "BLOCK",
-      "reason": "GUARDRAIL_BLOCKED (RULE_CROSS_TRACK_24H_QUIET_THROTTLED)"
-    },
-    {
-      "event_id": "evt_0407",
-      "amount": 2999.0,
-      "root_cause": "checkout_abandoned",
-      "action_taken": "standard_cart_recovery",
-      "channel": "none",
-      "guardrail_result": "BLOCK",
-      "reason": "GUARDRAIL_BLOCKED (RULE_CROSS_TRACK_24H_QUIET_THROTTLED)"
-    },
-    {
-      "event_id": "evt_0409",
-      "amount": 12000.0,
-      "root_cause": "checkout_abandoned",
-      "action_taken": "standard_cart_recovery",
-      "channel": "none",
-      "guardrail_result": "BLOCK",
-      "reason": "GUARDRAIL_BLOCKED (RULE_CROSS_TRACK_24H_QUIET_THROTTLED)"
+      "reason": "GUARDRAIL_BLOCKED (RULE_MERCHANT_POLICY_CHANNEL_PROHIBITED)"
     },
     {
       "event_id": "evt_0415",
@@ -69,7 +33,7 @@
       "event_id": "evt_0418",
       "amount": 120000.0,
       "root_cause": "receivable_overdue",
-      "action_taken": "whatsapp_ptp_request",
+      "action_taken": "whatsapp_payment_reminder",
       "channel": "none",
       "guardrail_result": "ESCALATE",
       "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
@@ -195,7 +159,7 @@
       "event_id": "evt_0478",
       "amount": 250000.0,
       "root_cause": "receivable_overdue",
-      "action_taken": "whatsapp_payment_reminder",
+      "action_taken": "whatsapp_ptp_request",
       "channel": "none",
       "guardrail_result": "ESCALATE",
       "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
@@ -231,7 +195,7 @@
       "event_id": "evt_0498",
       "amount": 500000.0,
       "root_cause": "receivable_overdue",
-      "action_taken": "email_ptp_request",
+      "action_taken": "whatsapp_followup",
       "channel": "none",
       "guardrail_result": "ESCALATE",
       "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
@@ -240,7 +204,7 @@
       "event_id": "evt_0499",
       "amount": 250000.0,
       "root_cause": "receivable_overdue",
-      "action_taken": "whatsapp_payment_nudge",
+      "action_taken": "email_invoice_reminder",
       "channel": "none",
       "guardrail_result": "ESCALATE",
       "reason": "HITL_ESCALATED_PAUSED (Amount >= \u20b91,00,000 threshold safety gate)"
@@ -294,7 +258,7 @@
       "event_id": "adv_0010",
       "amount": 500000.0,
       "root_cause": "receivable_overdue",
-      "action_taken": "whatsapp_ptp_nudge",
+      "action_taken": "whatsapp_ptp_request",
       "channel": "none",
       "guardrail_result": "BLOCK",
       "reason": "GUARDRAIL_BLOCKED (RULE_OPT_OUT_ENFORCED)"
@@ -429,7 +393,7 @@
       "event_id": "adv_0040",
       "amount": 500000.0,
       "root_cause": "receivable_overdue",
-      "action_taken": "email_ptp_request",
+      "action_taken": "whatsapp_payment_reminder",
       "channel": "none",
       "guardrail_result": "BLOCK",
       "reason": "GUARDRAIL_BLOCKED (RULE_OPT_OUT_ENFORCED)"
@@ -456,7 +420,7 @@
       "event_id": "adv_0045",
       "amount": 1999.0,
       "root_cause": "promise_to_pay",
-      "action_taken": "scheduled_reconciliation_check",
+      "action_taken": "scheduled_check",
       "channel": "none",
       "guardrail_result": "BLOCK",
       "reason": "GUARDRAIL_BLOCKED (RULE_OPT_OUT_ENFORCED)"

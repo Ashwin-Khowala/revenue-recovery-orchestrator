@@ -4,13 +4,13 @@
     "source_channel": "sms",
     "reason": "User texted STOP",
     "status": "PERMANENT_OPT_OUT",
-    "opted_out_at": "2026-09-01T19:27:29.126316+00:00"
+    "opted_out_at": "2026-09-03T20:51:37.430803+00:00"
   },
   "cust_dnd_test_01": {
     "identifier": "cust_dnd_test_01",
     "source_channel": "whatsapp",
     "reason": "User sent STOP keyword",
     "status": "PERMANENT_OPT_OUT",
-    "opted_out_at": "2026-09-01T19:27:29.237256+00:00"
+    "opted_out_at": "2026-09-03T20:51:37.379054+00:00"
   }
 }

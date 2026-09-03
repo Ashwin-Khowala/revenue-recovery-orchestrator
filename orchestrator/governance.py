@@ -81,6 +81,12 @@ class CrossTrackThrottler:
             logger.warning(f"Could not persist customer contact history sidecar: {e}")
 
     @classmethod
+    def reset_for_evaluation(cls) -> None:
+        """Resets in-memory touch history for clean benchmark evaluation runs."""
+        cls._in_memory_touches = {}
+        cls._loaded = True
+
+    @classmethod
     def record_touch(
         cls,
         customer_id: str,

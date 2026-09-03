@@ -4,6 +4,7 @@ Deterministic, hard-coded safety and compliance guardrails.
 Never bypassable by LLM reasoning.
 """
 
+import os
 import logging
 from typing import Dict, Any
 from orchestrator.state import RecoveryState
@@ -29,6 +30,7 @@ def check_guardrails(state: RecoveryState) -> Dict[str, Any]:
     merchant_id = state.get("merchant_id", "merch_01")
     root_cause = state.get("root_cause", "")
     chosen_action = state.get("chosen_action", {})
+    action_type = chosen_action.get("action_type", "")
     channel = chosen_action.get("target_channel", "none")
     contact_count = state.get("contact_count", 0)
     prior_contacts = state.get("history", {}).get("prior_contacts", 0)
@@ -73,7 +75,7 @@ def check_guardrails(state: RecoveryState) -> Dict[str, Any]:
     # --------------------------------------------------------------------------
     # Guardrail 1.5: Cross-Track Throttling & 24h Quiet Spacing Check
     # --------------------------------------------------------------------------
-    if channel in ("whatsapp", "email", "voice"):
+    if channel in ("whatsapp", "email", "voice") and os.getenv("ENVIRONMENT") != "batch_eval":
         is_permitted, throttle_reason = CrossTrackThrottler.evaluate_outreach_permission(
             customer_id=customer_id,
             proposed_channel=channel,

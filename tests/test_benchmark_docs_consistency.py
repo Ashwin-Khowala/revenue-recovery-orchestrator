@@ -1,8 +1,8 @@
 """
 Benchmark Documentation Consistency Test
 =========================================
-Ensures that all rupee figures and metrics cited in README.md, EVALS.md, or
-EVAL_PREREGISTRATION.md match evals/last_run.json with zero drift.
+Ensures that all rupee figures and metrics cited in README.md or EVALS.md
+match evals/last_run.json with zero drift.
 """
 
 import os

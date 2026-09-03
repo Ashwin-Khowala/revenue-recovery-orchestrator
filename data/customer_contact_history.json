@@ -1,192 +1,10 @@
 {
-  "cust_stop_02": [
+  "cust_1531": [
     {
       "channel": "whatsapp",
-      "track_name": "checkout_abandonment",
-      "event_id": "evt_prior",
-      "timestamp": "2026-09-01T10:25:43.006608+00:00"
-    },
-    {
-      "channel": "whatsapp",
-      "track_name": "checkout_abandonment",
-      "event_id": "evt_prior",
-      "timestamp": "2026-09-01T10:26:27.602111+00:00"
-    },
-    {
-      "channel": "whatsapp",
-      "track_name": "checkout_abandonment",
-      "event_id": "evt_prior",
-      "timestamp": "2026-09-01T10:28:49.447231+00:00"
-    }
-  ],
-  "cust_stop_07": [
-    {
-      "channel": "email",
-      "track_name": "subscription_failed",
-      "event_id": "evt_stop_07",
-      "timestamp": "2026-09-01T14:25:43.145632+00:00"
-    },
-    {
-      "channel": "email",
-      "track_name": "subscription_failed",
-      "event_id": "evt_stop_07",
-      "timestamp": "2026-09-01T14:26:27.728535+00:00"
-    },
-    {
-      "channel": "email",
-      "track_name": "subscription_failed",
-      "event_id": "evt_stop_07",
-      "timestamp": "2026-09-01T14:28:49.565849+00:00"
-    },
-    {
-      "channel": "email",
-      "track_name": "subscription_failed",
-      "event_id": "evt_stop_07",
-      "timestamp": "2026-09-01T14:29:20.401606+00:00"
-    },
-    {
-      "channel": "email",
-      "track_name": "subscription_failed",
-      "event_id": "evt_stop_07",
-      "timestamp": "2026-09-01T18:46:26.694192+00:00"
-    },
-    {
-      "channel": "email",
-      "track_name": "subscription_failed",
-      "event_id": "evt_stop_07",
-      "timestamp": "2026-09-01T19:26:55.125816+00:00"
-    },
-    {
-      "channel": "email",
-      "track_name": "subscription_failed",
-      "event_id": "evt_stop_07",
-      "timestamp": "2026-09-01T19:27:29.158201+00:00"
-    }
-  ],
-  "cust_01": [
-    {
-      "channel": "email",
-      "track_name": "subscription_failed",
-      "event_id": "evt_wa_fail_01",
-      "timestamp": "2026-09-01T14:27:04.289663+00:00"
-    },
-    {
-      "channel": "email",
-      "track_name": "subscription_failed",
-      "event_id": "evt_wa_fail_01",
-      "timestamp": "2026-09-01T18:44:38.711359+00:00"
-    },
-    {
-      "channel": "email",
-      "track_name": "subscription_failed",
-      "event_id": "evt_wa_fail_01",
-      "timestamp": "2026-09-01T19:25:20.419579+00:00"
-    }
-  ],
-  "cust_0003": [
-    {
-      "channel": "email",
-      "track_name": "receivable_overdue",
-      "event_id": "test_temporal_high_val",
-      "timestamp": "2026-09-01T14:27:49.029119+00:00"
-    }
-  ],
-  "cust_throttled_99": [
-    {
-      "channel": "whatsapp",
-      "track_name": "subscriptions",
-      "event_id": "evt_1",
-      "timestamp": "2026-08-26T14:28:18.935709+00:00"
-    },
-    {
-      "channel": "email",
-      "track_name": "b2b_receivables",
-      "event_id": "evt_2",
-      "timestamp": "2026-08-28T14:28:18.936422+00:00"
-    },
-    {
-      "channel": "whatsapp",
-      "track_name": "checkout_funnel",
-      "event_id": "evt_3",
-      "timestamp": "2026-08-30T14:28:18.937048+00:00"
-    },
-    {
-      "channel": "whatsapp",
-      "track_name": "subscriptions",
-      "event_id": "evt_1",
-      "timestamp": "2026-08-26T18:45:58.783160+00:00"
-    },
-    {
-      "channel": "email",
-      "track_name": "b2b_receivables",
-      "event_id": "evt_2",
-      "timestamp": "2026-08-28T18:45:58.784756+00:00"
-    },
-    {
-      "channel": "whatsapp",
-      "track_name": "checkout_funnel",
-      "event_id": "evt_3",
-      "timestamp": "2026-08-30T18:45:58.790943+00:00"
-    },
-    {
-      "channel": "whatsapp",
-      "track_name": "subscriptions",
-      "event_id": "evt_1",
-      "timestamp": "2026-08-26T19:26:25.757447+00:00"
-    },
-    {
-      "channel": "email",
-      "track_name": "b2b_receivables",
-      "event_id": "evt_2",
-      "timestamp": "2026-08-28T19:26:25.758760+00:00"
-    },
-    {
-      "channel": "whatsapp",
-      "track_name": "checkout_funnel",
-      "event_id": "evt_3",
-      "timestamp": "2026-08-30T19:26:25.759919+00:00"
-    },
-    {
-      "channel": "whatsapp",
-      "track_name": "subscriptions",
-      "event_id": "evt_1",
-      "timestamp": "2026-08-26T19:27:29.229973+00:00"
-    },
-    {
-      "channel": "email",
-      "track_name": "b2b_receivables",
-      "event_id": "evt_2",
-      "timestamp": "2026-08-28T19:27:29.231199+00:00"
-    },
-    {
-      "channel": "whatsapp",
-      "track_name": "checkout_funnel",
-      "event_id": "evt_3",
-      "timestamp": "2026-08-30T19:27:29.232515+00:00"
-    }
-  ],
-  "cust_stop_cooldown_27fb7f01": [
-    {
-      "channel": "whatsapp",
-      "track_name": "checkout_abandonment",
-      "event_id": "evt_prior",
-      "timestamp": "2026-09-01T10:29:20.257898+00:00"
-    }
-  ],
-  "cust_stop_cooldown_708e03d9": [
-    {
-      "channel": "whatsapp",
-      "track_name": "checkout_abandonment",
-      "event_id": "evt_prior",
-      "timestamp": "2026-09-01T14:46:26.473318+00:00"
-    }
-  ],
-  "cust_temp_hitl_27bcc7": [
-    {
-      "channel": "email",
-      "track_name": "receivable_overdue",
-      "event_id": "test_temporal_high_val_afe415",
-      "timestamp": "2026-09-01T18:47:32.345381+00:00"
+      "track_name": "checkout_abandoned",
+      "event_id": "evt_0404",
+      "timestamp": "2026-09-03T20:45:06.657588+00:00"
     }
   ],
   "cust_0552": [
@@ -194,61 +12,7 @@
       "channel": "whatsapp",
       "track_name": "mandate_auth_failed",
       "event_id": "evt_0402",
-      "timestamp": "2026-09-01T18:51:43.145463+00:00"
-    }
-  ],
-  "cust_1761": [
-    {
-      "channel": "email",
-      "track_name": "receivable_overdue",
-      "event_id": "evt_0403",
-      "timestamp": "2026-09-01T18:51:57.124283+00:00"
-    }
-  ],
-  "cust_1531": [
-    {
-      "channel": "whatsapp",
-      "track_name": "checkout_abandoned",
-      "event_id": "evt_0404",
-      "timestamp": "2026-09-01T18:52:02.293972+00:00"
-    },
-    {
-      "channel": "whatsapp",
-      "track_name": "checkout_abandoned",
-      "event_id": "evt_0404",
-      "timestamp": "2026-09-01T19:23:45.648270+00:00"
-    }
-  ],
-  "cust_1163": [
-    {
-      "channel": "whatsapp",
-      "track_name": "mandate_auth_failed",
-      "event_id": "evt_0405",
-      "timestamp": "2026-09-01T18:52:07.349829+00:00"
-    }
-  ],
-  "cust_1247": [
-    {
-      "channel": "whatsapp",
-      "track_name": "mandate_auth_failed",
-      "event_id": "evt_0406",
-      "timestamp": "2026-09-01T18:52:12.497651+00:00"
-    }
-  ],
-  "cust_0980": [
-    {
-      "channel": "whatsapp",
-      "track_name": "checkout_abandoned",
-      "event_id": "evt_0407",
-      "timestamp": "2026-09-01T18:52:17.171609+00:00"
-    }
-  ],
-  "cust_1044": [
-    {
-      "channel": "whatsapp",
-      "track_name": "checkout_abandoned",
-      "event_id": "evt_0409",
-      "timestamp": "2026-09-01T18:52:30.771106+00:00"
+      "timestamp": "2026-09-03T20:45:06.661231+00:00"
     }
   ],
   "cust_1677": [
@@ -256,7 +20,31 @@
       "channel": "whatsapp",
       "track_name": "subscription_failed",
       "event_id": "evt_0411",
-      "timestamp": "2026-09-01T19:23:45.844812+00:00"
+      "timestamp": "2026-09-03T20:45:06.925750+00:00"
+    }
+  ],
+  "cust_1247": [
+    {
+      "channel": "whatsapp",
+      "track_name": "mandate_auth_failed",
+      "event_id": "evt_0406",
+      "timestamp": "2026-09-03T20:45:08.265206+00:00"
+    }
+  ],
+  "cust_0980": [
+    {
+      "channel": "whatsapp",
+      "track_name": "checkout_abandoned",
+      "event_id": "evt_0407",
+      "timestamp": "2026-09-03T20:45:09.492149+00:00"
+    }
+  ],
+  "cust_1044": [
+    {
+      "channel": "whatsapp",
+      "track_name": "checkout_abandoned",
+      "event_id": "evt_0409",
+      "timestamp": "2026-09-03T20:45:09.794836+00:00"
     }
   ],
   "cust_1759": [
@@ -264,7 +52,7 @@
       "channel": "whatsapp",
       "track_name": "subscription_failed",
       "event_id": "evt_0413",
-      "timestamp": "2026-09-01T19:23:45.996854+00:00"
+      "timestamp": "2026-09-03T20:45:10.429905+00:00"
     }
   ],
   "cust_0420": [
@@ -272,7 +60,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0420",
-      "timestamp": "2026-09-01T19:23:47.466876+00:00"
+      "timestamp": "2026-09-03T20:45:12.333713+00:00"
     }
   ],
   "cust_1706": [
@@ -280,7 +68,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0422",
-      "timestamp": "2026-09-01T19:23:47.748611+00:00"
+      "timestamp": "2026-09-03T20:45:12.396243+00:00"
     }
   ],
   "cust_1580": [
@@ -288,7 +76,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0425",
-      "timestamp": "2026-09-01T19:23:48.120439+00:00"
+      "timestamp": "2026-09-03T20:45:12.972428+00:00"
     }
   ],
   "cust_0940": [
@@ -296,7 +84,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0427",
-      "timestamp": "2026-09-01T19:23:48.715369+00:00"
+      "timestamp": "2026-09-03T20:45:14.509362+00:00"
     }
   ],
   "cust_1321": [
@@ -304,7 +92,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0428",
-      "timestamp": "2026-09-01T19:23:48.793962+00:00"
+      "timestamp": "2026-09-03T20:45:15.407778+00:00"
     }
   ],
   "cust_0469": [
@@ -312,15 +100,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0430",
-      "timestamp": "2026-09-01T19:23:48.959019+00:00"
-    }
-  ],
-  "cust_1845": [
-    {
-      "channel": "whatsapp",
-      "track_name": "subscription_failed",
-      "event_id": "evt_0439",
-      "timestamp": "2026-09-01T19:23:54.261904+00:00"
+      "timestamp": "2026-09-03T20:45:16.488105+00:00"
     }
   ],
   "cust_1304": [
@@ -328,7 +108,15 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0438",
-      "timestamp": "2026-09-01T19:23:54.266537+00:00"
+      "timestamp": "2026-09-03T20:45:27.591215+00:00"
+    }
+  ],
+  "cust_1845": [
+    {
+      "channel": "whatsapp",
+      "track_name": "subscription_failed",
+      "event_id": "evt_0439",
+      "timestamp": "2026-09-03T20:45:27.738254+00:00"
     }
   ],
   "cust_0659": [
@@ -336,7 +124,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0440",
-      "timestamp": "2026-09-01T19:23:54.288645+00:00"
+      "timestamp": "2026-09-03T20:45:27.754457+00:00"
     }
   ],
   "cust_1430": [
@@ -344,7 +132,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0443",
-      "timestamp": "2026-09-01T19:23:54.388201+00:00"
+      "timestamp": "2026-09-03T20:45:28.010046+00:00"
     }
   ],
   "cust_1406": [
@@ -352,7 +140,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0442",
-      "timestamp": "2026-09-01T19:23:54.407268+00:00"
+      "timestamp": "2026-09-03T20:45:28.012112+00:00"
     }
   ],
   "cust_1491": [
@@ -360,7 +148,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0447",
-      "timestamp": "2026-09-01T19:23:54.557083+00:00"
+      "timestamp": "2026-09-03T20:45:28.347483+00:00"
     }
   ],
   "cust_0066": [
@@ -368,7 +156,7 @@
       "channel": "whatsapp",
       "track_name": "subscription_failed",
       "event_id": "evt_0448",
-      "timestamp": "2026-09-01T19:23:54.758267+00:00"
+      "timestamp": "2026-09-03T20:45:28.427906+00:00"
     }
   ],
   "cust_1317": [
@@ -376,7 +164,7 @@
       "channel": "whatsapp",
       "track_name": "subscription_failed",
       "event_id": "evt_0456",
-      "timestamp": "2026-09-01T19:23:55.081449+00:00"
+      "timestamp": "2026-09-03T20:45:29.089305+00:00"
     }
   ],
   "cust_0735": [
@@ -384,7 +172,7 @@
       "channel": "whatsapp",
       "track_name": "mandate_auth_failed",
       "event_id": "evt_0457",
-      "timestamp": "2026-09-01T19:23:55.167170+00:00"
+      "timestamp": "2026-09-03T20:45:29.097530+00:00"
     }
   ],
   "cust_0830": [
@@ -392,7 +180,7 @@
       "channel": "whatsapp",
       "track_name": "subscription_failed",
       "event_id": "evt_0458",
-      "timestamp": "2026-09-01T19:23:55.219681+00:00"
+      "timestamp": "2026-09-03T20:45:29.126724+00:00"
     }
   ],
   "cust_0251": [
@@ -400,7 +188,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0471",
-      "timestamp": "2026-09-01T19:23:57.137140+00:00"
+      "timestamp": "2026-09-03T20:45:31.913450+00:00"
     }
   ],
   "cust_1279": [
@@ -408,7 +196,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0472",
-      "timestamp": "2026-09-01T19:23:57.275039+00:00"
+      "timestamp": "2026-09-03T20:45:32.224664+00:00"
     }
   ],
   "cust_1611": [
@@ -416,7 +204,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0475",
-      "timestamp": "2026-09-01T19:23:57.751670+00:00"
+      "timestamp": "2026-09-03T20:45:32.520205+00:00"
     }
   ],
   "cust_0931": [
@@ -424,7 +212,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0476",
-      "timestamp": "2026-09-01T19:23:57.881241+00:00"
+      "timestamp": "2026-09-03T20:45:32.595552+00:00"
     }
   ],
   "cust_0593": [
@@ -432,7 +220,7 @@
       "channel": "whatsapp",
       "track_name": "subscription_failed",
       "event_id": "evt_0477",
-      "timestamp": "2026-09-01T19:23:58.020823+00:00"
+      "timestamp": "2026-09-03T20:45:32.624281+00:00"
     }
   ],
   "cust_0613": [
@@ -440,7 +228,7 @@
       "channel": "whatsapp",
       "track_name": "mandate_auth_failed",
       "event_id": "evt_0481",
-      "timestamp": "2026-09-01T19:23:58.556011+00:00"
+      "timestamp": "2026-09-03T20:45:33.368947+00:00"
     }
   ],
   "cust_1936": [
@@ -448,7 +236,7 @@
       "channel": "whatsapp",
       "track_name": "mandate_auth_failed",
       "event_id": "evt_0482",
-      "timestamp": "2026-09-01T19:23:58.654372+00:00"
+      "timestamp": "2026-09-03T20:45:33.473490+00:00"
     }
   ],
   "cust_1615": [
@@ -456,7 +244,7 @@
       "channel": "whatsapp",
       "track_name": "mandate_auth_failed",
       "event_id": "evt_0484",
-      "timestamp": "2026-09-01T19:23:58.767276+00:00"
+      "timestamp": "2026-09-03T20:45:33.630440+00:00"
     }
   ],
   "cust_1050": [
@@ -464,7 +252,7 @@
       "channel": "whatsapp",
       "track_name": "mandate_auth_failed",
       "event_id": "evt_0487",
-      "timestamp": "2026-09-01T19:23:59.285974+00:00"
+      "timestamp": "2026-09-03T20:45:34.356809+00:00"
     }
   ],
   "cust_1453": [
@@ -472,7 +260,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0488",
-      "timestamp": "2026-09-01T19:23:59.353756+00:00"
+      "timestamp": "2026-09-03T20:45:34.392144+00:00"
     }
   ],
   "cust_1177": [
@@ -480,7 +268,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0490",
-      "timestamp": "2026-09-01T19:23:59.441167+00:00"
+      "timestamp": "2026-09-03T20:45:34.555606+00:00"
     }
   ],
   "cust_0060": [
@@ -488,7 +276,7 @@
       "channel": "whatsapp",
       "track_name": "subscription_failed",
       "event_id": "evt_0493",
-      "timestamp": "2026-09-01T19:23:59.577373+00:00"
+      "timestamp": "2026-09-03T20:45:34.845076+00:00"
     }
   ],
   "cust_1176": [
@@ -496,7 +284,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0494",
-      "timestamp": "2026-09-01T19:23:59.702640+00:00"
+      "timestamp": "2026-09-03T20:45:34.989710+00:00"
     }
   ],
   "cust_0942": [
@@ -504,7 +292,7 @@
       "channel": "whatsapp",
       "track_name": "checkout_abandoned",
       "event_id": "evt_0496",
-      "timestamp": "2026-09-01T19:23:59.839902+00:00"
+      "timestamp": "2026-09-03T20:45:35.308199+00:00"
     }
   ],
   "cust_0167": [
@@ -512,7 +300,7 @@
       "channel": "whatsapp",
       "track_name": "mandate_auth_failed",
       "event_id": "evt_0500",
-      "timestamp": "2026-09-01T19:24:00.394750+00:00"
+      "timestamp": "2026-09-03T20:45:35.548075+00:00"
     }
   ],
   "cust_0238": [
@@ -520,31 +308,107 @@
       "channel": "email",
       "track_name": "receivable_overdue",
       "event_id": "evt_0492",
-      "timestamp": "2026-09-01T19:24:03.685004+00:00"
+      "timestamp": "2026-09-03T20:45:40.556628+00:00"
     }
   ],
-  "cust_temp_hitl_b5f1d1": [
+  "cust_throttled_99": [
     {
       "channel": "whatsapp",
-      "track_name": "receivable_overdue",
-      "event_id": "test_temporal_high_val_f91c7e",
-      "timestamp": "2026-09-01T19:25:47.682220+00:00"
+      "track_name": "subscriptions",
+      "event_id": "evt_1",
+      "timestamp": "2026-08-28T20:46:26.468677+00:00"
+    },
+    {
+      "channel": "email",
+      "track_name": "b2b_receivables",
+      "event_id": "evt_2",
+      "timestamp": "2026-08-30T20:46:26.474590+00:00"
+    },
+    {
+      "channel": "whatsapp",
+      "track_name": "checkout_funnel",
+      "event_id": "evt_3",
+      "timestamp": "2026-09-01T20:46:26.479168+00:00"
+    },
+    {
+      "channel": "whatsapp",
+      "track_name": "subscriptions",
+      "event_id": "evt_1",
+      "timestamp": "2026-08-28T20:48:59.697441+00:00"
+    },
+    {
+      "channel": "email",
+      "track_name": "b2b_receivables",
+      "event_id": "evt_2",
+      "timestamp": "2026-08-30T20:48:59.699673+00:00"
+    },
+    {
+      "channel": "whatsapp",
+      "track_name": "checkout_funnel",
+      "event_id": "evt_3",
+      "timestamp": "2026-09-01T20:48:59.701081+00:00"
+    },
+    {
+      "channel": "whatsapp",
+      "track_name": "subscriptions",
+      "event_id": "evt_1",
+      "timestamp": "2026-08-28T20:51:37.369522+00:00"
+    },
+    {
+      "channel": "email",
+      "track_name": "b2b_receivables",
+      "event_id": "evt_2",
+      "timestamp": "2026-08-30T20:51:37.372000+00:00"
+    },
+    {
+      "channel": "whatsapp",
+      "track_name": "checkout_funnel",
+      "event_id": "evt_3",
+      "timestamp": "2026-09-01T20:51:37.373720+00:00"
     }
   ],
-  "cust_stop_cooldown_842b7ee1": [
+  "cust_stop_cooldown_bf98b8c9": [
     {
       "channel": "whatsapp",
       "track_name": "checkout_abandonment",
       "event_id": "evt_prior",
-      "timestamp": "2026-09-01T15:26:55.067514+00:00"
+      "timestamp": "2026-09-03T16:46:26.534436+00:00"
     }
   ],
-  "cust_stop_cooldown_e196fba1": [
+  "cust_stop_07": [
+    {
+      "channel": "email",
+      "track_name": "subscription_failed",
+      "event_id": "evt_stop_07",
+      "timestamp": "2026-09-03T20:46:26.603225+00:00"
+    },
+    {
+      "channel": "email",
+      "track_name": "subscription_failed",
+      "event_id": "evt_stop_07",
+      "timestamp": "2026-09-03T20:48:59.745628+00:00"
+    },
+    {
+      "channel": "email",
+      "track_name": "subscription_failed",
+      "event_id": "evt_stop_07",
+      "timestamp": "2026-09-03T20:51:37.439092+00:00"
+    }
+  ],
+  "cust_stop_cooldown_1429c3e0": [
     {
       "channel": "whatsapp",
       "track_name": "checkout_abandonment",
       "event_id": "evt_prior",
-      "timestamp": "2026-09-01T15:27:29.035874+00:00"
+      "timestamp": "2026-09-03T16:48:59.721672+00:00"
+    }
+  ],
+  "cust_stop_cooldown_375e6328": [
+    {
+      "channel": "whatsapp",
+      "track_name": "checkout_abandonment",
+      "event_id": "evt_prior",
+      "timestamp": "2026-09-03T16:51:37.405139+00:00"
     }
   ]
 }

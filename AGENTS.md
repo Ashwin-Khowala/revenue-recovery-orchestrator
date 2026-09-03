@@ -37,6 +37,27 @@ The **Revenue Recovery Orchestrator** is an enterprise-grade, supervisory decisi
 
 ## Graph Topology & Node Responsibilities
 
+```mermaid
+flowchart TD
+    INGEST([⚡ Event Ingestion]) --> N0["Node 0: memory_enrichment<br/>(Pulls Profile, 54k History, Policies, Channel Capacities)"]
+    N0 --> N1["Node 1: classify_root_cause<br/>(Hybrid: Deterministic Rules + Azure OpenAI)"]
+    N1 --> N2["Node 2: score_policy_options<br/>(Deterministic EV Engine + 'Do Nothing' Scored)"]
+    N2 --> N3{"Node 3: check_guardrails<br/>(₹1L Ceiling, 2-Contact Max, 24h Quiet Spacing)"}
+    
+    N3 -- "ALLOW" --> N4["Node 4: execute_action<br/>(Pre-Send Race Check -> WhatsApp / Email / Voice / Reroute)"]
+    N3 -- "ESCALATE (>= ₹1L)" --> N5["Node 5: hitl_escalation<br/>(Telegram Admin Alert -> LangGraph interrupt())"]
+    N3 -- "BLOCK" --> N4
+    
+    N5 -. "Admin Approve / Reject<br/>Command(resume=...)" .-> N4
+    N4 --> N6["Node 6: outcome_tracker<br/>(Razorpay Webhook Reconciler & Dedup Arbitrator)"]
+    N6 --> FIN([🏁 END / Settlement Complete])
+
+    classDef nodeStyle fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
+    classDef branchStyle fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#f8fafc;
+    class N0,N1,N2,N4,N5,N6 nodeStyle;
+    class N3 branchStyle;
+```
+
 ```
 [Event Ingestion] 
        │
@@ -68,7 +89,9 @@ The **Revenue Recovery Orchestrator** is an enterprise-grade, supervisory decisi
 [Node 6: outcome_tracker] ────── (Razorpay webhook reconciler & dedup arbitrator)
        │
        ▼
-[Node 7: write_audit_entry] ──── (SHA-256 Chained Log + Supabase DB + Langfuse Cloud)
+     [END]
+
+* Tamper-Evident SHA-256 Audit Trail: `log_audit_entry` is called inline within every node and state transition, persisting to local ledger, Supabase `audit_log` (details JSONB), and Langfuse Cloud.
 ```
 
 ---

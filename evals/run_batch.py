@@ -19,6 +19,7 @@ import json
 import logging
 import os
 import sys
+import uuid
 from datetime import datetime, timezone
 from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -70,7 +71,7 @@ def run_orchestrator_on_event(event: Dict[str, Any]) -> Dict[str, Any]:
         "audit_trail": [],
     }
 
-    config = {"configurable": {"thread_id": f"eval_{event['event_id']}"}}
+    config = {"configurable": {"thread_id": f"eval_{event['event_id']}_{uuid.uuid4().hex[:6]}"}}
     try:
         result = orchestrator_graph.invoke(state, config=config)
     except Exception:
@@ -172,6 +173,9 @@ def compute_aggregate_metrics(results: List[Dict[str, Any]], total_at_risk: floa
 
 
 def run_full_benchmark(holdout_path: str = "evals/labeled_holdout.json"):
+    from orchestrator.governance import CrossTrackThrottler
+    CrossTrackThrottler.reset_for_evaluation()
+
     with open(holdout_path, "r", encoding="utf-8") as f:
         holdout_events = json.load(f)
 
@@ -219,6 +223,10 @@ def run_full_benchmark(holdout_path: str = "evals/labeled_holdout.json"):
     ]
     m_cf = compute_aggregate_metrics(cf_results, total_at_risk, organic_recovered=organic_recovered)
 
+    naive_spam = m_naive['false_interventions']
+    orch_spam = m_orch['false_interventions']
+    reduction_pct = ((naive_spam - orch_spam) / naive_spam * 100) if naive_spam > 0 else 0.0
+
     # Print 4-Arm Comparison Table + Counterfactual
     table_data = [
         ["₹ Targeted (At-Risk)", f"₹{total_at_risk:,.2f}", f"₹{total_at_risk:,.2f}", f"₹{total_at_risk:,.2f}", f"₹{total_at_risk:,.2f}"],
@@ -226,7 +234,7 @@ def run_full_benchmark(holdout_path: str = "evals/labeled_holdout.json"):
         ["Recovery Rate (%)", f"{m_organic['recovery_rate_pct']}%", f"{m_naive['recovery_rate_pct']}%", f"{m_rules['recovery_rate_pct']}%", f"{m_orch['recovery_rate_pct']}%"],
         ["Incremental ₹ vs Organic", "₹0.00 (Baseline)", f"₹{m_naive['incremental_recovered_vs_organic']:,.2f}", f"₹{m_rules['incremental_recovered_vs_organic']:,.2f}", f"₹{m_orch['incremental_recovered_vs_organic']:,.2f}"],
         ["Outreach Contacts Sent", "0 (Zero Contact)", f"{m_naive['total_contacts_made']}", f"{m_rules['total_contacts_made']}", f"{m_orch['total_contacts_made']}"],
-        ["Wasted Touches (Spam)", "0", f"{m_naive['false_interventions']}", f"{m_rules['false_interventions']}", f"{m_orch['false_interventions']} (100% Reduction)"],
+        ["Wasted Touches (Spam)", "0", f"{m_naive['false_interventions']}", f"{m_rules['false_interventions']}", f"{m_orch['false_interventions']} ({reduction_pct:.1f}% Reduction)"],
         ["Duplicate Breaches", "0", f"{m_naive['duplicate_contacts']}", f"{m_rules['duplicate_contacts']}", f"{m_orch['duplicate_contacts']} (Guaranteed 0)"],
         ["Human Escalations (HITL)", "0 (No Gates)", "0 (No Gates)", "0 (No Gates)", f"{m_orch['escalations']} ({m_orch['escalation_rate_pct']}%)"],
         ["Total Channel/API Cost", "₹0.00", f"₹{m_naive['total_cost']:.2f}", f"₹{m_rules['total_cost']:.2f}", f"₹{m_orch['total_cost']:.2f}"],

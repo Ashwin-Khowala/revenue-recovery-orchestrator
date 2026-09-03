@@ -7,88 +7,131 @@ The **Revenue Recovery Intelligence Platform** is architected around a fundament
 2. **Deterministic Reasoning Sub-Step (LangGraph + EV Engine)**: Owns failure root-cause classification (rules-first + LLM fallback), deterministic Expected Value (EV) calculation, and hard financial guardrails.
 3. **Exact Structured Relational Memory (PostgreSQL via Prisma)**: Manages customer priors (54,779 historical episodes) and merchant contact policies using exact relational queries rather than fuzzy semantic vector recall.
 
-```
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                               MULTI-CHANNEL INGESTION & OUTREACH                                 │
-│         Razorpay Test/Live Webhooks • WhatsApp API • Telegram Bot • Resend Email • Voice        │
-└────────────────────────────────────────────────┬─────────────────────────────────────────────────┘
-                                                 │ Event Object
-                                                 ▼
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                     DURABLE WORKFLOW OUTER LOOP (Temporal SDK / Inngest Engine)                  │
-│   • Persists workflow state across server restarts & multi-day sagas                             │
-│   • Durable wait conditions for payment webhooks & promise-to-pay commitment dates               │
-│   • External signal arbitration: 'signal_payment_captured' cancels pending outreach instantly    │
-│                                                │
-│                                                ▼ (Dispatches Discrete Activity)
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐  │
-│  │ 0. MEMORY ENRICHMENT LAYER (Prisma + Supabase Postgres)                                    │  │
-│  │    • Fetches customer profile (reliability, risk score, channel effectiveness, language)  │  │
-│  │    • Loads last 10-20 episodic history entries from 54,779 historical dataset              │  │
-│  │    • Loads merchant custom contact policies & channel capacity limits                      │  │
-│  │    • Synthesizes plain-text memory narrative for downstream LLM context                    │  │
-│  └─────────────────────────────────────────────┬──────────────────────────────────────────────┘  │
-│                                                │                                                 │
-│                                                ▼                                                 │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐  │
-│  │ 1. ROOT-CAUSE CLASSIFIER (Hybrid Rule Engine + Azure OpenAI)                               │  │
-│  │    • Evaluates failure telemetry, bank error codes, cart timing, and memory context        │  │
-│  │    • Categorizes into 1 of 6 distinct root-cause taxonomies                                │  │
-│  │    • Emits: root_cause, confidence, candidate_actions                                      │  │
-│  └─────────────────────────────────────────────┬──────────────────────────────────────────────┘  │
-│                                                │                                                 │
-│                                                ▼                                                 │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐  │
-│  │ 2. DETERMINISTIC POLICY ENGINE (Expected Value Ranking)                                    │  │
-│  │    • Calculates Net EV = P(rec | history) × Amount - Cost - Friction - Risk               │  │
-│  │    • "do_nothing" is a first-class scored candidate (wins on high-reliability customers)   │  │
-│  │    • Emits: ranked action list with mathematical justification                             │  │
-│  └─────────────────────────────────────────────┬──────────────────────────────────────────────┘  │
-│                                                │                                                 │
-│                                                ▼                                                 │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐  │
-│  │ 3. DETERMINISTIC GUARDRAIL VALIDATION                                                      │  │
-│  │    • Amount ceiling thresholds (> ₹1,00,000 -> Escalate)                                   │  │
-│  │    • 2-contact maximum limit per incident                                                  │  │
-│  │    • 24h anti-spam quiet window per customer                                               │  │
-│  │    • Payment route degradation -> strict zero customer contact rule                        │  │
-│  │    • Emits: "ALLOW" | "ESCALATE" | "BLOCK"                                                 │  │
-│  └─────────────────────────────────────────────┬──────────────────────────────────────────────┘  │
-│                                                │                                                 │
-│                                ┌───────────────┴───────────────┐                                 │
-│                                │ "ALLOW"                       │ "ESCALATE"                      │
-│                                ▼                               ▼                                 │
-│  ┌─────────────────────────────────────────────┐ ┌───────────────────────────────────────────┐  │
-│  │ 4. EXECUTION DISPATCHER                     │ │ 5. HITL ESCALATION NODE                   │  │
-│  │    • Primary: WhatsApp API / Telegram Bot   │ │    • Sends Telegram Alert to Merchant     │  │
-│  │    • Fallback: Resend Email / SMS           │ │    • Durable Wait for Approval Signal     │  │
-│  │    • Infra: Silent Route Reroute / AFA Link │ │    • Resumes on merchant signal           │  │
-│  └─────────────────────────────┬───────────────┘ └─────────────┬─────────────────────────────┘  │
-│                                │                               │                                 │
-│                                └───────────────┬───────────────┘                                 │
-│                                                │                                                 │
-│                                                ▼                                                 │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐  │
-│  │ 6. OUTCOME TRACKER & RACE CONDITION ARBITRATOR                                             │  │
-│  │    • Listens for out-of-order Razorpay captured webhooks                                   │  │
-│  │    • Cancels queued interventions if payment clears early                                  │  │
-│  │    • Enforces exact 0 duplicate contacts guarantee                                         │  │
-│  └─────────────────────────────────────────────┬──────────────────────────────────────────────┘  │
-│                                                │                                                 │
-│                                                ▼                                                 │
-│  ┌────────────────────────────────────────────────────────────────────────────────────────────┐  │
-│  │ 7. CRYPTOGRAPHIC AUDIT TRAIL & TRACING                                                     │  │
-│  │    • SHA-256 hash chaining (tamper-evident audit trail)                                    │  │
-│  │    • Persists state diffs, rule triggers, and EV breakdowns to Supabase Postgres           │  │
-│  │    • Full execution traces streamed to Langfuse Cloud                                      │  │
-│  └────────────────────────────────────────────────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────┬─────────────────────────────────────────────────┘
-                                                 │
-                                                 ▼
-┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│                   PRESENTATION & CUSTOMER INTELLIGENCE (Next.js Dashboard)                       │
-│    Overview • At-Risk Summary • Customer Intelligence Profile • Episodic Timeline • Evals        │
-└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    %% =========================================================================
+    %% 1. INGESTION & EVENT SOURCES
+    %% =========================================================================
+    subgraph INGESTION["1. Multi-Source Ingestion & Failure Telemetry"]
+        E1["⚡ Razorpay Webhooks<br/>(payment.failed, order.paid, captured)"]
+        E2["🛒 Checkout Drop-Off Telemetry<br/>(15-60 min step latency, form errors)"]
+        E3["🔄 Subscription Failures<br/>(RBI >₹15,000 AFA, mandate decline)"]
+        E4["📑 B2B Receivables<br/>(Net-30/60 overdue corporate invoices)"]
+        E5["🤝 Promise-to-Pay (PTP)<br/>(Customer payment commitments)"]
+    end
+
+    %% =========================================================================
+    %% 2. DURABLE WORKFLOW OUTER LOOP
+    %% =========================================================================
+    subgraph DURABLE["2. Durable Orchestration Loop (Temporal SDK & Inngest)"]
+        WF["⚙️ RevenueRecoveryWorkflow<br/>(Multi-Day Saga & Crash Recovery)"]
+        TIMER["⏳ Durable Timers<br/>(24h quiet spacing, 72h PTP pause)"]
+        RACE_QUEUE["🛡️ Persistent Arbitration Queue<br/>(pending_recovery_queue.json)"]
+    end
+
+    %% =========================================================================
+    %% 3. 4-TIER STATEFUL RELATIONAL MEMORY
+    %% =========================================================================
+    subgraph MEMORY["3. 4-Tier Stateful Relational Memory Layer (Postgres + Sidecars)"]
+        T1["👤 Tier 1: Customer Profile<br/>(Reliability Score, Default Risk, Preferred Channel)"]
+        T2["📚 Tier 2: 54,779 Historical Episodes<br/>(Past Recovery Outcomes, Average Days Late)"]
+        T3["🏢 Tier 3: Merchant Contact Policies<br/>(Custom HITL Cap, Allowed Channels, Max Touches)"]
+        T4["🔕 Tier 4: Omnichannel Consent & DND<br/>(Global Opt-Outs, 7-Day Cross-Track Spacing)"]
+    end
+
+    %% =========================================================================
+    %% 4. LANGGRAPH SUPERVISORY DECISION GRAPH (7 NODES)
+    %% =========================================================================
+    subgraph GRAPH["4. Supervisory AI Decision Engine (LangGraph StateGraph)"]
+        direction TB
+
+        N0["Node 0: memory_enrichment<br/>• Pulls Customer Profile & 54k History<br/>• Retrieves Merchant Contact Policy<br/>• Synthesizes Memory Context Narrative"]
+
+        N1["Node 1: classify_root_cause<br/>• PII Redaction Engine (PAN, Card, Phone, Email)<br/>• 30+ Code Deterministic Decline Taxonomy<br/>• Azure OpenAI gpt-4o-mini Fallback<br/>• Output: 1 of 6 Root-Cause Classes"]
+
+        N2["Node 2: score_policy_options<br/>• Deterministic Mathematical EV Engine<br/>• EV = P(rec|hist) × Amount - Cost - Friction - Risk<br/>• 'Do Nothing' Scored as 1st-Class Decision"]
+
+        N3{"Node 3: check_guardrails<br/>Enforces 8 Compliance Invariants:<br/>1. ₹1,00,000 High-Value Threshold<br/>2. Max 2 Contacts per Incident<br/>3. 24h Quiet Window (CrossTrackThrottler)<br/>4. Bank Degradation -> 0 Customer Noise<br/>5. Omnichannel Permanent Opt-Out<br/>6. Voluntary Churn Dunning Kill-Switch<br/>7. Dispute Isolation<br/>8. TRAI Voice Hours (09:00 - 21:00 IST)"}
+
+        N5["Node 5: hitl_escalation<br/>• Interactive Telegram Alert to Merchant Admin<br/>• LangGraph interrupt() Pauses Thread<br/>• Awaits Admin Approve / Reject Signal<br/>• Replay-Safe Resumption"]
+
+        N4["Node 4: execute_action<br/>• Pre-Send Webhook Race Check<br/>• WhatsApp Dispatch (Razorpay Link)<br/>• Failover to Resend Transactional Email<br/>• Plivo AI Telephony (Hinglish)<br/>• Silent Infrastructure Route Reroute"]
+
+        N6["Node 6: outcome_tracker<br/>• Razorpay Webhook Reconciler<br/>• Dedup Arbitrator (0 Duplicate Guarantee)<br/>• Counterfactual Attribution (P >= 0.40)"]
+
+        %% Graph Edges
+        N0 --> N1
+        N1 --> N2
+        N2 --> N3
+        N3 -- "ALLOW" --> N4
+        N3 -- "ESCALATE (>= ₹1L)" --> N5
+        N3 -- "BLOCK (Quiet/Opt-Out)" --> N4
+        N5 -. "Command(resume=True)" .-> N4
+        N4 --> N6
+    end
+
+    %% =========================================================================
+    %% 5. EXECUTION CHANNELS & INFRASTRUCTURE
+    %% =========================================================================
+    subgraph CHANNELS["5. Multi-Channel Execution & Payment Settlement"]
+        CH_WA["💬 WhatsApp Utility Template<br/>(Direct Smart Resume Link)"]
+        CH_EM["📧 Resend Email API<br/>(Fallback Transactional Invoice)"]
+        CH_VOICE["📞 Plivo Voice Telephony<br/>(Conversational Hinglish Call)"]
+        CH_REROUTE["🔀 Gateway Silent Switch<br/>(Zero-Contact HDFC/ICICI Route)"]
+        CH_RZP["💳 Razorpay Test Mode API<br/>(plink_... Authentic Checkout Links)"]
+    end
+
+    %% =========================================================================
+    %% 6. CRYPTOGRAPHIC AUDIT & OBSERVABILITY
+    %% =========================================================================
+    subgraph AUDIT["6. Cryptographic Audit Trail & Observability"]
+        LEDGER["🔐 SHA-256 Chained Hash Ledger<br/>(entry_hash = SHA256(prev_hash + data))<br/>data/audit_ledger.json + Supabase DB"]
+        LANGFUSE["🔭 Langfuse Cloud Tracing<br/>(Node Latency, Token Usage, Cost)"]
+        EXCEPTIONS["📋 evals/exceptions.json<br/>(Structured Non-Recovery Audit Cases)"]
+    end
+
+    %% =========================================================================
+    %% 7. CONTROL SURFACES & FRONTENDS
+    %% =========================================================================
+    subgraph UI["7. Merchant & Operator Control Surfaces"]
+        DASH["🖥️ Next.js 14 Merchant Dashboard<br/>(/merchant • At-Risk Summary • 3-Block Case File)"]
+        OPTIMIZER["🎛️ Dynamic Policy Optimizer<br/>(/merchant/optimizer • Live EV Sliders)"]
+        COPILOT["🎙️ Gemini Live Multilingual Voice Copilot<br/>(English / Hindi / Hinglish • Live Tools)"]
+        TELEGRAM["📱 Telegram Operations Center<br/>(Merchant Alerts & Two-Way Approval)"]
+    end
+
+    %% =========================================================================
+    %% SYSTEM-WIDE FLOW CONNECTIONS
+    %% =========================================================================
+    INGESTION --> WF
+    WF --> RACE_QUEUE
+    WF --> N0
+
+    MEMORY <--> N0
+    MEMORY <--> N1
+    MEMORY <--> N3
+
+    N4 --> CHANNELS
+    CHANNELS --> CH_RZP
+    CH_RZP -. "payment.captured webhook" .-> RACE_QUEUE
+    RACE_QUEUE -. "Pre-send Cancel" .-> N4
+
+    %% Cross-cutting audit logging
+    N0 -. "log_audit_entry" .-> LEDGER
+    N1 -. "log_audit_entry" .-> LEDGER
+    N2 -. "log_audit_entry" .-> LEDGER
+    N3 -. "log_audit_entry" .-> LEDGER
+    N4 -. "log_audit_entry" .-> LEDGER
+    N5 -. "log_audit_entry" .-> LEDGER
+    N6 -. "log_audit_entry" .-> LEDGER
+    N6 --> EXCEPTIONS
+
+    GRAPH -. "Traces" .-> LANGFUSE
+    N6 --> WF
+    WF --> DASH
+    DASH <--> COPILOT
+    N5 <--> TELEGRAM
+    DASH <--> OPTIMIZER
 ```
 
 ---

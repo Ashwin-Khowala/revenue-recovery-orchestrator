@@ -51,14 +51,15 @@ We have engineered an **enterprise-grade, stateful financial agent system** buil
 │      ┌─────┴─────────────────┐                                                                   │
 │      │ ALLOW                 │ ESCALATE                                                          │
 │      ▼                       ▼                                                                   │
-│  [Node 4: execute_action]   [Node 5: hitl_escalation] ──► Proactive Telegram Alert + interrupt()│
-│      │                               │ (resume via Command)                                      │
-│      └──────────────┬────────────────┘                                                           │
-│                     ▼                                                                            │
-│  [Node 6: outcome_tracker] ─────► Razorpay Webhook Race Arbitrator & Dedup Tracker (Zero Dupes) │
+│  [Node 4: execute_action] ◄─── (Resumed after review)                                            │
 │            │                                                                                     │
 │            ▼                                                                                     │
-│  [Node 7: write_audit_entry] ───► SHA-256 Tamper-Evident Hash Chain + Supabase + Langfuse Cloud  │
+│  [Node 6: outcome_tracker] ─────► Razorpay Webhook Race Arbitrator & Dedup Tracker (Zero Dupes)  │
+│            │                                                                                     │
+│            ▼                                                                                     │
+│          [END]                                                                                   │
+│                                                                                                  │
+│  * Immutable SHA-256 Audit Trail: `log_audit_entry` runs inline on every node transition.        │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -116,7 +117,7 @@ The `verify_audit_chain()` utility mathematically validates audit integrity.
 | **Merchant Dashboard** | ✅ Complete | Built in Next.js 14 (`/merchant`, `/merchant/customers/[merchantId]`, `/merchant/customers/[merchantId]/[customerId]`, `/merchant/optimizer`) featuring AI risk overviews, channel bars, episode timelines, and live EV simulation sliders. |
 | **Gemini Live Voice System** | ✅ Complete | Google GenAI (`gemini-3.1-flash-live-preview` / `gemini-2.5-flash`) & Azure OpenAI with dynamic multilingual mirroring (English, Hindi, Hinglish), data access tools (`get_customer_intelligence`, `get_merchant_financial_overview`, `get_at_risk_incidents`, `apply_concession_discount`, `register_promise_to_pay`, `approve_high_value_invoice`), collapsible right panel, and speech-to-text mic buttons on both merchant and payer pages. |
 | **Durable Execution Engine (Temporal & Inngest)** | ✅ Complete | Temporal SDK (`RevenueRecoveryWorkflow`) and Inngest serverless functions managing multi-day sagas, 24h quiet windows, 3-day PTP pauses, external `signal_payment_captured` webhook race arbitration, and process restart resilience. Verified via `tests/test_durable_workflows.py`. |
-| **Evaluation Benchmark** | ✅ Complete | 3-way benchmark (Orchestrator vs Rules vs Naive) across held-out dataset, multi-model matrix, and formalized in `evals/EVAL_PREREGISTRATION.md`. |
+| **Evaluation Benchmark** | ✅ Complete | 4-arm benchmark (Organic vs Naive vs Rules vs Orchestrator) across 150 held-out events, multi-model matrix, and formalized in `EVALS.md`. |
 
 ---
 

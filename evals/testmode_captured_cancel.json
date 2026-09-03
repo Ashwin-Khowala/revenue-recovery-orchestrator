@@ -1,27 +1,27 @@
 {
-  "verified_at": "2026-09-01T14:31:52.721479+00:00",
-  "incident_id": "test_order_race_20260901143152",
+  "verified_at": "2026-09-03T20:18:29.343746+00:00",
+  "incident_id": "test_order_race_20260903201829",
   "test_amount_inr": 4999.0,
   "steps": [
     {
       "step": 1,
       "action": "create_payment_link",
-      "payment_link_id": "plink_TWo4E2ACN7CLzD",
-      "short_url": "https://rzp.io/rzp/ivuhHdx",
+      "payment_link_id": "plink_TXh2bWh9Xzk7LC",
+      "short_url": "https://rzp.io/rzp/ppRweVIS",
       "amount": 4999.0
     },
     {
       "step": 2,
       "action": "enqueue_recovery",
-      "event_id": "test_order_race_20260901143152",
+      "event_id": "test_order_race_20260903201829",
       "queue_status": "pending_send"
     },
     {
       "step": 3,
       "action": "webhook_arbitration",
-      "payment_id": "pay_test_20260901143152",
+      "payment_id": "pay_test_20260903201829",
       "was_cancelled": true,
-      "audit_entry_hash": "34d4e7653961ebd189fa73ebb21879dedd6e62606da322ff2776be1038583692"
+      "audit_entry_hash": "5a173f3754c8d3e9a1e0176453e007e74d5be5f8d5c73bc3ae695b3dd226c68c"
     },
     {
       "step": 4,
