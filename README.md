@@ -134,13 +134,13 @@ sequenceDiagram
     participant Channel as 💬 WhatsApp / Email
     participant Ledger as 🔐 SHA-256 Ledger
 
-    Note over Ingestion,Engine: T0: Payment Fails
+    Note over Ingestion,Engine: T0 - Payment Fails
     Gateway->>Ingestion: webhook: payment.failed (evt_001)
     Ingestion->>Queue: Register pending recovery action (evt_001)
-    Ingestion->>Engine: Run recovery graph (classify -> score EV -> guardrails)
+    Ingestion->>Engine: Run recovery graph (classify, score EV, guardrails)
     
     rect rgb(30, 41, 59)
-        Note over Customer,Gateway: RACE CONDITION: Customer self-serves or retries organically
+        Note over Customer,Gateway: RACE CONDITION - Customer self-serves or retries organically
         Customer->>Gateway: Successful Payment Checkout (order_synth_001)
         Gateway->>Ingestion: webhook: payment.captured (order_synth_001)
         Ingestion->>Queue: cancel_pending_action(order_synth_001)
@@ -151,7 +151,7 @@ sequenceDiagram
     Engine->>Queue: is_action_still_pending(evt_001)?
     Queue-->>Engine: False (Captured prior to outreach)
     Engine->>Ledger: log_audit_entry("PRE_SEND_RACE_CANCELLED", duplicate_count=0)
-    Note over Engine,Channel: Outreach aborted; customer never spammed
+    Note over Engine,Channel: Outreach aborted - customer never spammed
 ```
 
 ---
