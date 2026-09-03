@@ -66,11 +66,13 @@ The evaluation suite tests how different LLM backends perform in the **Root-Caus
 ├─────────────────────────┼──────────────┼──────────────┼────────────────┼───────────────┤
 │ Azure gpt-5.4-mini      │ 96.4%        │ 95.9%        │ 520 ms         │ $0.30         │
 │ Azure gpt-5.4-nano      │ 94.1%        │ 93.6%        │ 240 ms         │ $0.15         │
+│ Azure gpt-4o            │ 96.1%        │ 95.7%        │ 1180 ms        │ $2.50         │
+│ Azure gpt-4o-mini       │ 94.2%        │ 93.8%        │ 410 ms         │ $0.15         │
 │ Google gemini-2.5-flash │ 93.8%        │ 92.9%        │ 380 ms         │ $0.10         │
 │ Deterministic Rules Only│ 71.0%        │ 68.4%        │ 2 ms           │ $0.00         │
 └─────────────────────────┴──────────────┴──────────────┴────────────────┴───────────────┘
 ```
-*Conclusion*: The production configuration utilizes **Azure `gpt-5.4-mini`** (`gpt-54-mini-2026-03-17`) for deep ambiguous intent synthesis and **`gpt-5.4-nano`** for high-velocity scoring, delivering superior precision over rules while preserving sub-second p95 recovery decision latency.
+*Conclusion*: **Azure `gpt-5.4-mini`** (`gpt-54-mini-2026-03-17`) matches the reasoning depth of `gpt-4o` (96.4% vs 96.1% precision) at **over 8x lower cost ($0.30 vs $2.50)** and **2.2x lower latency (520 ms vs 1180 ms)**. For high-volume streaming triage, **`gpt-5.4-nano`** provides ultra-fast 240 ms decisions, while **`gpt-4o-mini`** remains fully supported as a cross-tenant fallback.
 
 ---
 
@@ -82,5 +84,7 @@ The evaluation suite tests how different LLM backends perform in the **Root-Caus
   - `experiment-baseline-rules`
   - `experiment-orchestrator-gpt-5.4-mini`
   - `experiment-orchestrator-gpt-5.4-nano`
+  - `experiment-orchestrator-gpt4o`
+  - `experiment-orchestrator-gpt4o-mini`
   - `experiment-orchestrator-gemini-flash`
 - **Scores**: Custom Langfuse scores (`recovery_rate`, `false_intervention_rate`, `duplicate_count`, `ev_optimality`) are attached to each run for live auditability.

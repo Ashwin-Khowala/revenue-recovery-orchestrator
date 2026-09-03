@@ -1,6 +1,6 @@
 """
 LLM Client Factory
-Configurable singleton supporting Azure OpenAI deployments (gpt-5.4-mini, gpt-5.4-nano)
+Configurable singleton supporting Azure OpenAI deployments (gpt-5.4-mini, gpt-5.4-nano, gpt-4o-mini, gpt-4o)
 and Google GenAI models (gemini-3.1-flash-live-preview, gemini-2.5-flash) with automatic failover.
 """
 
