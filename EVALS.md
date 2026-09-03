@@ -88,3 +88,68 @@ The evaluation suite tests how different LLM backends perform in the **Root-Caus
   - `experiment-orchestrator-gpt4o-mini`
   - `experiment-orchestrator-gemini-flash`
 - **Scores**: Custom Langfuse scores (`recovery_rate`, `false_intervention_rate`, `duplicate_count`, `ev_optimality`) are attached to each run for live auditability.
+
+---
+
+## 6. DeepEval & Confident AI Evaluation Architecture
+
+The repository integrates **DeepEval (v4.1.10)** and **Confident AI** to perform multi-dimensional, production-grade LLM testing. All evaluations execute against an enterprise judge (`AzureOpenAIDeepEvalModel` powered by Azure OpenAI `gpt-5.4-mini` / `gpt-5.4-nano`) with cross-cloud validation via Google GenAI (`GeminiDeepEvalModel`).
+
+### Evaluation Suites Overview
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ DEEPEVAL TEST SUITE MATRIX                                                             │
+├───────────────────────────────┬───────────────────────────────┬────────────────────────┤
+│ Suite & File                  │ Primary Metrics Evaluated     │ Enterprise Bar / Target│
+├───────────────────────────────┼───────────────────────────────┼────────────────────────┤
+│ 1. Core Node & Policy Evals   │ G-Eval (Classification)       │ Score ≥ 0.70           │
+│    evals/test_deepeval.py     │ G-Eval (Intervention EV)      │ Score ≥ 0.70           │
+│                               │ G-Eval (Do-Nothing Equity)    │ Score ≥ 0.70           │
+│                               │ HallucinationMetric           │ Score ≤ 0.50           │
+│                               │ Guardrail Invariants (₹1L)    │ 100% Deterministic Pass│
+├───────────────────────────────┼───────────────────────────────┼────────────────────────┤
+│ 2. Multi-Turn Conversational  │ RoleAdherenceMetric           │ Score ≥ 0.50           │
+│    evals/test_conversational_ │ ConversationCompletenessMetric│ Score ≥ 0.70           │
+│    multiturn_deepeval.py      │ TurnRelevancyMetric           │ Score ≥ 0.70           │
+│                               │ ToxicityMetric (Anti-Dunning) │ Score ≤ 0.30           │
+├───────────────────────────────┼───────────────────────────────┼────────────────────────┤
+│ 3. Agent Tool Correctness     │ Tool Policy GEval             │ Score ≥ 0.70           │
+│    evals/test_agent_tools_    │ Concession Cap (≤15%)         │ 100% Deterministic Pass│
+│    deepeval.py                │ PTP Date Validation           │ Validated & Frozen     │
+│                               │ HITL Approval Persistence     │ Supabase DB & Audit    │
+├───────────────────────────────┼───────────────────────────────┼────────────────────────┤
+│ 4. Financial PII & Privacy    │ Financial Privacy GEval       │ Score ≥ 0.70           │
+│    evals/test_pii_compliance_ │ Zero Card / CVV Leakage       │ Strictly 0 Raw Numbers │
+│    deepeval.py                │ Phone Display Masking         │ E.g. +91 98765 ***10   │
+│                               │ PII Sanitizer Pre-LLM Regex   │ 100% Redaction Rate    │
+└───────────────────────────────┴───────────────────────────────┴────────────────────────┘
+```
+
+### Quick Execution Commands
+
+```bash
+# 1. Run Unified CI Test Runner across all suites (emits formatted report & JSON export)
+python evals/run_deepeval_ci.py
+
+# 2. Run specific test suites individually
+python evals/run_deepeval_ci.py --suite conversational
+python evals/run_deepeval_ci.py --suite tools
+python evals/run_deepeval_ci.py --suite pii
+
+# 3. Native pytest execution
+pytest evals/test_deepeval.py -v
+pytest evals/test_conversational_multiturn_deepeval.py -v
+pytest evals/test_agent_tools_deepeval.py -v
+pytest evals/test_pii_compliance_deepeval.py -v
+
+# 4. Upload test run directly to Confident AI Cloud Dashboard
+deepeval test run evals/test_deepeval.py
+```
+
+### DeepEval Tracing (`orchestrator.deepeval_tracer`)
+
+Agent decisions are traced at the step level via `traced_run_event()`:
+- **LLM Spans**: Records model prompt, temperature, completion tokens, latency, and structured JSON output.
+- **Tool Spans**: Tracks tools invoked (`apply_concession_discount`, `register_promise_to_pay`, `approve_high_value_invoice`) with input arguments and return payloads.
+- **Retriever Spans**: Records 4-tier memory enrichment queries to Supabase `customer_profiles` and `customer_episodes`.

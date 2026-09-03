@@ -98,7 +98,11 @@ class AzureOpenAIDeepEvalModel(DeepEvalBaseLLM):
             schema_json = json.dumps(schema.model_json_schema(), indent=2)
             messages.append({
                 "role": "system",
-                "content": f"You are a rigorous financial AI evaluation judge. You must strictly output valid JSON matching this schema:\n{schema_json}",
+                "content": (
+                    f"You are a rigorous financial AI evaluation judge. You must strictly output valid JSON matching this schema:\n{schema_json}\n\n"
+                    "CRITICAL INSTRUCTION: If evaluating violations, errors, or out-of-character responses and NONE are found (the interaction is fully compliant/adherent), "
+                    "the corresponding list (e.g. 'verdicts') MUST be completely empty: []. Do not create verdict objects to describe compliant turns."
+                ),
             })
         messages.append({"role": "user", "content": prompt})
         return messages

@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-09-03T21:47:05.359970+00:00",
+  "judge_model": "gpt-54-mini",
+  "total_duration_sec": 30.67,
+  "suites": [
+    {
+      "suite_key": "conversational",
+      "name": "Multi-Turn Conversational Evals",
+      "file": "evals/test_conversational_multiturn_deepeval.py",
+      "status": "PASSED",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "duration_sec": 30.67,
+      "return_code": 0
+    }
+  ],
+  "all_passed": true
+}
