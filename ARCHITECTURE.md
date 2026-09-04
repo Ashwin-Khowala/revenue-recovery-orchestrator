@@ -202,12 +202,12 @@ For any event $E$ with amount $A$, and candidate action $a \in \mathcal{A}$:
 $$\text{EV}(a) = P(\text{recovery} \mid a, E, \text{history}) \times A - C(a) - F(a, N_{\text{contacts}}) - R(a, A)$$
 
 Where:
-- $P(\text{recovery} \mid a, E, \text{history}) = \text{base\_prior}(a, \text{root\_cause}) \times f(\text{customer\_reliability}, \text{channel\_effectiveness})$
+- $P(\text{recovery} \mid a, E, \text{history}) = \text{base-prior}(a, \text{root-cause}) \times f(\text{customer-reliability}, \text{channel-effectiveness})$
 - $C(a)$: Direct execution cost (WhatsApp ₹0.80, Telegram ₹0.00, Email ₹0.05, API Reroute ₹0.00, Human review ₹50.00).
 - $F(a, N_{\text{contacts}})$: Customer friction / annoyance penalty exponential in contact count ($F = \lambda \cdot N_{\text{contacts}}^2$).
 - $R(a, A)$: Risk of churn/alienation on high amounts if contacted clumsily.
 
-If $\text{EV}(\text{do\_nothing}) > \max_{a \neq \text{do\_nothing}} \text{EV}(a)$, the system intentionally remains silent.
+If $\text{EV}(\text{do-nothing}) > \max_{a \neq \text{do-nothing}} \text{EV}(a)$, the system intentionally remains silent.
 
 ---
 

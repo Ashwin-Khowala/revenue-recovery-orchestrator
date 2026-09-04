@@ -46,7 +46,7 @@ To satisfy this rigor, the orchestrator evaluates every batch through a **3-Way 
 | Metric | Mathematical Definition | Target / Benchmark Bar |
 |---|---|---|
 | **Recovery Rate (%)** | $\frac{\sum \text{Recovered Amount}}{\sum \text{Total At-Risk Amount}} \times 100$ | Orchestrator $>$ Baseline B $>$ Baseline A |
-| **False-Intervention Rate (%)** | $\frac{\text{Interventions on Natural Payers}}{\text{Total Interventions Attempted}} \times 100$ | Lowest in Orchestrator (due to $EV(\text{do\_nothing})$) |
+| **False-Intervention Rate (%)** | $\frac{\text{Interventions on Natural Payers}}{\text{Total Interventions Attempted}} \times 100$ | Lowest in Orchestrator (due to $EV(\text{do-nothing})$) |
 | **Cost per ₹ Recovered (₹)** | $\frac{\sum \text{Channel Cost} + \sum \text{LLM Compute Cost}}{\sum \text{Recovered Amount}}$ | Minimum operational waste |
 | **Escalation Rate (%)** | $\frac{\text{Events Escalated to HITL}}{\text{Total Events}} \times 100$ | Bounded within 5%–12% (only high-risk/high-value) |
 | **Duplicate Contact Count** | $\sum \text{Cases with}>1\text{ outreach in }24\text{h window}$ | **Must be strictly 0** (Hard guardrail check) |

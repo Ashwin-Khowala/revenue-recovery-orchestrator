@@ -31,7 +31,7 @@ $$\text{EV}(a) = P(\text{recovery} \mid a, E, \text{history}) \times A - C(a) - 
 ### Term 1: Probability of Recovery $P(\text{recovery} \mid a, E, \text{history})$
 The recovery probability is conditioned on the failure root cause, the chosen channel, and the customer's historical payment priors:
 
-$$P(\text{recovery}) = \text{base\_prior}(\text{root\_cause}, \text{channel}) \times \text{reliability\_modifier}(\text{history})$$
+$$P(\text{recovery}) = \text{base-prior}(\text{root-cause}, \text{channel}) \times \text{reliability-modifier}(\text{history})$$
 
 #### Empirical Base Priors Matrix (`BASE_PRIORS`):
 | Root Cause Category | WhatsApp | Email | Voice Call | Route Reroute | Do Nothing (Natural) |
@@ -72,7 +72,7 @@ $$F(a, N_{\text{contacts}}) = \lambda \cdot N_{\text{contacts}}^2$$
 - For $N_{\text{contacts}} = 0$ (first outreach): $F = \lambda \cdot (1)^2 \approx \text{₹5.00}$ (WhatsApp) or $\text{₹1.00}$ (Email).
 - For $N_{\text{contacts}} = 1$ (second touch): $F = \lambda \cdot (2)^2 \approx \text{₹20.00}$ (WhatsApp) or $\text{₹4.00}$ (Email).
 - For $N_{\text{contacts}} \ge 2$: $F$ spikes past ₹50.00, causing EV to plummet and triggering guardrail stops.
-- For $a = \text{"do\_nothing"}$: $F = \text{₹0.00}$ (zero friction).
+- For $a = \text{"do-nothing"}$: $F = \text{₹0.00}$ (zero friction).
 
 ---
 
@@ -81,10 +81,10 @@ Losing a ₹499 consumer order to an uncalibrated message is low impact; alienat
 
 $$R(a, A) = \begin{cases} 
 0 & \text{if } A < \text{₹10,000} \\
-\gamma \cdot (A - 10000) \cdot \text{risk\_factor}(a) & \text{if } A \ge \text{₹10,000}
+\gamma \cdot (A - 10000) \cdot \text{risk-factor}(a) & \text{if } A \ge \text{₹10,000}
 \end{cases}$$
 
-- Automated voice bots on high-value orders have a high risk factor ($\text{risk\_factor} = 0.05$), penalizing automated outreach and favoring quiet resolution or personal merchant intervention.
+- Automated voice bots on high-value orders have a high risk factor ($\text{risk-factor} = 0.05$), penalizing automated outreach and favoring quiet resolution or personal merchant intervention.
 - Silent reroute and "do nothing" have $R = 0$.
 
 ---
@@ -95,13 +95,13 @@ In standard recovery bots, "Do Nothing" does not exist in the action space. The 
 
 In our policy engine, **`do_nothing` is a candidate with its own calculated EV**:
 
-$$\text{EV}(\text{do\_nothing}) = P(\text{natural\_recovery}) \times A - 0 - 0 - 0$$
+$$\text{EV}(\text{do-nothing}) = P(\text{natural-recovery}) \times A - 0 - 0 - 0$$
 
 ### Decision Rule:
 $$\text{Chosen Action } a^* = \arg\max_{a \in \mathcal{A}} \text{EV}(a)$$
 
 If:
-$$\text{EV}(\text{do\_nothing}) > \max_{a \neq \text{do\_nothing}} \text{EV}(a)$$
+$$\text{EV}(\text{do-nothing}) > \max_{a \neq \text{do-nothing}} \text{EV}(a)$$
 the system **intentionally remains passive**. No customer message is dispatched, no API fees are spent, and customer goodwill is preserved.
 
 ---
@@ -120,7 +120,7 @@ the system **intentionally remains passive**. No customer message is dispatched,
 $$\text{EV}(\text{WhatsApp}) = (0.96 \times 1500) - 0.80 - 50.00 = \mathbf{₹1,389.20}$$
 
 #### Option 2: Do Nothing (Wait 24 Hours)
-- $P(\text{natural\_recovery}) = 0.95$ *(Aarav almost always updates his card on his own)*
+- $P(\text{natural-recovery}) = 0.95$ *(Aarav almost always updates his card on his own)*
 - Direct Cost $C = \text{₹0.00}$
 - Friction Penalty $F = \text{₹0.00}$
 - Risk Penalty $R = \text{₹0.00}$
@@ -135,7 +135,7 @@ $$\text{EV}(\text{Do Nothing}) = (0.95 \times 1500) - 0 - 0 = \mathbf{₹1,425.0
 - **Incident**: `checkout_abandoned` (high-intent cart latency > 20 min).
 
 #### Option 1: Do Nothing
-- $P(\text{natural\_recovery}) = 0.12$ *(first-time abandoners rarely return unprompted)*
+- $P(\text{natural-recovery}) = 0.12$ *(first-time abandoners rarely return unprompted)*
 $$\text{EV}(\text{Do Nothing}) = (0.12 \times 3500) - 0 = \mathbf{₹420.00}$$
 
 #### Option 2: Send WhatsApp with 1-Click Razorpay Smart Link
