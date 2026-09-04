@@ -26,7 +26,7 @@
 
 ## 🛡️ Core Invariants
 
-1. **Deterministic EV Engine**: Computes Net Expected Value ($EV = P \cdot A - C - F - R$); scores *do nothing* as a first-class candidate.
+1. **Deterministic EV Engine**: Computes Net Expected Value ($EV = P \cdot A - C - F - R$); scores *do nothing* as a first-class candidate. Full mathematical specification in [EV_POLICY.md](file:///d:/side-proj/razorpay-buildathon/EV_POLICY.md).
 2. **Hard Guardrails**: ₹1,00,000 HITL cap, 2-contact maximum, and 24-hour quiet window via persistent sidecar throttler.
 3. **Webhook Race Arbitration**: Active queue cancels pending outreach immediately upon receiving `payment.captured` (0 duplicate spam).
 4. **Cryptographic SHA-256 Audit**: Append-only hash-chained ledger verifying every decision.

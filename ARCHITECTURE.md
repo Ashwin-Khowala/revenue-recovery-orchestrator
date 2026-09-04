@@ -195,6 +195,8 @@ class RecoveryState(TypedDict):
 
 ## 3. Mathematical Policy Formulation
 
+> For full derivations, unit economics, worked customer scenarios (Aarav vs Priya), and pitch talking points, see [EV_POLICY.md](file:///d:/side-proj/razorpay-buildathon/EV_POLICY.md).
+
 For any event $E$ with amount $A$, and candidate action $a \in \mathcal{A}$:
 
 $$\text{EV}(a) = P(\text{recovery} \mid a, E, \text{history}) \times A - C(a) - F(a, N_{\text{contacts}}) - R(a, A)$$
